@@ -1,0 +1,40 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.svgz binary
+
+*.zip binary
+*.7z binary
+*.rar binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.xz binary
+*.jar binary
+*.war binary
+
+*.npy binary
+*.npz binary
+*.parquet binary
+*.pkl binary
+*.pickle binary
+*.joblib binary
+*.onnx binary
+*.pt binary
+*.pth binary
+*.h5 binary
+*.hdf5 binary
+*.keras binary
+*.tflite binary
+*.safetensors binary
