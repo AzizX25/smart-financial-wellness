@@ -54,7 +54,33 @@ Transaction ingestion supports CSV import as an alternative that remains availab
 
 ## Current Status
 
-This repository is an initial project foundation. The backend has PostgreSQL persistence plumbing with Flyway-managed schema migrations, but the application services are not feature-complete. Financial features, user management, and authentication are not implemented.
+This repository is an initial project foundation. The backend has PostgreSQL persistence plumbing with Flyway-managed schema migrations, but the application services are not feature-complete. Financial features, user management, and authentication APIs are not implemented.
+
+The backend database foundation defines its final MVP schema through Flyway
+migrations V1-V10. No JPA entities, repositories, or business services have
+been generated yet. See the canonical [data model](docs/data-model.md) and
+[Flyway schema documentation](docs/database/flyway-schema.md).
+
+The React frontend now contains a demonstrable UI prototype backed only by
+centralized simulated data. It does not call a mock API or bypass the future
+Spring Boot backend. See the [prototype guide](docs/prototype-ui.md), the
+[thematic ERD views](docs/database/entity-relationship-diagrams.md), and the
+[system architecture view](docs/architecture/system-overview.md).
+
+## Frontend Prototype
+
+From the repository root:
+
+```powershell
+Set-Location frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. All balances, transactions, forecasts,
+recommendations, bank accounts, and identities shown by this prototype are
+fictitious demonstration data. Setup will evolve as the backend APIs are
+implemented.
 
 ## Local PostgreSQL
 
