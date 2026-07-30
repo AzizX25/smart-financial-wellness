@@ -25,8 +25,8 @@ export default function ForecastChart({ values, labels, compact = false }) {
         </desc>
         <defs>
           <linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2c8177" stopOpacity="0.24" />
-            <stop offset="100%" stopColor="#2c8177" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="var(--color-proxym-blue)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="var(--color-proxym-blue)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
         {[0.25, 0.5, 0.75].map((ratio) => (
@@ -36,15 +36,15 @@ export default function ForecastChart({ values, labels, compact = false }) {
             x2={width - padding}
             y1={height * ratio}
             y2={height * ratio}
-            stroke="#dfe7e4"
+            stroke="var(--color-border)"
             strokeDasharray="5 7"
           />
         ))}
         <path d={area} fill="url(#forecastArea)" />
-        <path d={path} fill="none" stroke="#1f6b63" strokeWidth="5" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="var(--color-primary)" strokeWidth="5" strokeLinecap="round" />
         {points.map((point) => (
           <g key={point.label}>
-            <circle cx={point.x} cy={point.y} r="5" fill="#fff" stroke="#1f6b63" strokeWidth="3" />
+            <circle cx={point.x} cy={point.y} r="5" fill="var(--color-surface)" stroke="var(--color-primary)" strokeWidth="3" />
             {!compact && (
               <text x={point.x} y={height - 4} textAnchor="middle" className="chart-label">
                 {point.label}

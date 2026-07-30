@@ -38,6 +38,32 @@ public final class AuthDtos {
         }
     }
 
+    public record EmailRequest(
+            @NotBlank @Email @Size(max = 320) String email) {
+    }
+
+    public record TokenRequest(
+            @NotBlank @Size(max = 512) String token) {
+
+        @Override
+        public String toString() {
+            return "TokenRequest[token=redacted]";
+        }
+    }
+
+    public record PasswordResetConfirmRequest(
+            @NotBlank @Size(max = 512) String token,
+            @BcryptPassword String newPassword) {
+
+        @Override
+        public String toString() {
+            return "PasswordResetConfirmRequest[token=redacted,password=redacted]";
+        }
+    }
+
+    public record MessageResponse(String message) {
+    }
+
     public record AccessTokenResponse(
             String accessToken,
             String tokenType,

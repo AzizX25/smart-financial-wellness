@@ -2,7 +2,6 @@ package com.azizx25.smartfinancialwellness.auth;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Locale;
 import java.util.UUID;
 
 import com.azizx25.smartfinancialwellness.audit.AuditService;
@@ -36,6 +35,7 @@ public class AuthService {
     private final FinancialPreferenceRepository financialPreferenceRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final AccountActionService accountActionService;
     private final JwtService jwtService;
     private final AuditService auditService;
     private final SecurityProperties properties;
@@ -50,6 +50,7 @@ public class AuthService {
             FinancialPreferenceRepository financialPreferenceRepository,
             PasswordEncoder passwordEncoder,
             RefreshTokenService refreshTokenService,
+            AccountActionService accountActionService,
             JwtService jwtService,
             AuditService auditService,
             SecurityProperties properties,
@@ -61,6 +62,7 @@ public class AuthService {
         this.financialPreferenceRepository = financialPreferenceRepository;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
+        this.accountActionService = accountActionService;
         this.jwtService = jwtService;
         this.auditService = auditService;
         this.properties = properties;
@@ -97,6 +99,7 @@ public class AuthService {
                 identity,
                 passwordEncoder.encode(request.password()),
                 properties.bcryptStrength()));
+        accountActionService.scheduleRegistrationVerification(identity);
         auditService.record(userId, "AUTH_REGISTER", "APP_USER", userId);
         return issueTokens(identity);
     }
@@ -160,7 +163,7 @@ public class AuthService {
     }
 
     private String normalizeEmail(String email) {
-        return email.strip().toLowerCase(Locale.ROOT);
+        return EmailNormalizer.normalize(email);
     }
 
     private String normalizeOptionalName(String value) {

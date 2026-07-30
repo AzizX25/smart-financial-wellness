@@ -13,8 +13,12 @@ const iconPaths = {
   check: <path d="m5 12 4 4L19 6" />,
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></>,
   lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></>,
+  alert: <><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></>,
   arrow: <><path d="M5 12h14" /><path d="m14 7 5 5-5 5" /></>,
   menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+  close: <><path d="m6 6 12 12M18 6 6 18" /></>,
+  logout: <><path d="M10 5H5v14h5" /><path d="M14 8l4 4-4 4M18 12H9" /></>,
   wallet: <><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H18v16H6.5A2.5 2.5 0 0 1 4 17.5Z" /><path d="M4 7h14M14 12h7v5h-7a2.5 2.5 0 0 1 0-5Z" /></>,
 }
 

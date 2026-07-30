@@ -1,8 +1,10 @@
 package com.azizx25.smartfinancialwellness;
 
+import com.azizx25.smartfinancialwellness.email.EmailDeliveryService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
@@ -19,6 +21,12 @@ class PostgresTestConfiguration {
             registry.add("app.security.bcrypt-strength", () -> 4);
             registry.add("app.security.refresh-cookie-secure", () -> false);
         };
+    }
+
+    @Bean
+    @Primary
+    EmailDeliveryService capturingEmailDeliveryService() {
+        return new CapturingEmailDeliveryService();
     }
 
     @Bean

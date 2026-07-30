@@ -15,6 +15,10 @@ import org.springframework.validation.annotation.Validated;
 public record SecurityProperties(
         @NotNull @Valid Jwt jwt,
         @NotNull Duration refreshTokenTtl,
+        @NotNull Duration emailVerificationTokenTtl,
+        @NotNull Duration emailVerificationResendCooldown,
+        @NotNull Duration passwordResetTokenTtl,
+        @NotNull Duration passwordResetRequestCooldown,
         boolean refreshCookieSecure,
         @Min(4) @Max(31) int bcryptStrength,
         @NotBlank String corsAllowedOrigin) {

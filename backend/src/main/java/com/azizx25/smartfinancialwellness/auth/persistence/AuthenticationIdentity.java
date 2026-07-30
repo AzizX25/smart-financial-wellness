@@ -109,4 +109,10 @@ public class AuthenticationIdentity {
     public int getVersion() {
         return version;
     }
+
+    public void activate(Instant now) {
+        this.status = Status.ACTIVE;
+        this.verifiedAt = now;
+        this.updatedAt = now;
+    }
 }

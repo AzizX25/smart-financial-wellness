@@ -68,8 +68,26 @@ public class AuditLogEntry {
             UUID resourceId,
             Outcome outcome,
             Map<String, Object> changeSummary) {
+        this(
+                ActorType.USER,
+                actorId,
+                action,
+                resourceType,
+                resourceId,
+                outcome,
+                changeSummary);
+    }
+
+    public AuditLogEntry(
+            ActorType actorType,
+            UUID actorId,
+            String action,
+            String resourceType,
+            UUID resourceId,
+            Outcome outcome,
+            Map<String, Object> changeSummary) {
         this.id = UUID.randomUUID();
-        this.actorType = ActorType.USER;
+        this.actorType = actorType;
         this.actorId = actorId;
         this.action = action;
         this.resourceType = resourceType;

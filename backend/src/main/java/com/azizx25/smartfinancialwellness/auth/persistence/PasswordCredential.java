@@ -103,4 +103,13 @@ public class PasswordCredential {
     public int getVersion() {
         return version;
     }
+
+    public void changePassword(String newPasswordHash, int strength, Instant now) {
+        this.passwordHash = newPasswordHash;
+        this.passwordAlgorithm = "BCRYPT";
+        this.passwordParameters = new LinkedHashMap<>();
+        this.passwordParameters.put("strength", strength);
+        this.passwordChangedAt = now;
+        this.updatedAt = now;
+    }
 }

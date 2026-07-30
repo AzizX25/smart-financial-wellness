@@ -33,7 +33,7 @@ The frontend communicates only with the core backend. It must never call the moc
 smart-financial-wellness/
 |-- ai-service/       # FastAPI inference service
 |-- backend/          # Core Spring Boot application
-|-- compose.yaml      # Local PostgreSQL service
+|-- compose.yaml      # Local PostgreSQL and Mailpit services
 |-- docs/             # Project documentation
 |-- frontend/         # React and Vite application
 |-- infrastructure/   # Docker Compose and local infrastructure
@@ -48,13 +48,13 @@ smart-financial-wellness/
 - `mock-bank` behaves like an external banking provider and contains no financial-wellness business logic.
 - `ai-service` serves model inference only and remains separate from model training.
 - `ml-pipeline` prepares and versions datasets, features, model artifacts, and evaluation results before validated models are promoted.
-- `compose.yaml` defines local PostgreSQL; `infrastructure` is reserved for broader local infrastructure as the project grows.
+- `compose.yaml` defines local PostgreSQL and Mailpit; `infrastructure` is reserved for broader local infrastructure as the project grows.
 
 Transaction ingestion supports CSV import as an alternative that remains available alongside synchronization with the mock bank.
 
 ## Current Status
 
-This repository remains an initial project foundation. The backend has PostgreSQL persistence with Flyway-managed schema migrations and now provides local email/password registration, JWT authentication, refresh-token rotation, logout, and profile APIs. Newly registered accounts remain pending until the future email-verification slice promotes them. Financial features are not implemented, and the React prototype is not connected to these APIs yet.
+This repository remains an initial project foundation. The backend has PostgreSQL persistence with Flyway-managed schema migrations and provides local email/password registration, email verification, JWT authentication, refresh-token rotation, password reset, logout, and profile APIs. Newly registered accounts remain pending until their email address is verified. Financial features are not implemented, and only the React authentication onboarding flow is connected to these APIs.
 
 The backend database foundation defines its final MVP schema through Flyway
 migrations V1-V10. Only the JPA mappings needed by authentication, profile,
@@ -83,7 +83,7 @@ recommendations, bank accounts, and identities shown by this prototype are
 fictitious demonstration data. Setup will evolve as the backend APIs are
 implemented.
 
-## Local PostgreSQL
+## Local PostgreSQL and Mailpit
 
 Docker Desktop must be running before using Docker Compose or running backend tests.
 
@@ -95,10 +95,10 @@ Copy-Item .env.example .env
 
 Open `.env` and replace `replace_with_a_local_password` with a local development password. Never commit `.env`.
 
-Start PostgreSQL:
+Start PostgreSQL and the local Mailpit email catcher:
 
 ```powershell
-docker compose up -d postgres
+docker compose up -d postgres mailpit
 ```
 
 Check its status and health:
@@ -107,11 +107,16 @@ Check its status and health:
 docker compose ps
 ```
 
+Mailpit accepts local SMTP messages without authentication or TLS on `localhost:1025`.
+Open `http://localhost:8025` to inspect verification and password-reset emails.
+
 Stop PostgreSQL without deleting its persistent named volume:
 
 ```powershell
 docker compose stop postgres
 ```
+
+Stop Mailpit separately with `docker compose stop mailpit`.
 
 The root `.env` file configures Docker Compose through `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_PORT`. Spring Boot does not automatically load this file when the backend is started with Maven.
 
@@ -124,11 +129,18 @@ $env:DB_PASSWORD = "<same local password as .env>"
 $jwtSecretBytes = [byte[]]::new(32)
 [System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtSecretBytes)
 $env:AUTH_JWT_SECRET = [Convert]::ToBase64String($jwtSecretBytes)
+$env:SMTP_HOST = "localhost"
+$env:SMTP_PORT = "1025"
+$env:SMTP_AUTH = "false"
+$env:SMTP_STARTTLS_ENABLE = "false"
+$env:EMAIL_SENDER_ADDRESS = "no-reply@smart-financial-wellness.local"
+$env:EMAIL_SENDER_NAME = "Mon Equilibre"
+$env:FRONTEND_BASE_URL = "http://localhost:5173"
 Set-Location backend
 mvn spring-boot:run
 ```
 
-Adjust the URL and username if their Compose values were changed. The generated JWT secret is temporary for that PowerShell process; production must inject a securely managed secret. No dotenv dependency is required. See the [authentication and profile API guide](docs/api/authentication-profile.md) for all optional security settings and endpoint behavior.
+Adjust the database URL, username, and SMTP port if their Compose values were changed. The generated JWT secret is temporary for that PowerShell process; production must inject a securely managed secret. No dotenv dependency is required. See the [authentication and profile API guide](docs/api/authentication-profile.md) for all optional security and email settings and endpoint behavior.
 
 Running `mvn test` from `backend` starts an isolated `postgres:17-alpine` Testcontainer automatically. Docker is the only external test prerequisite; the local Compose database is not used by the tests.
 

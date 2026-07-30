@@ -37,4 +37,17 @@ public interface RefreshSessionRepository extends JpaRepository<RefreshSession, 
             @Param("familyId") UUID familyId,
             @Param("revokedAt") Instant revokedAt,
             @Param("reason") String reason);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = false)
+    @Query("""
+            update RefreshSession session
+               set session.revokedAt = :revokedAt,
+                   session.revocationReason = :reason
+             where session.authenticationIdentity.id = :identityId
+               and session.revokedAt is null
+            """)
+    int revokeAllForIdentity(
+            @Param("identityId") UUID identityId,
+            @Param("revokedAt") Instant revokedAt,
+            @Param("reason") String reason);
 }

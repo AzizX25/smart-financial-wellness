@@ -94,7 +94,7 @@ export default function LoginPage() {
           </InlineNotice>
 
           <p className="login-panel__signup">
-            Nouveau sur Mon Équilibre ? <a className="text-link" href="#inscription">Créer un compte</a>
+            Nouveau sur Mon Équilibre ? <Link className="text-link" to="/register">Créer un compte</Link>
           </p>
         </div>
       </section>

@@ -40,7 +40,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
-@EnableConfigurationProperties(SecurityProperties.class)
+@EnableConfigurationProperties({SecurityProperties.class, EmailProperties.class})
 public class SecurityConfiguration {
 
     @Bean
@@ -57,7 +57,15 @@ public class SecurityConfiguration {
                                 "/actuator/health/**",
                                 "/actuator/info")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/refresh")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/refresh",
+                                "/api/auth/email-verification/confirm",
+                                "/api/auth/email-verification/resend",
+                                "/api/auth/password-reset/request",
+                                "/api/auth/password-reset/confirm")
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()

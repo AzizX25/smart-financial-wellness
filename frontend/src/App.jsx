@@ -6,15 +6,21 @@ import ForecastPage from './pages/ForecastPage'
 import GoalsPage from './pages/GoalsPage'
 import LoginPage from './pages/LoginPage'
 import MockBankPage from './pages/MockBankPage'
+import RegisterPage from './pages/RegisterPage'
 import SalaryPlanningPage from './pages/SalaryPlanningPage'
 import SettingsPage from './pages/SettingsPage'
 import TransactionsPage from './pages/TransactionsPage'
+import VerificationPendingPage from './pages/VerificationPendingPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate replace to="/connexion" />} />
       <Route path="/connexion" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email-sent" element={<VerificationPendingPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/banque-demo" element={<MockBankPage />} />
       <Route element={<AppShell />}>
         <Route path="/tableau-de-bord" element={<DashboardPage />} />

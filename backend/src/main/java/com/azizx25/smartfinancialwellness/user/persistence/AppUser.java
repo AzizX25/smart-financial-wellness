@@ -106,4 +106,8 @@ public class AppUser {
     public int getVersion() {
         return version;
     }
+
+    public void activate() {
+        this.status = Status.ACTIVE;
+    }
 }
