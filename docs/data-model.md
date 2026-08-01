@@ -98,7 +98,8 @@ justification from the same evaluation.
 ## Simulated bank boundary
 
 The mock bank is a separate Spring Boot application and owns a separate
-database or schema. Its minimal planned model contains seven tables:
+PostgreSQL database, `mock_bank` schema, and Flyway history. Its implemented
+foundation contains seven tables:
 
 - `bank_customer`;
 - `oauth_client`;
@@ -108,9 +109,11 @@ database or schema. Its minimal planned model contains seven tables:
 - `authorization_code`;
 - `access_token`.
 
-It exposes only authorization, revocation, account discovery, balances, and
-transaction reads. There are no payment or transfer endpoints and no foreign
-keys between the mock-bank and backend databases. Its Flyway migrations will
-be created with the future `mock-bank` module rather than mixed into the
-backend migration history.
-
+V1 creates these tables and V2 supplies deterministic synthetic customers,
+OAuth client metadata, accounts, and transactions. The Java foundation has
+internal lookup services for customer, client, account, balance, and
+transaction data, but only the Actuator health endpoint is exposed over HTTP.
+Account, transaction, consent, authorization-code, and token APIs remain future
+work, including lightweight simulated read-only authorization. There are no
+payment or transfer endpoints and no foreign keys between the mock-bank and
+backend databases.

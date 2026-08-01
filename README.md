@@ -33,7 +33,7 @@ The frontend communicates only with the core backend. It must never call the moc
 smart-financial-wellness/
 |-- ai-service/       # FastAPI inference service
 |-- backend/          # Core Spring Boot application
-|-- compose.yaml      # Local PostgreSQL and Mailpit services
+|-- compose.yaml      # Local databases, Mailpit, and mock-bank service
 |-- docs/             # Project documentation
 |-- frontend/         # React and Vite application
 |-- infrastructure/   # Docker Compose and local infrastructure
@@ -48,7 +48,7 @@ smart-financial-wellness/
 - `mock-bank` behaves like an external banking provider and contains no financial-wellness business logic.
 - `ai-service` serves model inference only and remains separate from model training.
 - `ml-pipeline` prepares and versions datasets, features, model artifacts, and evaluation results before validated models are promoted.
-- `compose.yaml` defines local PostgreSQL and Mailpit; `infrastructure` is reserved for broader local infrastructure as the project grows.
+- `compose.yaml` defines the main PostgreSQL database, Mailpit, and the independent mock-bank application and database; `infrastructure` is reserved for broader local infrastructure as the project grows.
 
 Transaction ingestion supports CSV import as an alternative that remains available alongside synchronization with the mock bank.
 
@@ -62,9 +62,16 @@ preferences, refresh sessions, and audit logging are implemented; the other
 schema tables remain intentionally unmapped. See the canonical [data model](docs/data-model.md) and
 [Flyway schema documentation](docs/database/flyway-schema.md).
 
-The React frontend now contains a demonstrable UI prototype backed only by
-centralized simulated data. It does not call a mock API or bypass the future
-Spring Boot backend. See the [prototype guide](docs/prototype-ui.md), the
+The mock bank now has an independent Java 21 Spring Boot foundation, its own
+PostgreSQL database and Flyway history, and synthetic fixtures only. Its V1
+migration creates seven tables and V2 loads deterministic customers, accounts,
+and transactions. Only `GET /actuator/health` is exposed over HTTP; account,
+transaction, consent, authorization-code, and token APIs are not implemented.
+A lightweight simulated read-only authorization flow will be added later.
+
+The React frontend's financial screens remain a demonstrable UI prototype
+backed by centralized simulated data. The authentication onboarding screens
+call only the core backend; the frontend does not call the mock bank. See the [prototype guide](docs/prototype-ui.md), the
 [thematic ERD views](docs/database/entity-relationship-diagrams.md), and the
 [system architecture view](docs/architecture/system-overview.md).
 
@@ -83,7 +90,7 @@ recommendations, bank accounts, and identities shown by this prototype are
 fictitious demonstration data. Setup will evolve as the backend APIs are
 implemented.
 
-## Local PostgreSQL and Mailpit
+## Local PostgreSQL, Mailpit, and Mock Bank
 
 Docker Desktop must be running before using Docker Compose or running backend tests.
 
@@ -93,7 +100,8 @@ From the repository root, create a local environment file in PowerShell:
 Copy-Item .env.example .env
 ```
 
-Open `.env` and replace `replace_with_a_local_password` with a local development password. Never commit `.env`.
+Open `.env` and replace both local password placeholders with development-only
+passwords. Never commit `.env`.
 
 Start PostgreSQL and the local Mailpit email catcher:
 
@@ -118,7 +126,28 @@ docker compose stop postgres
 
 Stop Mailpit separately with `docker compose stop mailpit`.
 
-The root `.env` file configures Docker Compose through `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_PORT`. Spring Boot does not automatically load this file when the backend is started with Maven.
+Start the independent mock-bank database and application:
+
+```powershell
+docker compose up -d mock-bank-db mock-bank
+docker compose ps mock-bank-db mock-bank
+```
+
+When both services are ready, `http://localhost:8081/actuator/health` reports
+the mock-bank health. No banking business API is exposed yet. Stop only these
+services without deleting their named volume:
+
+```powershell
+docker compose stop mock-bank mock-bank-db
+```
+
+Docker Compose supplies the mock-bank process with `DB_URL`, `DB_USERNAME`, and
+`DB_PASSWORD` from the `MOCK_BANK_DB_*` settings. The application does not have
+a fallback database password.
+
+The root `.env` file configures Docker Compose through the main `DB_*`,
+`MOCK_BANK_DB_*`, and port settings. Spring Boot does not automatically load
+this file when either application is started with Maven.
 
 Before starting the backend, make `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and a Base64-encoded JWT signing secret available to its process. The backend password must match `DB_PASSWORD` in `.env`. For the example database name, username, and port, run the following from the repository root in the same PowerShell session:
 
@@ -143,6 +172,10 @@ mvn spring-boot:run
 Adjust the database URL, username, and SMTP port if their Compose values were changed. The generated JWT secret is temporary for that PowerShell process; production must inject a securely managed secret. No dotenv dependency is required. See the [authentication and profile API guide](docs/api/authentication-profile.md) for all optional security and email settings and endpoint behavior.
 
 Running `mvn test` from `backend` starts an isolated `postgres:17-alpine` Testcontainer automatically. Docker is the only external test prerequisite; the local Compose database is not used by the tests.
+
+Running `mvn test` from `mock-bank` likewise uses its own isolated PostgreSQL
+Testcontainer. It applies only the mock-bank V1 and V2 migrations and does not
+require the main application database.
 
 ## Development Tools
 

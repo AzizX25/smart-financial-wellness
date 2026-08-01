@@ -38,3 +38,17 @@ flowchart LR
 
 La page « Banque Démo » du prototype est une maquette visuelle du futur écran
 de consentement. Elle ne réalise actuellement aucun appel au mock-bank.
+
+## État actuel du mock-bank
+
+Le dossier `mock-bank/` contient une application Java 21 / Spring Boot 4.1
+indépendante. Elle utilise sa propre base PostgreSQL, le schéma `mock_bank` et
+un historique Flyway distinct de celui du backend principal. Toutes ses données
+sont synthétiques.
+
+La fondation actuelle fournit les mappings JPA, repositories et services
+internes de lecture pour les clients, comptes, soldes et transactions. Seul
+`GET /actuator/health` est exposé sur HTTP. Les API de comptes, transactions,
+consentement, codes d'autorisation et jetons ne sont pas encore implémentées.
+Une autorisation simulée, légère et strictement en lecture seule sera ajoutée
+dans un incrément ultérieur.

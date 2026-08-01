@@ -67,6 +67,7 @@ credentials/
 application-local.properties
 application-local.yml
 application-local.yaml
+sfwa-postgresql-flyway-migrations.zip
 
 # Docker local overrides
 docker-compose.override.yml

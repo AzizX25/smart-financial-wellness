@@ -68,18 +68,32 @@ available in the canonical [entity-relationship documentation](entity-relationsh
 
 ## Mock-bank migrations
 
-The mock-bank module does not exist yet. Its planned V1-V4 migrations are not
-placed in this directory and must start an independent Flyway history when the
-module is created:
+Mock-bank migrations live only in:
 
-1. customers, accounts, balances, and transactions;
-2. OAuth client and read-only consent;
-3. hashed authorization codes and rotating/revocable token hashes;
-4. strictly fictitious demonstration data.
+```text
+mock-bank/src/main/resources/db/migration
+```
+
+The mock bank uses its own PostgreSQL database, schema `mock_bank`, and Flyway
+history table. It has no database dependency or foreign key to the main
+application.
+
+| Migration | Responsibility | Tables |
+| --- | --- | ---: |
+| `V1__create_mock_bank_schema.sql` | Synthetic customers, OAuth client metadata, accounts, positive directional transactions, read-only consents, and hashed authorization/token artifacts | 7 |
+| `V2__seed_demo_data.sql` | Deterministic synthetic customers, client, accounts, and transactions used by local development and tests | 0 |
+
+The seven tables are `bank_customer`, `oauth_client`, `bank_account`,
+`bank_transaction`, `bank_consent`, `authorization_code`, and `access_token`.
+Only the Actuator health endpoint is currently exposed. Account, transaction,
+consent, authorization-code, and token HTTP APIs will be implemented later,
+including a lightweight simulated read-only authorization flow.
 
 ## Validation expectations
 
 - Run the complete V1-V10 sequence on a clean PostgreSQL database.
 - Test both valid writes and expected database rejections with Testcontainers.
 - Run `mvn test` from `backend` after migration changes.
+- Run `mvn test` from `mock-bank` to validate its independent V1-V2 history,
+  seven mappings, deterministic fixtures, and PostgreSQL constraints.
 - Never edit an applied migration; add a new forward-only migration.
