@@ -112,8 +112,11 @@ foundation contains seven tables:
 V1 creates these tables and V2 supplies deterministic synthetic customers,
 OAuth client metadata, accounts, and transactions. The Java foundation has
 internal lookup services for customer, client, account, balance, and
-transaction data, but only the Actuator health endpoint is exposed over HTTP.
-Account, transaction, consent, authorization-code, and token APIs remain future
-work, including lightweight simulated read-only authorization. There are no
-payment or transfer endpoints and no foreign keys between the mock-bank and
-backend databases.
+transaction data. HTTP exposure currently consists of Actuator health and
+customer-scoped read-only endpoints for account lists, account metadata, and
+balances. Public response records prevent persistence identifiers and entities
+from crossing the service boundary, while `404` ownership responses avoid
+account enumeration. Transaction, consent, authorization-code, and token APIs
+remain future work, including lightweight simulated read-only authorization.
+There are no payment or transfer endpoints and no foreign keys between the
+mock-bank and backend databases.

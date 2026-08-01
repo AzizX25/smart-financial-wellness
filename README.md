@@ -65,9 +65,22 @@ schema tables remain intentionally unmapped. See the canonical [data model](docs
 The mock bank now has an independent Java 21 Spring Boot foundation, its own
 PostgreSQL database and Flyway history, and synthetic fixtures only. Its V1
 migration creates seven tables and V2 loads deterministic customers, accounts,
-and transactions. Only `GET /actuator/health` is exposed over HTTP; account,
-transaction, consent, authorization-code, and token APIs are not implemented.
-A lightweight simulated read-only authorization flow will be added later.
+and transactions. It exposes health plus a read-only Accounts API backed by
+public response records rather than persistence entities. Transaction,
+consent, authorization-code, and token APIs are not implemented. A lightweight
+simulated read-only authorization flow will be added later.
+
+The current mock-bank Accounts API is:
+
+| Method and path | Responsibility |
+| --- | --- |
+| `GET /api/v1/customers/{customerId}/accounts` | List public account metadata in stable external-account-ID order |
+| `GET /api/v1/customers/{customerId}/accounts/{accountId}` | Return public metadata for one customer-owned account |
+| `GET /api/v1/customers/{customerId}/accounts/{accountId}/balance` | Return only the account balance contract |
+
+Unknown customers or accounts return a consistent JSON `404`. An account owned
+by another customer also returns `404` with `Account not found`, preventing the
+response from confirming that the account exists.
 
 The React frontend's financial screens remain a demonstrable UI prototype
 backed by centralized simulated data. The authentication onboarding screens
@@ -134,8 +147,9 @@ docker compose ps mock-bank-db mock-bank
 ```
 
 When both services are ready, `http://localhost:8081/actuator/health` reports
-the mock-bank health. No banking business API is exposed yet. Stop only these
-services without deleting their named volume:
+the mock-bank health. The three read-only Accounts API routes documented above
+are also available; simulated authorization is intentionally deferred. Stop
+only these services without deleting their named volume:
 
 ```powershell
 docker compose stop mock-bank mock-bank-db

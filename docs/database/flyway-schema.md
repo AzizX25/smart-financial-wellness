@@ -85,9 +85,13 @@ application.
 
 The seven tables are `bank_customer`, `oauth_client`, `bank_account`,
 `bank_transaction`, `bank_consent`, `authorization_code`, and `access_token`.
-Only the Actuator health endpoint is currently exposed. Account, transaction,
-consent, authorization-code, and token HTTP APIs will be implemented later,
-including a lightweight simulated read-only authorization flow.
+The Actuator health endpoint and three customer-scoped, read-only account list,
+account metadata, and balance endpoints are currently exposed. Their HTTP
+responses use public records rather than persistence entities, and ownership
+mismatches use the same `404 Account not found` response as absent accounts.
+Transaction, consent, authorization-code, and token HTTP APIs will be
+implemented later, including a lightweight simulated read-only authorization
+flow.
 
 ## Validation expectations
 
