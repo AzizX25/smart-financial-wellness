@@ -6,8 +6,6 @@ import com.azizx25.mockbank.account.persistence.BankAccount;
 import com.azizx25.mockbank.account.persistence.BankAccountRepository;
 import com.azizx25.mockbank.customer.persistence.BankCustomer;
 import com.azizx25.mockbank.customer.persistence.BankCustomerRepository;
-import com.azizx25.mockbank.exception.AccountNotFoundException;
-import com.azizx25.mockbank.exception.AccountNotOwnedException;
 import com.azizx25.mockbank.exception.CustomerNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +16,15 @@ public class AccountQueryService {
 
     private final BankCustomerRepository customerRepository;
     private final BankAccountRepository accountRepository;
+    private final AccountOwnershipResolver accountOwnershipResolver;
 
     public AccountQueryService(
             BankCustomerRepository customerRepository,
-            BankAccountRepository accountRepository) {
+            BankAccountRepository accountRepository,
+            AccountOwnershipResolver accountOwnershipResolver) {
         this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
+        this.accountOwnershipResolver = accountOwnershipResolver;
     }
 
     public List<AccountSummary> listAccounts(String externalCustomerId) {
@@ -35,17 +36,9 @@ public class AccountQueryService {
     }
 
     public AccountSummary loadOwnedAccount(String externalCustomerId, String externalAccountId) {
-        return toSummary(resolveOwnedAccount(externalCustomerId, externalAccountId));
-    }
-
-    BankAccount resolveOwnedAccount(String externalCustomerId, String externalAccountId) {
-        BankCustomer customer = resolveCustomer(externalCustomerId);
-        BankAccount account = accountRepository.findByExternalAccountId(externalAccountId)
-                .orElseThrow(AccountNotFoundException::new);
-        if (!account.getBankCustomerId().equals(customer.getId())) {
-            throw new AccountNotOwnedException();
-        }
-        return account;
+        return toSummary(accountOwnershipResolver.resolveOwnedAccount(
+                externalCustomerId,
+                externalAccountId));
     }
 
     private BankCustomer resolveCustomer(String externalCustomerId) {

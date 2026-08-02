@@ -48,20 +48,29 @@ sont synthétiques.
 
 La fondation actuelle fournit les mappings JPA, repositories et services
 internes de lecture pour les clients, comptes, soldes et transactions. Elle
-expose `GET /actuator/health` ainsi que trois routes de comptes en lecture seule :
+expose `GET /actuator/health` ainsi que quatre routes bancaires en lecture seule :
 
 - `GET /api/v1/customers/{customerId}/accounts` retourne les métadonnées
   publiques dans un ordre déterministe ;
 - `GET /api/v1/customers/{customerId}/accounts/{accountId}` retourne les
   métadonnées publiques d'un compte appartenant au client ;
 - `GET /api/v1/customers/{customerId}/accounts/{accountId}/balance` retourne
-  uniquement le contrat de solde.
+  uniquement le contrat de solde ;
+- `GET /api/v1/customers/{customerId}/accounts/{accountId}/transactions`
+  retourne une enveloppe paginée de transactions du compte.
+
+La route de transactions filtre la `bookingDate` avec des bornes ISO-8601
+`from` et `to` inclusives. Elle trie par date décroissante puis par identifiant
+de transaction externe décroissant. `page` commence à `0` et vaut `0` par
+défaut ; `size` vaut `20` par défaut et accepte les valeurs de `1` à `100`.
+L'enveloppe stable contient uniquement `items`, `page`, `size`,
+`totalElements`, `totalPages`, `first` et `last`.
 
 Les entités JPA, UUID internes et soldes ne sont pas exposés par les routes de
 métadonnées. Un client inconnu, un compte inconnu ou un compte appartenant à
 un autre client produit un JSON `404`; le dernier cas utilise toujours
 `Account not found` afin d'empêcher l'énumération des comptes.
 
-Les API de transactions, consentement, codes d'autorisation et jetons ne sont
-pas encore implémentées. Une autorisation simulée, légère et strictement en
-lecture seule sera ajoutée dans un incrément ultérieur.
+Les API de consentement, codes d'autorisation et jetons ne sont pas encore
+implémentées. Une autorisation simulée, légère et strictement en lecture seule
+sera ajoutée dans un incrément ultérieur.

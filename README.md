@@ -65,18 +65,26 @@ schema tables remain intentionally unmapped. See the canonical [data model](docs
 The mock bank now has an independent Java 21 Spring Boot foundation, its own
 PostgreSQL database and Flyway history, and synthetic fixtures only. Its V1
 migration creates seven tables and V2 loads deterministic customers, accounts,
-and transactions. It exposes health plus a read-only Accounts API backed by
-public response records rather than persistence entities. Transaction,
-consent, authorization-code, and token APIs are not implemented. A lightweight
+and transactions. It exposes health plus read-only Accounts and Transactions
+APIs backed by public response records rather than persistence entities.
+Consent, authorization-code, and token APIs are not implemented. A lightweight
 simulated read-only authorization flow will be added later.
 
-The current mock-bank Accounts API is:
+The current mock-bank read-only API is:
 
 | Method and path | Responsibility |
 | --- | --- |
 | `GET /api/v1/customers/{customerId}/accounts` | List public account metadata in stable external-account-ID order |
 | `GET /api/v1/customers/{customerId}/accounts/{accountId}` | Return public metadata for one customer-owned account |
 | `GET /api/v1/customers/{customerId}/accounts/{accountId}/balance` | Return only the account balance contract |
+| `GET /api/v1/customers/{customerId}/accounts/{accountId}/transactions` | Return an account's transactions with date filters and pagination |
+
+The Transactions endpoint accepts optional `from` and `to` ISO-8601 dates and
+filters the PostgreSQL `booking_date`. Both boundaries are inclusive. Results
+are ordered by `bookingDate` descending, then `externalTransactionId`
+descending as a stable tie-breaker. `page` is zero-based and defaults to `0`;
+`size` defaults to `20` and must be between `1` and `100`. The response exposes
+only `items`, `page`, `size`, `totalElements`, `totalPages`, `first`, and `last`.
 
 Unknown customers or accounts return a consistent JSON `404`. An account owned
 by another customer also returns `404` with `Account not found`, preventing the
@@ -147,8 +155,8 @@ docker compose ps mock-bank-db mock-bank
 ```
 
 When both services are ready, `http://localhost:8081/actuator/health` reports
-the mock-bank health. The three read-only Accounts API routes documented above
-are also available; simulated authorization is intentionally deferred. Stop
+the mock-bank health. The four read-only API routes documented above are also
+available; simulated authorization is intentionally deferred. Stop
 only these services without deleting their named volume:
 
 ```powershell

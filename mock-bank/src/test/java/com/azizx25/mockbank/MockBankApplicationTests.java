@@ -22,6 +22,7 @@ import com.azizx25.mockbank.exception.ClientNotFoundException;
 import com.azizx25.mockbank.exception.CustomerNotFoundException;
 import com.azizx25.mockbank.exception.InvalidRedirectUriException;
 import com.azizx25.mockbank.exception.InvalidTransactionDateRangeException;
+import com.azizx25.mockbank.exception.InvalidTransactionPaginationException;
 import com.azizx25.mockbank.transaction.PaginatedTransactionResult;
 import com.azizx25.mockbank.transaction.TransactionQueryService;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -348,18 +349,18 @@ class MockBankApplicationTests {
         PaginatedTransactionResult secondPage = transactionQueryService.loadTransactions(
                 "MOCK-CUST-001", "MOCK-ACC-001", null, null, 1, 2);
 
-        assertThat(firstPage.transactions()).extracting(transaction -> transaction.externalTransactionId())
+        assertThat(firstPage.items()).extracting(transaction -> transaction.externalTransactionId())
                 .containsExactly("MOCK-TXN-006", "MOCK-TXN-004");
-        assertThat(firstPage.pageNumber()).isZero();
-        assertThat(firstPage.pageSize()).isEqualTo(2);
+        assertThat(firstPage.page()).isZero();
+        assertThat(firstPage.size()).isEqualTo(2);
         assertThat(firstPage.totalElements()).isEqualTo(5);
         assertThat(firstPage.totalPages()).isEqualTo(3);
-        assertThat(firstPage.hasNext()).isTrue();
-        assertThat(firstPage.hasPrevious()).isFalse();
-        assertThat(secondPage.transactions()).extracting(transaction -> transaction.externalTransactionId())
+        assertThat(firstPage.first()).isTrue();
+        assertThat(firstPage.last()).isFalse();
+        assertThat(secondPage.items()).extracting(transaction -> transaction.externalTransactionId())
                 .containsExactly("MOCK-TXN-003", "MOCK-TXN-002");
-        assertThat(secondPage.hasNext()).isTrue();
-        assertThat(secondPage.hasPrevious()).isTrue();
+        assertThat(secondPage.first()).isFalse();
+        assertThat(secondPage.last()).isFalse();
     }
 
     @Test
@@ -372,7 +373,7 @@ class MockBankApplicationTests {
                 0,
                 10);
 
-        assertThat(filtered.transactions()).extracting(transaction -> transaction.externalTransactionId())
+        assertThat(filtered.items()).extracting(transaction -> transaction.externalTransactionId())
                 .containsExactly("MOCK-TXN-004", "MOCK-TXN-003", "MOCK-TXN-002");
         assertThat(filtered.totalElements()).isEqualTo(3);
 
@@ -380,9 +381,9 @@ class MockBankApplicationTests {
                 "MOCK-CUST-001", "MOCK-ACC-001", LocalDate.of(2026, 7, 28), null, 0, 10);
         PaginatedTransactionResult toDate = transactionQueryService.loadTransactions(
                 "MOCK-CUST-001", "MOCK-ACC-001", null, LocalDate.of(2026, 7, 26), 0, 10);
-        assertThat(fromDate.transactions()).extracting(transaction -> transaction.externalTransactionId())
+        assertThat(fromDate.items()).extracting(transaction -> transaction.externalTransactionId())
                 .containsExactly("MOCK-TXN-006", "MOCK-TXN-004");
-        assertThat(toDate.transactions()).extracting(transaction -> transaction.externalTransactionId())
+        assertThat(toDate.items()).extracting(transaction -> transaction.externalTransactionId())
                 .containsExactly("MOCK-TXN-002", "MOCK-TXN-001");
 
         assertThatThrownBy(() -> transactionQueryService.loadTransactions(
@@ -404,9 +405,12 @@ class MockBankApplicationTests {
                 .isInstanceOf(AccountNotOwnedException.class);
         assertThatThrownBy(() -> transactionQueryService.loadTransactions(
                 "MOCK-CUST-001", "MOCK-ACC-001", null, null, -1, 10))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidTransactionPaginationException.class);
         assertThatThrownBy(() -> transactionQueryService.loadTransactions(
                 "MOCK-CUST-001", "MOCK-ACC-001", null, null, 0, 0))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidTransactionPaginationException.class);
+        assertThatThrownBy(() -> transactionQueryService.loadTransactions(
+                "MOCK-CUST-001", "MOCK-ACC-001", null, null, 0, 101))
+                .isInstanceOf(InvalidTransactionPaginationException.class);
     }
 }

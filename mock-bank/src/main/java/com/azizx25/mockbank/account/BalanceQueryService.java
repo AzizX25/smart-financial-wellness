@@ -9,14 +9,14 @@ import com.azizx25.mockbank.account.persistence.BankAccount;
 @Transactional(readOnly = true)
 public class BalanceQueryService {
 
-    private final AccountQueryService accountQueryService;
+    private final AccountOwnershipResolver accountOwnershipResolver;
 
-    public BalanceQueryService(AccountQueryService accountQueryService) {
-        this.accountQueryService = accountQueryService;
+    public BalanceQueryService(AccountOwnershipResolver accountOwnershipResolver) {
+        this.accountOwnershipResolver = accountOwnershipResolver;
     }
 
     public BalanceSummary loadBalance(String externalCustomerId, String externalAccountId) {
-        BankAccount account = accountQueryService.resolveOwnedAccount(
+        BankAccount account = accountOwnershipResolver.resolveOwnedAccount(
                 externalCustomerId,
                 externalAccountId);
         return new BalanceSummary(

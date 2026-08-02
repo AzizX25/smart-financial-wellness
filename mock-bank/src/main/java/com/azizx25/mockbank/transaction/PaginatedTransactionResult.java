@@ -3,11 +3,11 @@ package com.azizx25.mockbank.transaction;
 import java.util.List;
 
 public record PaginatedTransactionResult(
-        List<TransactionSummary> transactions,
-        int pageNumber,
-        int pageSize,
+        List<TransactionSummary> items,
+        int page,
+        int size,
         long totalElements,
         int totalPages,
-        boolean hasNext,
-        boolean hasPrevious) {
+        boolean first,
+        boolean last) {
 }

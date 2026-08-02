@@ -2,7 +2,6 @@ package com.azizx25.mockbank.transaction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 public record TransactionSummary(
         String externalTransactionId,
@@ -13,6 +12,5 @@ public record TransactionSummary(
         String currency,
         String description,
         String counterpartyName,
-        String status,
-        OffsetDateTime createdAt) {
+        String status) {
 }

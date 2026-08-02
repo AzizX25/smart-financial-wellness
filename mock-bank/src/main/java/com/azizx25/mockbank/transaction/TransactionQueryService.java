@@ -7,14 +7,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.azizx25.mockbank.account.AccountOwnershipResolver;
 import com.azizx25.mockbank.account.persistence.BankAccount;
-import com.azizx25.mockbank.account.persistence.BankAccountRepository;
-import com.azizx25.mockbank.customer.persistence.BankCustomer;
-import com.azizx25.mockbank.customer.persistence.BankCustomerRepository;
-import com.azizx25.mockbank.exception.AccountNotFoundException;
-import com.azizx25.mockbank.exception.AccountNotOwnedException;
-import com.azizx25.mockbank.exception.CustomerNotFoundException;
 import com.azizx25.mockbank.exception.InvalidTransactionDateRangeException;
+import com.azizx25.mockbank.exception.InvalidTransactionPaginationException;
 import com.azizx25.mockbank.transaction.persistence.BankTransaction;
 import com.azizx25.mockbank.transaction.persistence.BankTransactionRepository;
 
@@ -22,16 +18,15 @@ import com.azizx25.mockbank.transaction.persistence.BankTransactionRepository;
 @Transactional(readOnly = true)
 public class TransactionQueryService {
 
-    private final BankCustomerRepository customerRepository;
-    private final BankAccountRepository accountRepository;
+    private static final int MAX_PAGE_SIZE = 100;
+
+    private final AccountOwnershipResolver accountOwnershipResolver;
     private final BankTransactionRepository transactionRepository;
 
     public TransactionQueryService(
-            BankCustomerRepository customerRepository,
-            BankAccountRepository accountRepository,
+            AccountOwnershipResolver accountOwnershipResolver,
             BankTransactionRepository transactionRepository) {
-        this.customerRepository = customerRepository;
-        this.accountRepository = accountRepository;
+        this.accountOwnershipResolver = accountOwnershipResolver;
         this.transactionRepository = transactionRepository;
     }
 
@@ -45,9 +40,12 @@ public class TransactionQueryService {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new InvalidTransactionDateRangeException();
         }
+        validatePagination(page, size);
 
         PageRequest pageRequest = PageRequest.of(page, size);
-        BankAccount account = resolveOwnedAccount(externalCustomerId, externalAccountId);
+        BankAccount account = accountOwnershipResolver.resolveOwnedAccount(
+                externalCustomerId,
+                externalAccountId);
         var transactionPage = findTransactions(account, fromDate, toDate, pageRequest);
 
         return new PaginatedTransactionResult(
@@ -56,8 +54,19 @@ public class TransactionQueryService {
                 transactionPage.getSize(),
                 transactionPage.getTotalElements(),
                 transactionPage.getTotalPages(),
-                transactionPage.hasNext(),
-                transactionPage.hasPrevious());
+                transactionPage.isFirst(),
+                transactionPage.isLast());
+    }
+
+    private void validatePagination(int page, int size) {
+        if (page < 0) {
+            throw new InvalidTransactionPaginationException(
+                    "Transaction page must be greater than or equal to 0");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new InvalidTransactionPaginationException(
+                    "Transaction size must be between 1 and " + MAX_PAGE_SIZE);
+        }
     }
 
     private Page<BankTransaction> findTransactions(
@@ -84,17 +93,6 @@ public class TransactionQueryService {
                 account.getId(), pageRequest);
     }
 
-    BankAccount resolveOwnedAccount(String externalCustomerId, String externalAccountId) {
-        BankCustomer customer = customerRepository.findByExternalCustomerId(externalCustomerId)
-                .orElseThrow(CustomerNotFoundException::new);
-        BankAccount account = accountRepository.findByExternalAccountId(externalAccountId)
-                .orElseThrow(AccountNotFoundException::new);
-        if (!account.getBankCustomerId().equals(customer.getId())) {
-            throw new AccountNotOwnedException();
-        }
-        return account;
-    }
-
     private TransactionSummary toSummary(BankTransaction transaction) {
         return new TransactionSummary(
                 transaction.getExternalTransactionId(),
@@ -105,7 +103,6 @@ public class TransactionQueryService {
                 transaction.getCurrency(),
                 transaction.getDescription(),
                 transaction.getCounterpartyName(),
-                transaction.getStatus(),
-                transaction.getCreatedAt());
+                transaction.getStatus());
     }
 }
