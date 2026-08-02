@@ -74,3 +74,38 @@ un autre client produit un JSON `404`; le dernier cas utilise toujours
 Les API de consentement, codes d'autorisation et jetons ne sont pas encore
 implémentées. Une autorisation simulée, légère et strictement en lecture seule
 sera ajoutée dans un incrément ultérieur.
+
+## Adaptateur interne du backend principal
+
+Le backend principal dispose désormais d'un port applicatif
+`ReadOnlyBankDataPort` et d'un adaptateur HTTP synchrone fondé sur `RestClient`.
+Il couvre exclusivement les quatre lectures existantes : liste des comptes,
+métadonnées d'un compte, solde et page de transactions. Ses résultats sont des
+records immuables appartenant au backend ; les DTO HTTP du fournisseur restent
+confinés dans le package d'infrastructure et aucune classe Java du mock-bank
+n'est importée.
+
+L'adaptateur encode chaque identifiant comme un segment de chemin, transmet
+explicitement la pagination, et omet `from` ou `to` lorsqu'ils sont absents.
+Les montants restent des `BigDecimal`, les dates de transaction des
+`LocalDate`, et les valeurs assimilables à des énumérations restent des chaînes
+afin d'éviter un couplage de code entre applications. Son décodeur JSON accepte
+les champs amont ajoutés ultérieurement sans relâcher la validation Jackson
+globale du backend.
+
+La configuration utilise `MOCK_BANK_BASE_URL` (défaut local
+`http://localhost:8081`), `MOCK_BANK_CONNECT_TIMEOUT` (défaut `2s`) et
+`MOCK_BANK_READ_TIMEOUT` (défaut `5s`). Dans Compose, le backend reçoit
+`http://mock-bank:8081`. Une URL non HTTP(S), relative ou contenant des
+identifiants, une requête ou un fragment, ainsi qu'un délai non positif,
+empêche le démarrage.
+
+Les erreurs sont séparées entre requête locale invalide, `404` amont, requête
+rejetée, indisponibilité réseau/serveur et violation du contrat de réponse.
+Seuls `Customer not found` et `Account not found` peuvent être repris depuis
+un corps `404`; aucun corps brut n'est propagé, aucun retry automatique n'est
+effectué et les données bancaires ne sont pas journalisées.
+
+Aucun contrôleur ou proxy public n'expose ce port. Le rattachement sécurisé
+entre utilisateur authentifié et client bancaire, ainsi que le consentement de
+lecture, restent des prérequis explicitement reportés.

@@ -4,6 +4,8 @@ import java.sql.Connection;
 
 import javax.sql.DataSource;
 
+import com.azizx25.smartfinancialwellness.bank.ReadOnlyBankDataPort;
+import com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankClientProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,8 +39,16 @@ class BackendApplicationTests {
     @Autowired
     private PostgreSQLContainer postgresContainer;
 
+    @Autowired
+    private ReadOnlyBankDataPort readOnlyBankDataPort;
+
+    @Autowired
+    private MockBankClientProperties mockBankClientProperties;
+
     @Test
     void contextLoads() {
+        assertThat(readOnlyBankDataPort).isNotNull();
+        assertThat(mockBankClientProperties.baseUrl().toString()).isEqualTo("http://localhost:8081");
     }
 
     @Test

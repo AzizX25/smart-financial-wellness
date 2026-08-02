@@ -90,6 +90,20 @@ Unknown customers or accounts return a consistent JSON `404`. An account owned
 by another customer also returns `404` with `Account not found`, preventing the
 response from confirming that the account exists.
 
+The core backend now contains an internal `ReadOnlyBankDataPort` implemented by
+a synchronous mock-bank HTTP adapter. It supports `listAccounts`, `getAccount`,
+`getBalance`, and `listTransactions` and maps responses to immutable,
+backend-owned records. The adapter keeps upstream HTTP DTOs private to its
+infrastructure package, uses finite connection/read timeouts, encodes IDs as
+path segments, and does not retry. It preserves only the safe upstream `404`
+messages `Customer not found` and `Account not found`; rejected requests,
+unavailability, and invalid successful responses use separate integration
+exception categories without retaining raw response bodies.
+
+This adapter is intentionally not exposed through a backend controller or
+proxy. Authenticated user-to-bank-customer linking and read consent must be
+implemented before application users can access bank data.
+
 The React frontend's financial screens remain a demonstrable UI prototype
 backed by centralized simulated data. The authentication onboarding screens
 call only the core backend; the frontend does not call the mock bank. See the [prototype guide](docs/prototype-ui.md), the
@@ -167,6 +181,23 @@ Docker Compose supplies the mock-bank process with `DB_URL`, `DB_USERNAME`, and
 `DB_PASSWORD` from the `MOCK_BANK_DB_*` settings. The application does not have
 a fallback database password.
 
+To run both Spring Boot applications as containers, build only their images and
+start their required services:
+
+```powershell
+docker compose build backend mock-bank
+docker compose up -d postgres mock-bank-db mock-bank backend
+docker compose ps postgres mock-bank-db mock-bank backend
+```
+
+The backend container always uses `http://mock-bank:8081`, the Compose service
+hostname, rather than `localhost`. Stop only this group without deleting its
+named database volumes:
+
+```powershell
+docker compose stop backend mock-bank mock-bank-db postgres
+```
+
 The root `.env` file configures Docker Compose through the main `DB_*`,
 `MOCK_BANK_DB_*`, and port settings. Spring Boot does not automatically load
 this file when either application is started with Maven.
@@ -187,11 +218,26 @@ $env:SMTP_STARTTLS_ENABLE = "false"
 $env:EMAIL_SENDER_ADDRESS = "no-reply@smart-financial-wellness.local"
 $env:EMAIL_SENDER_NAME = "Mon Equilibre"
 $env:FRONTEND_BASE_URL = "http://localhost:5173"
+$env:MOCK_BANK_BASE_URL = "http://localhost:8081"
+$env:MOCK_BANK_CONNECT_TIMEOUT = "2s"
+$env:MOCK_BANK_READ_TIMEOUT = "5s"
 Set-Location backend
 mvn spring-boot:run
 ```
 
 Adjust the database URL, username, and SMTP port if their Compose values were changed. The generated JWT secret is temporary for that PowerShell process; production must inject a securely managed secret. No dotenv dependency is required. See the [authentication and profile API guide](docs/api/authentication-profile.md) for all optional security and email settings and endpoint behavior.
+
+The mock-bank client settings are:
+
+| Spring property | Environment variable | Local default |
+| --- | --- | --- |
+| `app.integrations.mock-bank.base-url` | `MOCK_BANK_BASE_URL` | `http://localhost:8081` |
+| `app.integrations.mock-bank.connect-timeout` | `MOCK_BANK_CONNECT_TIMEOUT` | `2s` |
+| `app.integrations.mock-bank.read-timeout` | `MOCK_BANK_READ_TIMEOUT` | `5s` |
+
+The base URL must be an absolute HTTP(S) URL without embedded credentials,
+query, or fragment. Both timeouts must be positive; invalid configuration stops
+backend startup.
 
 Running `mvn test` from `backend` starts an isolated `postgres:17-alpine` Testcontainer automatically. Docker is the only external test prerequisite; the local Compose database is not used by the tests.
 
