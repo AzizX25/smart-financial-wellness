@@ -64,12 +64,12 @@ class DatabaseMigrationTests {
                         + "AND NOT t.tgisinternal",
                 Integer.class);
 
-        assertThat(successfulMigrations).isEqualTo(15);
+        assertThat(successfulMigrations).isEqualTo(16);
         assertThat(applicationTables).isEqualTo(46);
         assertThat(constraints).isEqualTo(371);
         assertThat(indexes).isEqualTo(136);
-        assertThat(functions).isEqualTo(37);
-        assertThat(triggers).isEqualTo(64);
+        assertThat(functions).isEqualTo(38);
+        assertThat(triggers).isEqualTo(65);
     }
 
     @Test
