@@ -10,6 +10,21 @@ final class MockBankHttpDtos {
     private MockBankHttpDtos() {
     }
 
+    record LoginRequest(String username, String password) {
+
+        @Override
+        public String toString() {
+            return "LoginRequest[username=" + username + ", password=<redacted>]";
+        }
+    }
+
+    record LoginResponse(
+            String accessToken,
+            String tokenType,
+            OffsetDateTime expiresAt,
+            String customerId) {
+    }
+
     record AccountResponse(
             String externalAccountId,
             String displayName,

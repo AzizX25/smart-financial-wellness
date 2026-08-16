@@ -539,9 +539,9 @@ class DatabaseMigrationTests {
         jdbcTemplate.update(
                 "INSERT INTO " + SCHEMA + "financial_account "
                         + "(id, user_id, bank_connection_id, account_origin, external_account_id, name, "
-                        + "masked_identifier, account_type, currency) "
+                        + "masked_identifier, account_type, currency, provider_code) "
                         + "VALUES (?, ?, ?, 'BANK_CONNECTION', ?, 'Mock bank account', '****1234', "
-                        + "'CHECKING', ?)",
+                        + "'CHECKING', ?, 'MOCK_BANK')",
                 accountId,
                 userId,
                 connectionId,
@@ -616,9 +616,11 @@ class DatabaseMigrationTests {
                 "INSERT INTO " + SCHEMA + "transaction_record "
                         + "(id, user_id, financial_account_id, category_id, source_type, sync_job_id, "
                         + "external_transaction_id, fingerprint, booking_date, amount, direction, currency, "
-                        + "raw_description, normalized_description, category_source) "
+                        + "raw_description, normalized_description, category_source, provider_status, "
+                        + "first_imported_at, last_synchronized_at) "
                         + "VALUES (?, ?, ?, ?, 'BANK_SYNC', ?, ?, ?, CURRENT_DATE, 40, 'DEBIT', 'TND', "
-                        + "'Bank transaction', 'bank transaction', 'UNCATEGORIZED')",
+                        + "'Bank transaction', 'bank transaction', 'UNCATEGORIZED', 'POSTED', "
+                        + "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                 UUID.randomUUID(),
                 userId,
                 accountId,
@@ -632,8 +634,8 @@ class DatabaseMigrationTests {
         UUID categoryId = UUID.randomUUID();
         jdbcTemplate.update(
                 "INSERT INTO " + SCHEMA + "category "
-                        + "(id, user_id, parent_id, code, label, taxonomy_version, direction) "
-                        + "VALUES (?, ?, ?, ?, ?, 'user-v1', 'BOTH')",
+                        + "(id, user_id, parent_id, code, label, taxonomy_version, direction, nature) "
+                        + "VALUES (?, ?, ?, ?, ?, 'user-v1', 'DEBIT', 'EXPENSE')",
                 categoryId,
                 userId,
                 parentId,

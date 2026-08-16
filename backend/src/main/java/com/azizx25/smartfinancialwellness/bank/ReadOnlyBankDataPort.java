@@ -9,14 +9,14 @@ import com.azizx25.smartfinancialwellness.bank.model.ExternalBankTransactionPage
 
 public interface ReadOnlyBankDataPort {
 
-    List<ExternalBankAccount> listAccounts(String customerId);
+    List<ExternalBankAccount> listAccounts(BankAccessCredentials credentials);
 
-    ExternalBankAccount getAccount(String customerId, String accountId);
+    ExternalBankAccount getAccount(BankAccessCredentials credentials, String accountId);
 
-    ExternalBankBalance getBalance(String customerId, String accountId);
+    ExternalBankBalance getBalance(BankAccessCredentials credentials, String accountId);
 
     ExternalBankTransactionPage listTransactions(
-            String customerId,
+            BankAccessCredentials credentials,
             String accountId,
             LocalDate from,
             LocalDate to,

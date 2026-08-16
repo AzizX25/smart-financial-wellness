@@ -9,16 +9,23 @@ public record ApiError(
         Instant timestamp,
         int status,
         String error,
+        String code,
         String message,
         String path,
         Map<String, String> fieldErrors) {
 
     public static ApiError of(HttpStatus status, String message, String path) {
-        return new ApiError(Instant.now(), status.value(), status.getReasonPhrase(), message, path, Map.of());
+        return of(status, null, message, path);
+    }
+
+    public static ApiError of(HttpStatus status, String code, String message, String path) {
+        return new ApiError(
+                Instant.now(), status.value(), status.getReasonPhrase(), code, message, path, Map.of());
     }
 
     public static ApiError validation(String message, String path, Map<String, String> fieldErrors) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        return new ApiError(Instant.now(), status.value(), status.getReasonPhrase(), message, path, fieldErrors);
+        return new ApiError(
+                Instant.now(), status.value(), status.getReasonPhrase(), null, message, path, fieldErrors);
     }
 }

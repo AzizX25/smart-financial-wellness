@@ -26,6 +26,16 @@ public class AuditService {
                 Map.of()));
     }
 
+    public void recordFailure(UUID userId, String action, String resourceType, UUID resourceId) {
+        repository.save(new AuditLogEntry(
+                userId,
+                action,
+                resourceType,
+                resourceId,
+                AuditLogEntry.Outcome.FAILED,
+                Map.of()));
+    }
+
     public void recordSystem(
             String action,
             String resourceType,

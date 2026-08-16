@@ -5,8 +5,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.azizx25.smartfinancialwellness.bank.BankAccessCredentials;
+import com.azizx25.smartfinancialwellness.bank.MockBankAuthenticationPort;
 import com.azizx25.smartfinancialwellness.bank.ReadOnlyBankDataPort;
 import com.azizx25.smartfinancialwellness.bank.exception.InvalidBankRequestException;
+import com.azizx25.smartfinancialwellness.bank.exception.InvalidMockBankCredentialsException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankAuthenticationException;
 import com.azizx25.smartfinancialwellness.bank.exception.MockBankNotFoundException;
 import com.azizx25.smartfinancialwellness.bank.exception.MockBankProtocolException;
 import com.azizx25.smartfinancialwellness.bank.exception.MockBankRejectedRequestException;
@@ -29,10 +33,12 @@ import tools.jackson.databind.json.JsonMapper;
 import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.AccountResponse;
 import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.BalanceResponse;
 import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.ErrorResponse;
+import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.LoginRequest;
+import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.LoginResponse;
 import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.TransactionPageResponse;
 import static com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank.MockBankHttpDtos.TransactionResponse;
 
-final class MockBankHttpClient implements ReadOnlyBankDataPort {
+final class MockBankHttpClient implements ReadOnlyBankDataPort, MockBankAuthenticationPort {
 
     private static final String CUSTOMER_NOT_FOUND = "Customer not found";
     private static final String ACCOUNT_NOT_FOUND = "Account not found";
@@ -49,12 +55,39 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
     }
 
     @Override
-    public List<ExternalBankAccount> listAccounts(String customerId) {
-        validateIdentifier(customerId, "customerId");
+    public BankLoginResult login(String username, String password) {
+        validateIdentifier(username, "username");
+        validateIdentifier(password, "password");
+        LoginResponse response = execute(() -> restClient.post()
+                .uri("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(new LoginRequest(username, password))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleLoginError)
+                .body(LoginResponse.class));
+        requireContractField(response);
+        requireContractField(response.accessToken());
+        requireContractField(response.tokenType());
+        requireContractField(response.expiresAt());
+        requireContractField(response.customerId());
+        if (!"Bearer".equals(response.tokenType())) {
+            throw new MockBankProtocolException();
+        }
+        return new BankLoginResult(
+                response.customerId(),
+                response.accessToken(),
+                response.expiresAt().toInstant());
+    }
+
+    @Override
+    public List<ExternalBankAccount> listAccounts(BankAccessCredentials credentials) {
+        validateCredentials(credentials);
         List<AccountResponse> response = execute(() -> restClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .pathSegment("api", "v1", "customers", customerId, "accounts")
+                        .pathSegment("api", "v1", "customers", credentials.customerId(), "accounts")
                         .build())
+                .headers(headers -> headers.setBearerAuth(credentials.accessToken()))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -66,12 +99,16 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
     }
 
     @Override
-    public ExternalBankAccount getAccount(String customerId, String accountId) {
-        validateIdentifiers(customerId, accountId);
+    public ExternalBankAccount getAccount(BankAccessCredentials credentials, String accountId) {
+        validateCredentials(credentials);
+        validateIdentifier(accountId, "accountId");
         AccountResponse response = execute(() -> restClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .pathSegment("api", "v1", "customers", customerId, "accounts", accountId)
+                        .pathSegment(
+                                "api", "v1", "customers", credentials.customerId(),
+                                "accounts", accountId)
                         .build())
+                .headers(headers -> headers.setBearerAuth(credentials.accessToken()))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -80,14 +117,16 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
     }
 
     @Override
-    public ExternalBankBalance getBalance(String customerId, String accountId) {
-        validateIdentifiers(customerId, accountId);
+    public ExternalBankBalance getBalance(BankAccessCredentials credentials, String accountId) {
+        validateCredentials(credentials);
+        validateIdentifier(accountId, "accountId");
         BalanceResponse response = execute(() -> restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .pathSegment(
-                                "api", "v1", "customers", customerId,
+                                "api", "v1", "customers", credentials.customerId(),
                                 "accounts", accountId, "balance")
                         .build())
+                .headers(headers -> headers.setBearerAuth(credentials.accessToken()))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -97,19 +136,20 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
 
     @Override
     public ExternalBankTransactionPage listTransactions(
-            String customerId,
+            BankAccessCredentials credentials,
             String accountId,
             LocalDate from,
             LocalDate to,
             int page,
             int size) {
-        validateIdentifiers(customerId, accountId);
+        validateCredentials(credentials);
+        validateIdentifier(accountId, "accountId");
         validateTransactionRequest(from, to, page, size);
 
         TransactionPageResponse response = execute(() -> restClient.get()
                 .uri(uriBuilder -> {
                     var builder = uriBuilder.pathSegment(
-                            "api", "v1", "customers", customerId,
+                            "api", "v1", "customers", credentials.customerId(),
                             "accounts", accountId, "transactions");
                     if (from != null) {
                         builder.queryParam("from", from);
@@ -122,6 +162,7 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
                             .queryParam("size", size)
                             .build();
                 })
+                .headers(headers -> headers.setBearerAuth(credentials.accessToken()))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -133,6 +174,8 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
         try {
             return request.get();
         } catch (MockBankNotFoundException
+                | InvalidMockBankCredentialsException
+                | MockBankAuthenticationException
                 | MockBankRejectedRequestException
                 | MockBankUnavailableException
                 | MockBankProtocolException exception) {
@@ -144,10 +187,29 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
         }
     }
 
+    private void handleLoginError(
+            org.springframework.http.HttpRequest request,
+            ClientHttpResponse response) throws IOException {
+        HttpStatusCode status = response.getStatusCode();
+        if (status.value() == 401) {
+            throw new InvalidMockBankCredentialsException();
+        }
+        if (status.is5xxServerError()) {
+            throw new MockBankUnavailableException();
+        }
+        if (status.is4xxClientError()) {
+            throw new MockBankRejectedRequestException();
+        }
+        throw new MockBankProtocolException();
+    }
+
     private void handleError(
             org.springframework.http.HttpRequest request,
             ClientHttpResponse response) throws IOException {
         HttpStatusCode status = response.getStatusCode();
+        if (status.value() == 401 || status.value() == 403) {
+            throw new MockBankAuthenticationException();
+        }
         if (status.value() == 404) {
             throw new MockBankNotFoundException(readSafeNotFoundMessage(response));
         }
@@ -265,9 +327,12 @@ final class MockBankHttpClient implements ReadOnlyBankDataPort {
         }
     }
 
-    private static void validateIdentifiers(String customerId, String accountId) {
-        validateIdentifier(customerId, "customerId");
-        validateIdentifier(accountId, "accountId");
+    private static void validateCredentials(BankAccessCredentials credentials) {
+        if (credentials == null) {
+            throw new InvalidBankRequestException("bank access credentials must not be null");
+        }
+        validateIdentifier(credentials.customerId(), "customerId");
+        validateIdentifier(credentials.accessToken(), "accessToken");
     }
 
     private static void validateIdentifier(String value, String name) {

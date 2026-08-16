@@ -2,7 +2,6 @@ package com.azizx25.smartfinancialwellness.bank.infrastructure.mockbank;
 
 import java.net.http.HttpClient;
 
-import com.azizx25.smartfinancialwellness.bank.ReadOnlyBankDataPort;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +16,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class MockBankClientConfiguration {
 
     @Bean
-    ReadOnlyBankDataPort mockBankReadOnlyBankDataPort(
+    MockBankHttpClient mockBankHttpClient(
             JsonMapper applicationJsonMapper,
             MockBankClientProperties properties) {
         JsonMapper tolerantJsonMapper = tolerantJsonMapper(applicationJsonMapper);

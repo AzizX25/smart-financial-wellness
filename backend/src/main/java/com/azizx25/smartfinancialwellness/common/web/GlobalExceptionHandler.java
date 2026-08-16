@@ -5,6 +5,13 @@ import java.util.Map;
 
 import com.azizx25.smartfinancialwellness.auth.RefreshCookieService;
 import com.azizx25.smartfinancialwellness.auth.RefreshTokenException;
+import com.azizx25.smartfinancialwellness.bank.exception.InvalidBankRequestException;
+import com.azizx25.smartfinancialwellness.bank.exception.InvalidMockBankCredentialsException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankAuthenticationException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankNotFoundException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankProtocolException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankRejectedRequestException;
+import com.azizx25.smartfinancialwellness.bank.exception.MockBankUnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -16,6 +23,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,7 +48,71 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiError> handleApiException(ApiException exception, HttpServletRequest request) {
         return ResponseEntity.status(exception.getStatus())
-                .body(ApiError.of(exception.getStatus(), exception.getMessage(), request.getRequestURI()));
+                .body(ApiError.of(
+                        exception.getStatus(),
+                        exception.getCode(),
+                        exception.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidMockBankCredentialsException.class)
+    ResponseEntity<ApiError> handleInvalidBankCredentials(
+            InvalidMockBankCredentialsException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ApiError.of(
+                        HttpStatus.UNPROCESSABLE_CONTENT,
+                        exception.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MockBankAuthenticationException.class)
+    ResponseEntity<ApiError> handleMockBankAuthentication(
+            MockBankAuthenticationException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(
+                        HttpStatus.CONFLICT,
+                        "Mock-bank reconnection is required",
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MockBankNotFoundException.class)
+    ResponseEntity<ApiError> handleMockBankNotFound(
+            MockBankNotFoundException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.of(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler({InvalidBankRequestException.class, MockBankRejectedRequestException.class})
+    ResponseEntity<ApiError> handleInvalidBankRequest(
+            RuntimeException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MockBankUnavailableException.class)
+    ResponseEntity<ApiError> handleMockBankUnavailable(
+            MockBankUnavailableException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiError.of(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        exception.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MockBankProtocolException.class)
+    ResponseEntity<ApiError> handleMockBankProtocol(
+            MockBankProtocolException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiError.of(
+                        HttpStatus.BAD_GATEWAY,
+                        exception.getMessage(),
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -71,6 +143,17 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> handleUnreadableBody(HttpServletRequest request) {
         return ResponseEntity.badRequest()
                 .body(ApiError.of(HttpStatus.BAD_REQUEST, "Request body is invalid", request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiError> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid value for request parameter '" + exception.getName() + "'",
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
