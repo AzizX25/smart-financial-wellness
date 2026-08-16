@@ -24,6 +24,12 @@ public class BankCustomer {
     @Column(name = "display_name", nullable = false, length = 160)
     private String displayName;
 
+    @Column(nullable = false, unique = true, length = 80)
+    private String username;
+
+    @Column(name = "password_hash", nullable = false, length = 100)
+    private String passwordHash;
+
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "country_code", nullable = false, length = 2)
     private String countryCode;
@@ -35,6 +41,23 @@ public class BankCustomer {
     private OffsetDateTime createdAt;
 
     protected BankCustomer() {
+    }
+
+    public BankCustomer(
+            String externalCustomerId,
+            String displayName,
+            String username,
+            String passwordHash,
+            String countryCode,
+            OffsetDateTime createdAt) {
+        this.id = UUID.randomUUID();
+        this.externalCustomerId = externalCustomerId;
+        this.displayName = displayName;
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.countryCode = countryCode;
+        this.status = "ACTIVE";
+        this.createdAt = createdAt;
     }
 
     public UUID getId() {
@@ -49,6 +72,14 @@ public class BankCustomer {
         return displayName;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
     public String getCountryCode() {
         return countryCode;
     }
@@ -59,5 +90,23 @@ public class BankCustomer {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void updateProfile(String displayName, String username, String countryCode) {
+        this.displayName = displayName;
+        this.username = username;
+        this.countryCode = countryCode;
+    }
+
+    public void resetPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void activate() {
+        this.status = "ACTIVE";
+    }
+
+    public void deactivate() {
+        this.status = "INACTIVE";
     }
 }

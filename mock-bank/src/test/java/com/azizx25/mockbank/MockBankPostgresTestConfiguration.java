@@ -9,12 +9,17 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 class MockBankPostgresTestConfiguration {
 
+    private static final String TEST_JWT_SECRET =
+            "bW9jay1iYW5rLXRlc3Qtb25seS0zMi1ieXRlLXNlY3JldCEhIQ==";
+
     @Bean
     static DynamicPropertyRegistrar testProperties() {
         return registry -> {
             registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
             registry.add("spring.datasource.password", () -> "test_password");
             registry.add("server.port", () -> 0);
+            registry.add("app.security.jwt.secret", () -> TEST_JWT_SECRET);
+            registry.add("app.security.bcrypt-strength", () -> 4);
         };
     }
 

@@ -66,8 +66,25 @@ services:
       DB_URL: jdbc:postgresql://mock-bank-db:5432/${MOCK_BANK_DB_NAME:-mock_bank}
       DB_USERNAME: ${MOCK_BANK_DB_USERNAME:-mock_bank}
       DB_PASSWORD: ${MOCK_BANK_DB_PASSWORD:?MOCK_BANK_DB_PASSWORD must be set}
+      MOCK_BANK_JWT_SECRET: ${MOCK_BANK_JWT_SECRET:?MOCK_BANK_JWT_SECRET must be set}
+      MOCK_BANK_JWT_ISSUER: ${MOCK_BANK_JWT_ISSUER:-smart-financial-wellness-mock-bank}
+      MOCK_BANK_JWT_AUDIENCE: ${MOCK_BANK_JWT_AUDIENCE:-smart-financial-wellness-backend}
+      MOCK_BANK_ACCESS_TOKEN_TTL: ${MOCK_BANK_ACCESS_TOKEN_TTL:-10m}
+      MOCK_BANK_ADMIN_ACCESS_TOKEN_TTL: ${MOCK_BANK_ADMIN_ACCESS_TOKEN_TTL:-15m}
+      MOCK_BANK_ADMIN_UI_ORIGIN: ${MOCK_BANK_ADMIN_UI_ORIGIN:-http://localhost:5174}
     ports:
       - "${MOCK_BANK_PORT:-8081}:8081"
+
+  mock-bank-ui:
+    build:
+      context: ./mock-bank-ui
+      args:
+        VITE_MOCK_BANK_API_URL: ${MOCK_BANK_ADMIN_API_URL:-http://localhost:8081}
+    depends_on:
+      mock-bank:
+        condition: service_started
+    ports:
+      - "${MOCK_BANK_UI_PORT:-5174}:80"
 
 volumes:
   postgres-data:

@@ -50,6 +50,25 @@ public class BankAccount {
     protected BankAccount() {
     }
 
+    public BankAccount(
+            UUID bankCustomerId,
+            String externalAccountId,
+            String displayName,
+            String accountType,
+            String currency,
+            OffsetDateTime createdAt) {
+        this.id = UUID.randomUUID();
+        this.bankCustomerId = bankCustomerId;
+        this.externalAccountId = externalAccountId;
+        this.displayName = displayName;
+        this.accountType = accountType;
+        this.currency = currency;
+        this.currentBalance = BigDecimal.ZERO.setScale(4);
+        this.availableBalance = BigDecimal.ZERO.setScale(4);
+        this.status = "ACTIVE";
+        this.createdAt = createdAt;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -88,5 +107,32 @@ public class BankAccount {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void updateDetails(String displayName, String accountType) {
+        this.displayName = displayName;
+        this.accountType = accountType;
+    }
+
+    public void activate() {
+        this.status = "ACTIVE";
+    }
+
+    public void freeze() {
+        this.status = "INACTIVE";
+    }
+
+    public void close() {
+        this.status = "CLOSED";
+    }
+
+    public void applyCredit(BigDecimal amount) {
+        this.currentBalance = currentBalance.add(amount);
+        this.availableBalance = availableBalance.add(amount);
+    }
+
+    public void applyDebit(BigDecimal amount) {
+        this.currentBalance = currentBalance.subtract(amount);
+        this.availableBalance = availableBalance.subtract(amount);
     }
 }

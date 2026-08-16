@@ -57,6 +57,30 @@ public class BankTransaction {
     protected BankTransaction() {
     }
 
+    public BankTransaction(
+            UUID bankAccountId,
+            String externalTransactionId,
+            LocalDate bookingDate,
+            BigDecimal amount,
+            String direction,
+            String currency,
+            String description,
+            String counterpartyName,
+            OffsetDateTime createdAt) {
+        this.id = UUID.randomUUID();
+        this.bankAccountId = bankAccountId;
+        this.externalTransactionId = externalTransactionId;
+        this.bookingDate = bookingDate;
+        this.valueDate = bookingDate;
+        this.amount = amount;
+        this.direction = direction;
+        this.currency = currency;
+        this.description = description;
+        this.counterpartyName = counterpartyName;
+        this.status = "POSTED";
+        this.createdAt = createdAt;
+    }
+
     public UUID getId() {
         return id;
     }

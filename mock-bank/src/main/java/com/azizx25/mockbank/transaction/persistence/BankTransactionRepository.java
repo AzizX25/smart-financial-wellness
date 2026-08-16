@@ -9,6 +9,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BankTransactionRepository extends JpaRepository<BankTransaction, UUID> {
 
+    long countByStatus(String status);
+
+    Page<BankTransaction> findAllByOrderByBookingDateDescCreatedAtDesc(Pageable pageable);
+
     Page<BankTransaction> findByBankAccountIdOrderByBookingDateDescExternalTransactionIdDesc(
             UUID bankAccountId,
             Pageable pageable);

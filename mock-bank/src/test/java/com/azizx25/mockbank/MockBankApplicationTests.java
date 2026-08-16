@@ -98,7 +98,7 @@ class MockBankApplicationTests {
                         + "AND table_type = 'BASE TABLE' AND table_name <> 'flyway_schema_history'",
                 String.class));
 
-        assertThat(successfulVersions).containsExactly("1", "2");
+        assertThat(successfulVersions).containsExactly("1", "2", "3", "4");
         assertThat(applicationTables).containsExactlyInAnyOrder(
                 "bank_customer",
                 "oauth_client",
@@ -106,7 +106,8 @@ class MockBankApplicationTests {
                 "bank_transaction",
                 "bank_consent",
                 "authorization_code",
-                "access_token");
+                "access_token",
+                "bank_administrator");
     }
 
     @Test
@@ -204,7 +205,7 @@ class MockBankApplicationTests {
                 "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'mock_bank'",
                 Integer.class);
 
-        assertThat(mockBankTables).isEqualTo(8);
+        assertThat(mockBankTables).isEqualTo(9);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT to_regclass('smart_financial_wellness.flyway_schema_history')",
                 String.class)).isNull();

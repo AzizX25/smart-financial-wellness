@@ -1,7 +1,6 @@
 package com.azizx25.mockbank;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
@@ -16,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(MockBankPostgresTestConfiguration.class)
-class AccountControllerIntegrationTests {
+class AccountControllerIntegrationTests extends AuthenticatedMockBankIntegrationTest {
 
     private static final String FIRST_CUSTOMER = "MOCK-CUST-001";
     private static final String FIRST_ACCOUNT = "MOCK-ACC-001";
@@ -24,9 +23,6 @@ class AccountControllerIntegrationTests {
     private static final String SECOND_CUSTOMER_ACCOUNT = "MOCK-ACC-003";
     private static final String UNKNOWN_CUSTOMER = "MOCK-CUST-999";
     private static final String UNKNOWN_ACCOUNT = "MOCK-ACC-999";
-
-    @Autowired
-    private MockMvc mockMvc;
 
     @Test
     void listAccountsReturnsOwnedAccountsInDeterministicOrder() throws Exception {
