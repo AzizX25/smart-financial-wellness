@@ -145,3 +145,69 @@ After reviewing `01_data_audit.ipynb`, record your decisions in its TODO cells:
 - how dataset configuration, evaluation results, and any future artifact will be versioned.
 
 No current source file makes those choices, and no model artifact is produced.
+
+## Baseline-model experiment workflow
+
+`notebooks/02_baseline_models.ipynb` is the manual validation and model-selection workspace for the residual target. It compares four fixed candidates without hyperparameter search:
+
+- residual-zero deterministic reference;
+- Ridge with scaled numeric inputs;
+- Huber regression with scaled numeric inputs;
+- shallow, regularized histogram gradient boosting with a fixed seed.
+
+The centralized feature contract is versioned as `forecast-residual-features-v1`. All learned preprocessing is inside scikit-learn pipelines and is fitted on training data only. Calendar month becomes explicit sine/cosine features. `deterministic_fallback_reason` is one-hot encoded with fixed categories. Identity columns, currency, raw target dates, dataset version, realized outcomes, and `residual_target` never enter the feature matrix.
+
+The default chronological boundaries are fixed and are never inferred from the data:
+
+```text
+Training:   2024-01 through 2025-06
+Validation: 2025-07 through 2025-09
+Test:       2025-10 through 2025-12
+```
+
+Every cutoff from one profile-month stays in one partition. Validation may be inspected repeatedly during development. Test rows remain behind a one-use guard until a known candidate name is selected and `MODEL_SELECTION_FROZEN` is exactly `True`.
+
+Use these PowerShell commands and steps:
+
+```powershell
+Set-Location .\ml-pipeline
+.\.venv\Scripts\Activate.ps1
+
+# Install the updated local dependencies, including scikit-learn.
+python -m pip install -e ".[test]"
+
+# Rebuild the processed dataset only when the raw input or builder configuration changed.
+python .\scripts\build_training_dataset.py `
+  --input .\data\raw\synthetic_transactions.csv `
+  --output .\data\processed\forecast_residual_examples.csv `
+  --as-of 2026-01-01 `
+  --cutoffs 5,10,15,20,25
+
+$env:FORECAST_PROCESSED_DATA = ".\data\processed\forecast_residual_examples.csv"
+$env:FORECAST_EXPERIMENT_CURRENCY = "TND"
+jupyter lab .\notebooks\02_baseline_models.ipynb
+```
+
+Inside the notebook:
+
+1. Run sections 1–18 to inspect training and validation behavior only.
+2. Complete every TODO in section 19, including the day-25 and synthetic-data limitations.
+3. Record the selected candidate and the validation-only reason for choosing it.
+4. Confirm in writing that the choice was made before test results were viewed.
+5. Edit the configuration cell so `SELECTED_MODEL_NAME` exactly matches a known candidate.
+6. Set `MODEL_SELECTION_FROZEN = True`.
+7. Execute section 20 exactly once. It recreates the selected pipeline, fits training+validation, and opens the untouched test partition.
+8. Do not revise the model choice using test results and do not export the fitted pipeline.
+
+Run the unit tests and clear all notebook outputs before a future commit:
+
+```powershell
+python -m pytest
+
+jupyter nbconvert `
+  --ClearOutputPreprocessor.enabled=True `
+  --inplace `
+  .\notebooks\02_baseline_models.ipynb
+```
+
+Five cutoff observations from a profile-month are correlated; row count is not the number of independent monthly observations. Full-dataset EDA metrics—including any global deterministic improvement—are descriptive, not validation metrics. Synthetic-data results do not prove production accuracy, and real pseudonymized data must be evaluated later with a separately frozen protocol. This increment produces no trained artifact.
