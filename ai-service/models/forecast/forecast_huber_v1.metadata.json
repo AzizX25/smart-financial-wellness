@@ -1,0 +1,105 @@
+{
+  "artifactSha256": "fa286c88243521755e154961ea8668efbfe3d57312efb50afc47b34f38e217c6",
+  "createdAtUtc": "2026-08-18T18:04:57.040557Z",
+  "currency": "TND",
+  "datasetVersion": "forecast-residual-v1",
+  "dependencies": {
+    "joblib": "1.5.3",
+    "numpy": "2.5.2",
+    "pandas": "2.3.3",
+    "scikitLearn": "1.9.0"
+  },
+  "excludedTestPeriod": {
+    "end": "2025-12",
+    "start": "2025-10"
+  },
+  "experimental": true,
+  "featureContractVersion": "forecast-residual-features-v1",
+  "featureOrder": [
+    "calendar_month_sin",
+    "calendar_month_cos",
+    "cutoff_day",
+    "days_remaining",
+    "month_to_date_credit",
+    "month_to_date_debit",
+    "month_to_date_net_flow",
+    "month_to_date_transaction_count",
+    "trailing_six_month_credit",
+    "trailing_six_month_debit",
+    "trailing_six_month_net_flow",
+    "historical_remaining_net_flow_range",
+    "deterministic_remaining_income",
+    "deterministic_remaining_expense",
+    "deterministic_remaining_net_flow",
+    "usable_history_count",
+    "deterministic_fallback_reason"
+  ],
+  "fittedPeriod": {
+    "end": "2025-09",
+    "rowCount": 525,
+    "start": "2024-01"
+  },
+  "frozenTestMetrics": {
+    "deterministicMae": 344.948136,
+    "improvementByCutoff": {
+      "10": 5.824223,
+      "15": 7.283011,
+      "20": 11.480422,
+      "25": -19.620741,
+      "5": 3.475886
+    },
+    "improvementPercentage": 4.894158,
+    "mae": 328.065829,
+    "medianAbsoluteError": 186.662423,
+    "rmse": 467.627051,
+    "rowCount": 75,
+    "signedMeanError": -168.558884
+  },
+  "frozenValidationMetrics": {
+    "deterministicMae": 467.654909,
+    "improvementPercentage": 6.276033,
+    "mae": 438.304734,
+    "medianAbsoluteError": 247.072835,
+    "rmse": 632.494369,
+    "rowCount": 75,
+    "signedMeanError": -33.970681
+  },
+  "generator": {
+    "asOfDate": "2026-01-01",
+    "currency": "TND",
+    "cutoffDays": [
+      5,
+      10,
+      15,
+      20,
+      25
+    ],
+    "endMonth": "2025-12",
+    "profiles": 5,
+    "seed": 20260816,
+    "startMonth": "2024-01"
+  },
+  "guaranteed": false,
+  "hyperparameters": {
+    "alpha": 0.0001,
+    "epsilon": 1.35,
+    "maxIter": 1000,
+    "tol": 1e-05
+  },
+  "modelId": "forecast-huber-synthetic-tnd",
+  "modelType": "HuberRegressor",
+  "modelVersion": "1.0.0",
+  "processedDatasetSha256": "763e102ae5b7bc71a6add3603fd5d7a99b231969c9bec2fb17e7451065cf2dbc",
+  "pythonVersion": "3.12.1",
+  "randomSeed": 20260818,
+  "rawDatasetSha256": "943a56e8f9ce8de7059fef336c818f23dae7f6845655df5aa437556bfd1b8139",
+  "syntheticTrainingData": true,
+  "trainingPeriod": {
+    "end": "2025-06",
+    "start": "2024-01"
+  },
+  "validationPeriodIncludedInFinalFit": {
+    "end": "2025-09",
+    "start": "2025-07"
+  }
+}

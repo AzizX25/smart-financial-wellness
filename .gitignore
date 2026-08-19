@@ -84,6 +84,7 @@ compose.override.yaml
 *.pkl
 *.pickle
 *.joblib
+!ai-service/models/forecast/*.joblib
 *.onnx
 *.pt
 *.pth

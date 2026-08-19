@@ -89,6 +89,11 @@ class GuardedTemporalSplit:
             )
         return pd.DataFrame(rows)
 
+    @property
+    def test_period_start(self) -> pd.Period:
+        """Expose only the boundary needed to prove final fitting excludes test rows."""
+        return self.__test.context["target_month"].min()
+
     def release_test_set(
         self,
         *,

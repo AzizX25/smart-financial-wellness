@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-financial-wellness-ai-service"
+version = "0.1.0"
+description = "Trusted inference boundary for the experimental Forecast residual model"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.116,<1",
+    "joblib==1.5.3",
+    "numpy==2.5.2",
+    "pandas==2.3.3",
+    "pydantic>=2.11,<3",
+    "scikit-learn==1.9.0",
+    "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+test = [
+    "httpx>=0.28,<1",
+    "pytest>=8.3,<9",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
