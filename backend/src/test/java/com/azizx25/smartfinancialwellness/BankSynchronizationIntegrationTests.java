@@ -3,12 +3,19 @@ package com.azizx25.smartfinancialwellness;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.azizx25.smartfinancialwellness.bank.model.ExternalBankTransaction;
+import com.azizx25.smartfinancialwellness.bank.persistence.BalanceSnapshot;
+import com.azizx25.smartfinancialwellness.bank.persistence.BalanceSnapshotRepository;
+import com.azizx25.smartfinancialwellness.bank.persistence.FinancialAccount;
+import com.azizx25.smartfinancialwellness.bank.persistence.FinancialAccountRepository;
+import com.azizx25.smartfinancialwellness.bank.persistence.SyncJob;
+import com.azizx25.smartfinancialwellness.bank.persistence.SyncJobRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +27,12 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -53,6 +62,18 @@ class BankSynchronizationIntegrationTests {
 
     @Autowired
     private BankConnectionIntegrationTests.FakeMockBankProvider provider;
+
+    @Autowired
+    private BalanceSnapshotRepository balanceSnapshotRepository;
+
+    @Autowired
+    private FinancialAccountRepository financialAccountRepository;
+
+    @Autowired
+    private SyncJobRepository syncJobRepository;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     void resetProvider() {
@@ -86,6 +107,29 @@ class BankSynchronizationIntegrationTests {
                 user.userId());
         assertThat(accounts).isEqualTo(2);
         assertThat(transactions).isEqualTo(1);
+        List<SnapshotState> snapshots = jdbcTemplate.query(
+                "SELECT snapshot.ledger_balance, snapshot.available_balance, snapshot.currency, "
+                        + "snapshot.source_type, snapshot.observed_at "
+                        + "FROM " + SCHEMA + "balance_snapshot snapshot "
+                        + "JOIN " + SCHEMA + "financial_account account "
+                        + "ON account.id = snapshot.financial_account_id "
+                        + "WHERE account.user_id = ? ORDER BY account.id",
+                (resultSet, rowNumber) -> new SnapshotState(
+                        resultSet.getBigDecimal(1),
+                        resultSet.getBigDecimal(2),
+                        resultSet.getString(3),
+                        resultSet.getString(4),
+                        resultSet.getTimestamp(5).toInstant()),
+                user.userId());
+        assertThat(snapshots).hasSize(2).allSatisfy(snapshot -> {
+            assertThat(snapshot.ledgerBalance()).isEqualByComparingTo("3626.2500");
+            assertThat(snapshot.ledgerBalance().scale()).isEqualTo(4);
+            assertThat(snapshot.availableBalance()).isEqualByComparingTo("3600.1000");
+            assertThat(snapshot.availableBalance().scale()).isEqualTo(4);
+            assertThat(snapshot.currency()).isEqualTo("TND");
+            assertThat(snapshot.sourceType()).isEqualTo("BANK_SYNC");
+        });
+        assertThat(snapshots.get(0).observedAt()).isEqualTo(snapshots.get(1).observedAt());
 
         MvcResult accountResult = mockMvc.perform(get("/api/accounts")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
@@ -181,6 +225,72 @@ class BankSynchronizationIntegrationTests {
 
         synchronize(user);
         assertCounts(user, 2, 2);
+        Integer duplicateObservationKeys = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM (SELECT financial_account_id, observed_at, source_type "
+                        + "FROM " + SCHEMA + "balance_snapshot "
+                        + "GROUP BY financial_account_id, observed_at, source_type HAVING COUNT(*) > 1) duplicate",
+                Integer.class);
+        assertThat(duplicateObservationKeys).isZero();
+    }
+
+    @Test
+    void synchronizationSnapshotsPreserveSignedScaleFourBalances() throws Exception {
+        AppRegistration user = registerAndActivate();
+        connect(user);
+        provider.changeBalance("-123.4567", "-150.0001");
+
+        synchronize(user);
+
+        List<BigDecimal> ledgerBalances = jdbcTemplate.queryForList(
+                "SELECT snapshot.ledger_balance FROM " + SCHEMA + "balance_snapshot snapshot "
+                        + "JOIN " + SCHEMA + "financial_account account "
+                        + "ON account.id = snapshot.financial_account_id "
+                        + "WHERE account.user_id = ?",
+                BigDecimal.class,
+                user.userId());
+        List<BigDecimal> availableBalances = jdbcTemplate.queryForList(
+                "SELECT snapshot.available_balance FROM " + SCHEMA + "balance_snapshot snapshot "
+                        + "JOIN " + SCHEMA + "financial_account account "
+                        + "ON account.id = snapshot.financial_account_id "
+                        + "WHERE account.user_id = ?",
+                BigDecimal.class,
+                user.userId());
+        assertThat(ledgerBalances).hasSize(2).allSatisfy(balance -> {
+            assertThat(balance).isEqualByComparingTo("-123.4567");
+            assertThat(balance.scale()).isEqualTo(4);
+        });
+        assertThat(availableBalances).hasSize(2).allSatisfy(balance -> {
+            assertThat(balance).isEqualByComparingTo("-150.0001");
+            assertThat(balance.scale()).isEqualTo(4);
+        });
+    }
+
+    @Test
+    void rolledBackSynchronizationTransactionLeavesNoBalanceSnapshot() throws Exception {
+        AppRegistration user = registerAndActivate();
+        connect(user);
+        synchronize(user);
+        int snapshotCountBeforeRollback = countSnapshots(user);
+
+        assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
+            FinancialAccount account = financialAccountRepository
+                    .findByUser_IdAndFirstSynchronizedAtIsNotNullOrderByNameAscIdAsc(user.userId())
+                    .getFirst();
+            SyncJob job = syncJobRepository
+                    .findTopByBankConnection_IdOrderByCreatedAtDesc(
+                            account.getBankConnection().getId())
+                    .orElseThrow();
+            balanceSnapshotRepository.saveAndFlush(new BalanceSnapshot(
+                    account,
+                    job,
+                    new BigDecimal("10.0000"),
+                    new BigDecimal("9.0000"),
+                    Instant.now().plusSeconds(30)));
+            throw new IllegalStateException("force synchronization rollback");
+        })).isInstanceOf(IllegalStateException.class)
+                .hasMessage("force synchronization rollback");
+
+        assertThat(countSnapshots(user)).isEqualTo(snapshotCountBeforeRollback);
     }
 
     @Test
@@ -252,6 +362,7 @@ class BankSynchronizationIntegrationTests {
         AppRegistration user = registerAndActivate();
         connect(user);
         synchronize(user);
+        int snapshotsBeforeFailure = countSnapshots(user);
         Instant lastSuccess = jdbcTemplate.queryForObject(
                 "SELECT last_synced_at FROM " + SCHEMA + "bank_connection WHERE user_id = ?",
                 (resultSet, rowNumber) -> resultSet.getTimestamp(1).toInstant(),
@@ -264,6 +375,7 @@ class BankSynchronizationIntegrationTests {
                 .andExpect(jsonPath("$.message").value("Mock-bank service is unavailable"));
         assertFailureState(user, "BANK_PROVIDER_UNAVAILABLE", lastSuccess);
         assertCounts(user, 2, 1);
+        assertThat(countSnapshots(user)).isEqualTo(snapshotsBeforeFailure);
         mockMvc.perform(get("/api/auth/me")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
                 .andExpect(status().isOk());
@@ -276,6 +388,7 @@ class BankSynchronizationIntegrationTests {
                 .andExpect(jsonPath("$.message").value("BANK_AUTHORIZATION_EXPIRED"));
         assertFailureState(user, "BANK_AUTHORIZATION_EXPIRED", lastSuccess);
         assertCounts(user, 2, 1);
+        assertThat(countSnapshots(user)).isEqualTo(snapshotsBeforeFailure);
         mockMvc.perform(get("/api/auth/me")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
                 .andExpect(status().isOk());
@@ -534,6 +647,15 @@ class BankSynchronizationIntegrationTests {
         assertThat(transactionCount).isEqualTo(transactions);
     }
 
+    private int countSnapshots(AppRegistration user) {
+        return jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + SCHEMA + "balance_snapshot snapshot "
+                        + "JOIN " + SCHEMA + "financial_account account "
+                        + "ON account.id = snapshot.financial_account_id WHERE account.user_id = ?",
+                Integer.class,
+                user.userId());
+    }
+
     private void assertFailureState(
             AppRegistration user,
             String expectedFailureCode,
@@ -572,5 +694,13 @@ class BankSynchronizationIntegrationTests {
     }
 
     private record FailureState(String status, String failureCode, Instant lastSuccess) {
+    }
+
+    private record SnapshotState(
+            BigDecimal ledgerBalance,
+            BigDecimal availableBalance,
+            String currency,
+            String sourceType,
+            Instant observedAt) {
     }
 }

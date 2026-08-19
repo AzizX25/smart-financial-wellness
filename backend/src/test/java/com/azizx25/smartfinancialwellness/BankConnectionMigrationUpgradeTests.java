@@ -21,7 +21,7 @@ class BankConnectionMigrationUpgradeTests {
     private static final String MIGRATIONS = "classpath:db/migration";
 
     @Test
-    void v11ThroughV16UpgradeExistingRowsAndAlsoMigrateAnEmptyDatabase() {
+    void v11ThroughV17UpgradeExistingRowsAndAlsoMigrateAnEmptyDatabase() {
         try (PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine")
                 .withDatabaseName("bank_connection_upgrade_test")
                 .withUsername("test_user")
@@ -78,7 +78,7 @@ class BankConnectionMigrationUpgradeTests {
                     connectionId);
 
             Flyway latest = flyway(postgres, null);
-            assertThat(latest.migrate().migrationsExecuted).isEqualTo(5);
+            assertThat(latest.migrate().migrationsExecuted).isEqualTo(6);
             String upgradedAccount = jdbc.queryForObject(
                     "SELECT provider_code || '|' || COALESCE(provider_account_status, 'NULL') "
                             + "FROM smart_financial_wellness.financial_account WHERE id = ?",
@@ -117,12 +117,12 @@ class BankConnectionMigrationUpgradeTests {
                     .isInstanceOf(DataAccessException.class);
 
             jdbc.execute("DROP SCHEMA smart_financial_wellness CASCADE");
-            assertThat(flyway(postgres, null).migrate().migrationsExecuted).isEqualTo(16);
+            assertThat(flyway(postgres, null).migrate().migrationsExecuted).isEqualTo(17);
             Integer successfulMigrations = jdbc.queryForObject(
                     "SELECT COUNT(*) FROM smart_financial_wellness.flyway_schema_history "
                             + "WHERE version IS NOT NULL AND success",
                     Integer.class);
-            assertThat(successfulMigrations).isEqualTo(16);
+            assertThat(successfulMigrations).isEqualTo(17);
         }
     }
 

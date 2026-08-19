@@ -16,6 +16,8 @@ import com.azizx25.smartfinancialwellness.bank.exception.BankReconnectionRequire
 import com.azizx25.smartfinancialwellness.bank.exception.BankSyncInProgressException;
 import com.azizx25.smartfinancialwellness.bank.exception.BankSynchronizationFailedException;
 import com.azizx25.smartfinancialwellness.bank.model.ExternalBankTransaction;
+import com.azizx25.smartfinancialwellness.bank.persistence.BalanceSnapshot;
+import com.azizx25.smartfinancialwellness.bank.persistence.BalanceSnapshotRepository;
 import com.azizx25.smartfinancialwellness.bank.persistence.BankConnection;
 import com.azizx25.smartfinancialwellness.bank.persistence.BankConnectionAuthorization;
 import com.azizx25.smartfinancialwellness.bank.persistence.BankConnectionAuthorizationRepository;
@@ -43,6 +45,7 @@ class BankSynchronizationStore {
     private final BankConnectionRepository connectionRepository;
     private final BankConnectionAuthorizationRepository authorizationRepository;
     private final FinancialAccountRepository accountRepository;
+    private final BalanceSnapshotRepository balanceSnapshotRepository;
     private final SyncJobRepository syncJobRepository;
     private final TransactionRecordRepository transactionRepository;
     private final CategoryRepository categoryRepository;
@@ -54,6 +57,7 @@ class BankSynchronizationStore {
             BankConnectionRepository connectionRepository,
             BankConnectionAuthorizationRepository authorizationRepository,
             FinancialAccountRepository accountRepository,
+            BalanceSnapshotRepository balanceSnapshotRepository,
             SyncJobRepository syncJobRepository,
             TransactionRecordRepository transactionRepository,
             CategoryRepository categoryRepository,
@@ -63,6 +67,7 @@ class BankSynchronizationStore {
         this.connectionRepository = connectionRepository;
         this.authorizationRepository = authorizationRepository;
         this.accountRepository = accountRepository;
+        this.balanceSnapshotRepository = balanceSnapshotRepository;
         this.syncJobRepository = syncJobRepository;
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
@@ -146,6 +151,15 @@ class BankSynchronizationStore {
                     snapshot.balance().availableBalance(),
                     now);
             account = accountRepository.saveAndFlush(account);
+            if (!balanceSnapshotRepository.existsByFinancialAccount_IdAndObservedAtAndSourceType(
+                    account.getId(), now, BalanceSnapshot.SourceType.BANK_SYNC)) {
+                balanceSnapshotRepository.save(new BalanceSnapshot(
+                        account,
+                        job,
+                        snapshot.balance().currentBalance(),
+                        snapshot.balance().availableBalance(),
+                        now));
+            }
 
             Map<String, TransactionRecord> existing = new HashMap<>();
             if (!snapshot.transactions().isEmpty()) {
