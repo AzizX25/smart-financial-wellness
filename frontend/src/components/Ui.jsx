@@ -8,6 +8,21 @@ export function formatTnd(value) {
   }).format(value)
 }
 
+export function formatCurrency(value, currency = 'TND') {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return '-'
+  }
+  try {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: currency === 'TND' ? 3 : 2,
+    }).format(Number(value))
+  } catch {
+    return `${value} ${currency || ''}`.trim()
+  }
+}
+
 export function DemoBanner({ compact = false }) {
   return (
     <div className={`demo-banner${compact ? ' demo-banner--compact' : ''}`} role="status">
@@ -20,7 +35,7 @@ export function DemoBanner({ compact = false }) {
 export function PageHeader({ eyebrow, title, description, action }) {
   return (
     <header className="page-header">
-      <div>
+      <div className="page-header__copy">
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h1>{title}</h1>
         {description && <p className="page-header__description">{description}</p>}
@@ -30,8 +45,8 @@ export function PageHeader({ eyebrow, title, description, action }) {
   )
 }
 
-export function Card({ children, className = '', as: Component = 'section' }) {
-  return <Component className={`card ${className}`}>{children}</Component>
+export function Card({ children, className = '', as: Component = 'section', ...props }) {
+  return <Component className={`card ${className}`} {...props}>{children}</Component>
 }
 
 export function ProgressBar({ value, tone = 'teal', label }) {
@@ -69,8 +84,10 @@ export function MetricCard({ icon, label, value, note, tone = 'teal' }) {
 }
 
 export function InlineNotice({ children, tone = 'info', icon = 'info', live = false }) {
+  const role = live ? (tone === 'warning' || tone === 'error' ? 'alert' : 'status') : undefined
+
   return (
-    <div className={`inline-notice inline-notice--${tone}`} role={live ? 'status' : undefined}>
+    <div className={`inline-notice inline-notice--${tone}`} role={role}>
       <Icon name={icon} size={20} />
       <div>{children}</div>
     </div>

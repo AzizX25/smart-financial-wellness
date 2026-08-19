@@ -1,58 +1,52 @@
-const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-const API_BASE_URL = configuredBaseUrl.replace(/\/+$/, '')
+import {
+  ApiError,
+  apiRequest,
+  clearAccessToken,
+  publicApiRequest,
+  setAccessToken,
+} from './apiClient'
 
-export class AuthApiError extends Error {
-  constructor(status, message, fieldErrors = {}) {
-    super(message)
-    this.name = 'AuthApiError'
-    this.status = status
-    this.fieldErrors = fieldErrors
-  }
-}
-
-async function request(path, body) {
-  let response
-
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-  } catch {
-    throw new AuthApiError(0, 'Le service est momentanément inaccessible.')
-  }
-
-  let payload = {}
-  try {
-    payload = await response.json()
-  } catch {
-    payload = {}
-  }
-
-  if (!response.ok) {
-    throw new AuthApiError(
-      response.status,
-      typeof payload.message === 'string' ? payload.message : 'La demande n’a pas pu être traitée.',
-      payload.fieldErrors && typeof payload.fieldErrors === 'object' ? payload.fieldErrors : {},
-    )
-  }
-
-  return payload
-}
+export { ApiError as AuthApiError }
 
 export async function registerAccount(registration) {
-  const payload = await request('/api/auth/register', registration)
+  const payload = await publicApiRequest('/api/auth/register', {
+    method: 'POST',
+    body: registration,
+  })
   return { user: payload.user }
 }
 
+export async function loginAccount(credentials) {
+  const payload = await publicApiRequest('/api/auth/login', {
+    method: 'POST',
+    body: credentials,
+  })
+  setAccessToken(payload.accessToken)
+  return payload
+}
+
+export function getCurrentUser() {
+  return apiRequest('/api/auth/me')
+}
+
+export async function logoutAccount() {
+  try {
+    await apiRequest('/api/auth/logout', { method: 'POST' })
+  } finally {
+    clearAccessToken()
+  }
+}
+
 export function resendVerificationEmail(email) {
-  return request('/api/auth/email-verification/resend', { email })
+  return publicApiRequest('/api/auth/email-verification/resend', {
+    method: 'POST',
+    body: { email },
+  })
 }
 
 export function confirmEmailVerification(token) {
-  return request('/api/auth/email-verification/confirm', { token })
+  return publicApiRequest('/api/auth/email-verification/confirm', {
+    method: 'POST',
+    body: { token },
+  })
 }

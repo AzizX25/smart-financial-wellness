@@ -1,0 +1,122 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { connectMockBank } from './bankApi'
+import {
+  assignTransactionCategory,
+  createCategory,
+  deleteCategory,
+  getCategorySummary,
+  listCategories,
+  runCategorization,
+  updateCategory,
+} from './categoryApi'
+import {
+  getDashboardSummary,
+  getSynchronizationStatus,
+  listLocalAccounts,
+  listLocalTransactions,
+  startSynchronization,
+} from './financialApi'
+import {
+  apiRequest,
+  clearAccessToken,
+  setAccessToken,
+  setSessionInvalidHandler,
+} from './apiClient'
+
+function jsonResponse(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+describe('client API principal', () => {
+  beforeEach(() => {
+    clearAccessToken()
+    setSessionInvalidHandler(() => {})
+    vi.restoreAllMocks()
+  })
+
+  it('utilise le backend principal et attache le bearer sans contacter le port 8081', async () => {
+    setAccessToken('main-access-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ ok: true })))
+
+    await connectMockBank({ username: 'client.demo', password: 'secret-value' })
+
+    const [url, options] = fetch.mock.calls[0]
+    expect(url).toBe('http://localhost:8080/api/bank-connections/mock-bank')
+    expect(url).not.toContain(':8081')
+    expect(options.headers.get('Authorization')).toBe('Bearer main-access-token')
+  })
+
+  it('invalide la session uniquement si le renouvellement confirme un 401', async () => {
+    const invalidated = vi.fn()
+    setSessionInvalidHandler(invalidated)
+    setAccessToken('expired-access-token')
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ message: 'Unauthorized' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ message: 'Refresh token is invalid' }, 401)))
+
+    await expect(apiRequest('/api/auth/me')).rejects.toMatchObject({ status: 401 })
+    expect(invalidated).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('conserve la session lors du rejet des identifiants mock-bank', async () => {
+    const invalidated = vi.fn()
+    setSessionInvalidHandler(invalidated)
+    setAccessToken('valid-main-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
+      message: 'Invalid mock-bank credentials',
+      path: '/api/bank-connections/mock-bank',
+    }, 422)))
+
+    await expect(connectMockBank({ username: 'wrong', password: 'wrong' }))
+      .rejects.toMatchObject({ status: 422 })
+    expect(invalidated).not.toHaveBeenCalled()
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('adresse toutes les données financières au backend principal sans port 8081', async () => {
+    setAccessToken('main-access-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ items: [] })))
+    await startSynchronization()
+    await getSynchronizationStatus()
+    await listLocalAccounts()
+    await listLocalTransactions({ accountId: 'ACCOUNT-1', direction: 'DEBIT', search: 'loyer' })
+    await getDashboardSummary('2026-08')
+    expect(fetch).toHaveBeenCalledTimes(5)
+    fetch.mock.calls.forEach(([url]) => {
+      expect(url).toMatch(/^http:\/\/localhost:8080\/api\//)
+      expect(url).not.toContain(':8081')
+    })
+  })
+
+  it('ne déconnecte pas l’utilisateur lors d’un échec de synchronisation fournisseur', async () => {
+    const invalidated = vi.fn()
+    setSessionInvalidHandler(invalidated)
+    setAccessToken('valid-main-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ message: 'Mock-bank service is unavailable' }, 503)))
+    await expect(startSynchronization()).rejects.toMatchObject({ status: 503 })
+    expect(invalidated).not.toHaveBeenCalled()
+  })
+
+  it('adresse toute la catégorisation au backend principal sans port 8081', async () => {
+    setAccessToken('main-access-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({})))
+
+    await listCategories()
+    await createCategory({ name: 'Vacances', nature: 'EXPENSE' })
+    await updateCategory('CATEGORY-1', { name: 'Voyages', nature: 'EXPENSE' })
+    await deleteCategory('CATEGORY-1')
+    await runCategorization()
+    await getCategorySummary('2026-08')
+    await assignTransactionCategory('TRANSACTION-1', 'CATEGORY-2')
+
+    expect(fetch).toHaveBeenCalledTimes(7)
+    fetch.mock.calls.forEach(([url]) => {
+      expect(url).toMatch(/^http:\/\/localhost:8080\/api\//)
+      expect(url).not.toContain(':8081')
+    })
+  })
+})

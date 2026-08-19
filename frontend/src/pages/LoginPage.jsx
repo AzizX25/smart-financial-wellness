@@ -1,15 +1,56 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import Icon from '../components/Icon'
 import { DemoBanner, InlineNotice } from '../components/Ui'
+import { ApiError } from '../services/apiClient'
 
 export default function LoginPage() {
+  const location = useLocation()
   const navigate = useNavigate()
+  const { login } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    navigate('/tableau-de-bord')
+    if (isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+    setError('')
+    try {
+      const user = await login({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+      if (!user.emailVerified) {
+        navigate('/verify-email-sent', {
+          replace: true,
+          state: { email: user.email },
+        })
+        return
+      }
+      const destination = typeof location.state?.from === 'string'
+        ? location.state.from
+        : '/tableau-de-bord'
+      navigate(destination, { replace: true })
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError && requestError.status === 401
+          ? 'Adresse e-mail ou mot de passe incorrect.'
+          : requestError instanceof ApiError && requestError.status === 0
+            ? 'Le service est momentanément inaccessible. Réessayez plus tard.'
+            : 'La connexion n’a pas pu être effectuée.',
+      )
+    } finally {
+      setPassword('')
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -34,9 +75,7 @@ export default function LoginPage() {
           </ul>
         </div>
 
-        <Link className="text-link text-link--light" to="/banque-demo">
-          Voir aussi la maquette Banque Atlas Démo <Icon name="arrow" size={18} />
-        </Link>
+        <p className="login-story__security">La connexion bancaire simulée est disponible après authentification.</p>
       </section>
 
       <section className="login-panel" aria-labelledby="login-title">
@@ -45,6 +84,8 @@ export default function LoginPage() {
           <p className="eyebrow">Heureuse de vous revoir</p>
           <h2 id="login-title">Connexion</h2>
           <p className="muted">Accédez à votre espace financier personnel.</p>
+
+          {error && <div className="auth-alert auth-alert--error" role="alert"><Icon name="alert" size={20} /><span>{error}</span></div>}
 
           <form className="form-stack" onSubmit={handleSubmit}>
             <label className="field">
@@ -55,6 +96,11 @@ export default function LoginPage() {
                 placeholder="votre.nom@exemple.tn"
                 required
                 type="email"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value)
+                  setError('')
+                }}
               />
             </label>
 
@@ -67,6 +113,11 @@ export default function LoginPage() {
                   placeholder="Votre mot de passe"
                   required
                   type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    setError('')
+                  }}
                 />
                 <button
                   type="button"
@@ -79,18 +130,17 @@ export default function LoginPage() {
             </label>
 
             <div className="form-row form-row--between">
-              <label className="checkbox-label"><input type="checkbox" /> Se souvenir de moi</label>
+              <span />
               <a className="text-link" href="#mot-de-passe-oublie">Mot de passe oublié ?</a>
             </div>
 
-            <button className="button button--primary button--wide" type="submit">
-              Se connecter <Icon name="arrow" size={19} />
+            <button className="button button--primary button--wide" disabled={isSubmitting} type="submit">
+              {isSubmitting ? 'Connexion en cours…' : 'Se connecter'} <Icon name="arrow" size={19} />
             </button>
           </form>
 
           <InlineNotice>
-            Pour la démonstration, saisissez n'importe quel e-mail et mot de passe.
-            Aucune information n'est envoyée ni enregistrée.
+            Votre session utilise un jeton d’accès temporaire et un cookie de renouvellement HttpOnly.
           </InlineNotice>
 
           <p className="login-panel__signup">

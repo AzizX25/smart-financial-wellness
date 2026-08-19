@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { profile } from '../data/demoData'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import Icon from './Icon'
 import { DemoBanner } from './Ui'
 
 const navigation = [
   { to: '/tableau-de-bord', label: 'Accueil', icon: 'home' },
   { to: '/transactions', label: 'Transactions', icon: 'transactions' },
+  { to: '/categories', label: 'Catégories', icon: 'tag' },
   { to: '/connexion-bancaire', label: 'Ma banque', icon: 'bank' },
   { to: '/planification-salaire', label: 'Mon budget', icon: 'plan' },
   { to: '/objectifs', label: 'Mes objectifs', icon: 'target' },
@@ -16,7 +17,19 @@ const navigation = [
 
 export default function AppShell() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout, user } = useAuth()
   const [navigationOpen, setNavigationOpen] = useState(false)
+  const displayName = user?.displayName?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+  const initials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((name) => name.trim().slice(0, 1).toUpperCase())
+    .join('') || displayName?.slice(0, 2).toUpperCase() || '-'
+
+  async function handleLogout() {
+    await logout()
+    navigate('/connexion', { replace: true })
+  }
 
   useEffect(() => {
     setNavigationOpen(false)
@@ -53,7 +66,8 @@ export default function AppShell() {
           onClick={() => setNavigationOpen((open) => !open)}
           type="button"
         >
-          <Icon name={navigationOpen ? 'close' : 'menu'} size={24} />
+          <Icon name={navigationOpen ? 'close' : 'menu'} size={22} />
+          <span className="mobile-menu-button__label" aria-hidden="true">{navigationOpen ? 'Fermer' : 'Menu'}</span>
         </button>
       </header>
 
@@ -102,11 +116,11 @@ export default function AppShell() {
         </div>
 
         <div className="sidebar__profile">
-          <span className="avatar" aria-hidden="true">AT</span>
-          <div><strong>{profile.fullName}</strong><span>{profile.email}</span></div>
-          <Link className="sidebar__logout" to="/connexion" aria-label="Se déconnecter">
+          <span className="avatar" aria-hidden="true">{initials}</span>
+          <div><strong>{displayName || 'Nom non renseigné'}</strong><span>{user?.email || ''}</span></div>
+          <button className="sidebar__logout" onClick={handleLogout} type="button" aria-label="Se déconnecter">
             <Icon name="logout" size={20} />
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -114,14 +128,10 @@ export default function AppShell() {
         <div className="main-content__topbar">
           <DemoBanner />
           <div className="topbar__actions">
-            <button className="icon-button" type="button" aria-label="Voir les notifications">
-              <Icon name="bell" size={21} />
-              <span className="notification-dot" aria-hidden="true" />
-            </button>
-            <Link className="topbar__signout" to="/connexion">
+            <button className="topbar__signout" onClick={handleLogout} type="button">
               <Icon name="logout" size={19} />
               <span>Se déconnecter</span>
-            </Link>
+            </button>
           </div>
         </div>
         <Outlet />
