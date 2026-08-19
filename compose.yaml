@@ -30,6 +30,8 @@ services:
         condition: service_healthy
       mock-bank:
         condition: service_started
+      mailpit:
+        condition: service_started
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-smart_financial_wellness}
       DB_USERNAME: ${DB_USERNAME:-smart_financial_wellness}
@@ -38,8 +40,39 @@ services:
       MOCK_BANK_BASE_URL: http://mock-bank:8081
       MOCK_BANK_CONNECT_TIMEOUT: ${MOCK_BANK_CONNECT_TIMEOUT:-2s}
       MOCK_BANK_READ_TIMEOUT: ${MOCK_BANK_READ_TIMEOUT:-5s}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_AUTH: "false"
+      SMTP_STARTTLS_ENABLE: "false"
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+      AI_SERVICE_CONNECT_TIMEOUT: ${AI_SERVICE_CONNECT_TIMEOUT:-2s}
+      AI_SERVICE_READ_TIMEOUT: ${AI_SERVICE_READ_TIMEOUT:-5s}
+      AI_FORECAST_EXPECTED_MODEL_ID: ${AI_FORECAST_EXPECTED_MODEL_ID:-forecast-huber-synthetic-tnd}
+      AI_FORECAST_EXPECTED_MODEL_VERSION: ${AI_FORECAST_EXPECTED_MODEL_VERSION:-1.0.0}
+      AI_FORECAST_EXPECTED_FEATURE_VERSION: ${AI_FORECAST_EXPECTED_FEATURE_VERSION:-forecast-residual-features-v1}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+
+  ai-service:
+    build:
+      context: ./ai-service
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${FRONTEND_API_URL:-http://localhost:8080}
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
 
   mock-bank-db:
     image: postgres:17-alpine
