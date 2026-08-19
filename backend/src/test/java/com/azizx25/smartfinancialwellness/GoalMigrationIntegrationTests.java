@@ -25,7 +25,7 @@ class GoalMigrationIntegrationTests {
     @Autowired JdbcTemplate jdbcTemplate;
 
     @Test
-    void appliesV1ThroughV16AndKeepsProgressDerived() {
+    void appliesV1ThroughV17AndKeepsProgressDerived() {
         Integer successfulMigrations = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM " + SCHEMA + "flyway_schema_history "
                         + "WHERE version IS NOT NULL AND success",
@@ -45,7 +45,7 @@ class GoalMigrationIntegrationTests {
                         + "AND NOT trigger.tgisinternal",
                 Integer.class);
 
-        assertThat(successfulMigrations).isEqualTo(16);
+        assertThat(successfulMigrations).isEqualTo(17);
         assertThat(derivedProgressColumns).isZero();
         assertThat(identityTrigger).isOne();
     }
