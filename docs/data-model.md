@@ -40,14 +40,34 @@ application must execute a dedicated deletion or anonymization workflow.
 | Table | Responsibility |
 | --- | --- |
 | `bank_connection` | User-owned connection to the simulated bank |
-| `bank_connection_authorization` | Read-only consent history and secret-manager reference |
+| `bank_connection_authorization` | Read-only authorization history and simulated provider access token |
 | `financial_account` | Manual or bank-discovered account |
 | `sync_job` | Traceable account, balance, and transaction synchronization |
 | `balance_snapshot` | Account balance observed at a point in time |
 
 Only one authorization may be `ACTIVE` for a connection. It contains read-only
-scopes and a `secret_reference`; no bank access or refresh token is stored in
-the backend database. Revoked or expired authorizations cannot start a sync.
+scopes and, for this deliberately simple development integration, the
+short-lived mock-bank access JWT. The token is never returned by a public API
+and is cleared on disconnect or provider authentication rejection. The bank
+password is never stored. A production provider integration would replace this
+storage with a dedicated secret manager. Revoked or expired authorizations
+cannot start a sync.
+
+V11 adds current-connection uniqueness: one current mock-bank connection per
+application user, and one current provider customer link across application
+users. Disconnected records remain as history after their provider identity and
+token are cleared.
+
+V12 adds persistent synchronization state without adding tables. A connection
+records the current sync state, last attempt, last success, and a bounded safe
+failure code. Each sync job records created/updated counters. Synchronized
+accounts retain provider-scoped identity, current and available balances,
+provider status, and first/last synchronization timestamps. Canonical
+`BANK_SYNC` transactions retain their provider status and first/last import
+timestamps. Re-running a sync updates records using stable provider identifiers;
+the transaction uniqueness remains `(financial_account_id,
+external_transaction_id)`. Provider retrieval completes before the atomic
+database write, and failed attempts preserve the last successful local data.
 
 ### File imports and canonical transactions
 
@@ -61,6 +81,8 @@ the backend database. Revoked or expired authorizations cannot start a sync.
 | `category` | UUID-keyed system or private category |
 | `transaction_record` | Positive canonical transaction with explicit direction |
 | `category_prediction` | Immutable prediction evidence without a selected flag |
+| `categorization_rule` | Versionable deterministic exact/contains rules over stored evidence |
+| `transaction_category_history` | Append-only automatic and manual assignment history |
 | `internal_transfer` | Same-user debit/credit pair between distinct accounts |
 
 Canonical transactions use `NUMERIC(19,4)` amounts greater than zero and a
@@ -71,8 +93,11 @@ Canonical transactions use `NUMERIC(19,4)` amounts greater than zero and a
 - `BANK_SYNC`: unique account and stable external transaction ID.
 
 The non-unique fingerprint is retained for duplicate analysis. A transaction
-stores the category actually applied, its source, and optionally the matching
-prediction. This avoids a separate `selected` state that could diverge.
+stores the category actually applied, its source, categorization time, and
+optionally the matching deterministic rule and immutable prediction trace.
+Manual assignments clear automatic rule references and automatic runs lock and
+select only uncategorized records, so later synchronization or reruns cannot
+overwrite a user's correction.
 
 ### Planning, goals, forecasts, and recommendations
 
@@ -109,14 +134,13 @@ foundation contains seven tables:
 - `authorization_code`;
 - `access_token`.
 
-V1 creates these tables and V2 supplies deterministic synthetic customers,
-OAuth client metadata, accounts, and transactions. The Java foundation has
-internal lookup services for customer, client, account, balance, and
-transaction data. HTTP exposure currently consists of Actuator health and
-customer-scoped read-only endpoints for account lists, account metadata, and
-balances. Public response records prevent persistence identifiers and entities
-from crossing the service boundary, while `404` ownership responses avoid
-account enumeration. Transaction, consent, authorization-code, and token APIs
-remain future work, including lightweight simulated read-only authorization.
-There are no payment or transfer endpoints and no foreign keys between the
-mock-bank and backend databases.
+V1 creates these tables, V2 supplies deterministic synthetic customers, OAuth
+client metadata, accounts, and transactions, and V3 adds unique demo usernames
+with BCrypt password hashes. `POST /api/auth/login` emits a short-lived signed
+JWT; customer-scoped account, balance, and transaction endpoints require that
+the JWT subject match the customer path. Public response records prevent
+persistence identifiers and entities from crossing the service boundary,
+while `404` ownership responses avoid account enumeration. OAuth consent,
+authorization-code, persisted provider-token, payment, and transfer APIs remain
+future work. There are no foreign keys between the mock-bank and backend
+databases.

@@ -40,8 +40,10 @@ The root `.env` configures Docker Compose only. Spring Boot does not load it aut
 $env:DB_URL = "jdbc:postgresql://localhost:5432/smart_financial_wellness"
 $env:DB_USERNAME = "smart_financial_wellness"
 $env:DB_PASSWORD = "<same local password as .env>"
-$jwtSecretBytes = [byte[]]::new(32)
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtSecretBytes)
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$jwtSecretBytes = New-Object byte[] 32
+$rng.GetBytes($jwtSecretBytes)
+$rng.Dispose()
 $env:AUTH_JWT_SECRET = [Convert]::ToBase64String($jwtSecretBytes)
 $env:AUTH_REFRESH_COOKIE_SECURE = "false"
 $env:CORS_ALLOWED_ORIGIN = "http://localhost:5173"

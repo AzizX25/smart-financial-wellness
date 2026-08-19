@@ -36,8 +36,9 @@ flowchart LR
 - Les deux applications Spring Boot ont leurs propres données, leurs propres
   migrations Flyway et aucune clé étrangère entre leurs bases.
 
-La page « Banque Démo » du prototype est une maquette visuelle du futur écran
-de consentement. Elle ne réalise actuellement aucun appel au mock-bank.
+La page « Banque Démo » du prototype reste une maquette visuelle et ne réalise
+aucun appel au mock-bank. Le flux de connexion décrit ci-dessous est exposé par
+le backend, sans modification du frontend dans cet incrément.
 
 ## État actuel du mock-bank
 
@@ -71,22 +72,25 @@ métadonnées. Un client inconnu, un compte inconnu ou un compte appartenant à
 un autre client produit un JSON `404`; le dernier cas utilise toujours
 `Account not found` afin d'empêcher l'énumération des comptes.
 
-Les API de consentement, codes d'autorisation et jetons ne sont pas encore
-implémentées. Une autorisation simulée, légère et strictement en lecture seule
-sera ajoutée dans un incrément ultérieur.
+`POST /api/auth/login` valide les identifiants bancaires de démonstration avec
+BCrypt et émet un JWT de courte durée. Les routes de données exigent ce bearer,
+valident sa signature, son expiration, son issuer et son audience, puis
+vérifient que son sujet correspond au client du chemin. Les API OAuth, écran de
+consentement, refresh token, paiement et virement ne sont pas implémentées.
 
 ## Adaptateur interne du backend principal
 
-Le backend principal dispose désormais d'un port applicatif
-`ReadOnlyBankDataPort` et d'un adaptateur HTTP synchrone fondé sur `RestClient`.
-Il couvre exclusivement les quatre lectures existantes : liste des comptes,
-métadonnées d'un compte, solde et page de transactions. Ses résultats sont des
-records immuables appartenant au backend ; les DTO HTTP du fournisseur restent
-confinés dans le package d'infrastructure et aucune classe Java du mock-bank
-n'est importée.
+Le backend principal dispose d'un port d'authentification mock-bank et du port
+applicatif `ReadOnlyBankDataPort`, implémentés par un adaptateur HTTP synchrone
+fondé sur `RestClient`. Il couvre le login fournisseur et les quatre lectures :
+liste des comptes, métadonnées d'un compte, solde et page de transactions. Ses
+résultats sont des records immuables appartenant au backend ; les DTO HTTP du
+fournisseur restent confinés dans le package d'infrastructure et aucune classe
+Java du mock-bank n'est importée.
 
-L'adaptateur encode chaque identifiant comme un segment de chemin, transmet
-explicitement la pagination, et omet `from` ou `to` lorsqu'ils sont absents.
+L'adaptateur encode chaque identifiant comme un segment de chemin, ajoute le
+bearer fournisseur uniquement au moment de l'appel, transmet explicitement la
+pagination, et omet `from` ou `to` lorsqu'ils sont absents.
 Les montants restent des `BigDecimal`, les dates de transaction des
 `LocalDate`, et les valeurs assimilables à des énumérations restent des chaînes
 afin d'éviter un couplage de code entre applications. Son décodeur JSON accepte
@@ -106,6 +110,14 @@ Seuls `Customer not found` et `Account not found` peuvent être repris depuis
 un corps `404`; aucun corps brut n'est propagé, aucun retry automatique n'est
 effectué et les données bancaires ne sont pas journalisées.
 
-Aucun contrôleur ou proxy public n'expose ce port. Le rattachement sécurisé
-entre utilisateur authentifié et client bancaire, ainsi que le consentement de
-lecture, restent des prérequis explicitement reportés.
+Les contrôleurs publics sont strictement centrés sur l'utilisateur courant :
+ils n'acceptent ni `userId` applicatif ni `customerId` fournisseur. Le backend
+dérive l'utilisateur du JWT applicatif, retrouve sa connexion en PostgreSQL et
+fournit l'identité fournisseur stockée à l'adaptateur. Une contrainte garantit
+une seule connexion mock-bank courante par utilisateur et empêche de rattacher
+un client simulé à deux utilisateurs. Le mot de passe bancaire n'est jamais
+stocké ; le JWT fournisseur, autorisé uniquement pour cette intégration locale,
+est effacé à la déconnexion ou après un rejet d'authentification.
+
+Les contrats complets sont documentés dans le
+[guide de connexion mock-bank](../api/mock-bank-connection.md).
