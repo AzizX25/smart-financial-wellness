@@ -5,6 +5,7 @@ COPY pyproject.toml ./
 COPY src ./src
 COPY models ./models
 ENV FORECAST_MODEL_DIRECTORY=/app/models/forecast
+ENV MERCHANT_MODEL_DIRECTORY=/app/models/merchant
 RUN pip install --no-cache-dir .
 
 RUN useradd --create-home --uid 10001 appuser

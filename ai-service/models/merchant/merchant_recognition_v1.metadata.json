@@ -1,0 +1,44 @@
+{
+  "artifactSha256": "cab6f368bda1dc3b02cf0708f9b987d30cda2e2a102dcbd1f00a3ba6bcbc2fb1",
+  "catalogVersion": "merchant-catalog-v1",
+  "createdAtUtc": "2026-08-19T15:45:11.638387Z",
+  "currency": "TND",
+  "datasetSha256": "86e4c0f595036cb08f3d834cf3d0d94fa9eab436da7b00bed57ce6507b993147",
+  "datasetVersion": "merchant-synthetic-v1",
+  "dependencies": {
+    "joblib": "1.5.3",
+    "pandas": "2.3.3",
+    "python": "3.12.1",
+    "scikitLearn": "1.9.0"
+  },
+  "experimental": true,
+  "featureVersion": "merchant-recognition-features-v1",
+  "guaranteed": false,
+  "modelId": "merchant-recognition-synthetic-v1",
+  "modelType": "char-tfidf-logistic-regression",
+  "modelVersion": "1.0.0",
+  "normalizationVersion": "merchant-normalization-v1",
+  "randomSeed": 20260819,
+  "splitSizes": {
+    "test": 120,
+    "train": 178,
+    "validation": 120
+  },
+  "syntheticTrainingData": true,
+  "taxonomyVersion": "system-taxonomy-v2",
+  "testMetrics": {
+    "knownAcceptanceRate": 0.948276,
+    "knownCount": 116,
+    "knownMacroF1": 0.858104,
+    "unknownCount": 4,
+    "unknownFalseAcceptanceRate": 0.0
+  },
+  "threshold": 0.35,
+  "validationMetrics": {
+    "knownAcceptanceRate": 0.931034,
+    "knownCount": 116,
+    "knownMacroF1": 0.853228,
+    "unknownCount": 4,
+    "unknownFalseAcceptanceRate": 0.0
+  }
+}

@@ -18,27 +18,38 @@ from forecast_ai.contracts import (
     PredictionResponse,
 )
 from forecast_ai.runtime import MODEL_ID, MODEL_VERSION, ModelRuntime, ModelUnavailableError
+from forecast_ai.merchant_contracts import MerchantBatchRequest, MerchantBatchResponse, MerchantModelResponse
+from forecast_ai.merchant_runtime import MerchantRuntime
 
 LOGGER = logging.getLogger("forecast_ai")
 DEFAULT_MODEL_DIRECTORY = Path(__file__).parents[2] / "models/forecast"
 
 
-def create_app(runtime: ModelRuntime | None = None) -> FastAPI:
+def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRuntime | None = None) -> FastAPI:
     model_runtime = runtime or ModelRuntime(
         os.getenv("FORECAST_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY))
+    )
+    merchant_model_runtime = merchant_runtime or MerchantRuntime(
+        os.getenv("MERCHANT_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY.parent / "merchant"))
     )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         model_runtime.load()
+        merchant_model_runtime.load()
         if model_runtime.available:
             LOGGER.info("forecast_model_loaded model_id=%s model_version=%s", MODEL_ID, MODEL_VERSION)
         else:
             LOGGER.error("forecast_model_unavailable reason=%s", model_runtime.failure_reason)
+        if merchant_model_runtime.available:
+            LOGGER.info("merchant_model_loaded model_id=merchant-recognition-synthetic-v1 model_version=1.0.0")
+        else:
+            LOGGER.error("merchant_model_unavailable reason=%s", merchant_model_runtime.failure_reason)
         yield
 
     app = FastAPI(title="Smart Financial Wellness AI Service", version="0.1.0", lifespan=lifespan)
     app.state.model_runtime = model_runtime
+    app.state.merchant_runtime = merchant_model_runtime
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exception: RequestValidationError) -> JSONResponse:
@@ -100,11 +111,31 @@ def create_app(runtime: ModelRuntime | None = None) -> FastAPI:
             guaranteed=False,
         )
 
+    @app.get("/api/v1/merchant-recognition/model", response_model=MerchantModelResponse, response_model_by_alias=True)
+    async def merchant_model() -> MerchantModelResponse:
+        if not merchant_model_runtime.available:
+            raise ModelUnavailableError("merchant model is unavailable")
+        metadata = merchant_model_runtime.metadata
+        return MerchantModelResponse(
+            model_id=metadata["modelId"], model_version=metadata["modelVersion"],
+            feature_version=metadata["featureVersion"], catalog_version=metadata["catalogVersion"],
+            taxonomy_version=metadata["taxonomyVersion"], threshold=metadata["threshold"],
+            experimental=True, synthetic_training_data=True, guaranteed=False,
+        )
+
+    @app.post("/api/v1/merchant-recognition/predict", response_model=MerchantBatchResponse, response_model_by_alias=True)
+    async def merchant_predict(request: MerchantBatchRequest) -> MerchantBatchResponse:
+        if not merchant_model_runtime.available:
+            raise ModelUnavailableError("merchant model is unavailable")
+        predictions = [merchant_model_runtime.predict(item) for item in request.items]
+        LOGGER.info("merchant_prediction outcome=success item_count=%s", len(predictions))
+        return MerchantBatchResponse(items=predictions)
+
     @app.exception_handler(ModelUnavailableError)
     async def unavailable(_: Request, __: ModelUnavailableError) -> JSONResponse:
         return JSONResponse(
             status_code=503,
-            content={"code": "MODEL_UNAVAILABLE", "message": "Forecast model is unavailable"},
+            content={"code": "MODEL_UNAVAILABLE", "message": "Requested model is unavailable"},
         )
 
     return app
