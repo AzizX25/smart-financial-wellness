@@ -38,6 +38,7 @@ public class CategoryService {
     private final TransactionRecordRepository transactionRepository;
     private final TransactionCategoryHistoryRepository historyRepository;
     private final CategoryPredictionRepository predictionRepository;
+    private final CategorizationReviewService reviewService;
     private final AppUserRepository userRepository;
     private final AuditService auditService;
     private final Clock clock;
@@ -47,6 +48,7 @@ public class CategoryService {
             TransactionRecordRepository transactionRepository,
             TransactionCategoryHistoryRepository historyRepository,
             CategoryPredictionRepository predictionRepository,
+            CategorizationReviewService reviewService,
             AppUserRepository userRepository,
             AuditService auditService,
             Clock clock) {
@@ -54,6 +56,7 @@ public class CategoryService {
         this.transactionRepository = transactionRepository;
         this.historyRepository = historyRepository;
         this.predictionRepository = predictionRepository;
+        this.reviewService = reviewService;
         this.userRepository = userRepository;
         this.auditService = auditService;
         this.clock = clock;
@@ -148,6 +151,7 @@ public class CategoryService {
 
         if (previous.getId().equals(target.getId()) && previousSource.equals(newSource)) {
             rejectPendingSuggestion(transactionId);
+            if (removing) reviewService.reopenAfterRemoval(transaction);
             return response(transaction);
         }
 
@@ -167,6 +171,11 @@ public class CategoryService {
                 null,
                 transaction.getUser(),
                 clock.instant()));
+        if (removing) {
+            reviewService.reopenAfterRemoval(transaction);
+        } else {
+            reviewService.resolveManual(transaction, target, categorizedAt);
+        }
         auditService.record(userId, "TRANSACTION_CATEGORY_CHANGED", "TRANSACTION", transactionId);
         return response(transaction);
     }
@@ -234,6 +243,8 @@ public class CategoryService {
             case "USER" -> "MANUAL";
             case "RULES" -> "DETERMINISTIC_RULE";
             case "ML" -> "ML";
+            case "LLM" -> "WEB_LLM";
+            case "USER_MEMORY" -> "USER_MEMORY";
             default -> "UNCATEGORIZED";
         };
     }

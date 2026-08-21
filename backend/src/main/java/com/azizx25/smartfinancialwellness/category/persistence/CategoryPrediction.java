@@ -105,6 +105,23 @@ public class CategoryPrediction {
         reviewStatus = ReviewStatus.PENDING;
     }
 
+    public static CategoryPrediction fromUserMemory(
+            TransactionRecord record, Category target, String merchantKey, Instant now) {
+        CategoryPrediction prediction = new CategoryPrediction();
+        prediction.id = UUID.randomUUID();
+        prediction.transaction = record;
+        prediction.category = target;
+        prediction.predictionMethod = "USER_HISTORY";
+        prediction.canonicalMerchant = merchantKey;
+        prediction.modelId = "private-user-memory";
+        prediction.modelVersion = "v1";
+        prediction.featureVersion = "private-user-memory-v1";
+        prediction.explanation = "USER_MEMORY";
+        prediction.producedAt = now;
+        prediction.reviewStatus = ReviewStatus.PENDING;
+        return prediction;
+    }
+
     public CategoryPrediction(
             TransactionRecord record, Category target, String merchant,
             String merchantProviderId, String merchantModelId, String merchantModelVersion,

@@ -63,11 +63,13 @@ public final class LocalBankDtos {
     public record DashboardSummaryResponse(
             String month,
             List<AccountBalanceTotalResponse> balanceTotals,
-            List<MonthlyCashFlowResponse> monthlyCashFlows) {
+            List<MonthlyCashFlowResponse> monthlyCashFlows,
+            List<MonthlyCategorySpendingResponse> categorySpending) {
 
         public DashboardSummaryResponse {
             balanceTotals = List.copyOf(balanceTotals);
             monthlyCashFlows = List.copyOf(monthlyCashFlows);
+            categorySpending = List.copyOf(categorySpending);
         }
     }
 
@@ -82,5 +84,24 @@ public final class LocalBankDtos {
             BigDecimal income,
             BigDecimal expenses,
             BigDecimal netCashFlow) {
+    }
+
+    public record MonthlyCategorySpendingResponse(
+            String currency,
+            BigDecimal totalExpenses,
+            List<CategoryExpenseResponse> categories,
+            long uncategorizedCount,
+            BigDecimal uncategorizedAmount) {
+
+        public MonthlyCategorySpendingResponse {
+            categories = List.copyOf(categories);
+        }
+    }
+
+    public record CategoryExpenseResponse(
+            UUID categoryId,
+            String categoryName,
+            long transactionCount,
+            BigDecimal totalAmount) {
     }
 }

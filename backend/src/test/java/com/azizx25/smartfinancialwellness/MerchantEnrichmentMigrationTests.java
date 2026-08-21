@@ -29,7 +29,7 @@ class MerchantEnrichmentMigrationTests {
                     "SELECT checksum FROM smart_financial_wellness.flyway_schema_history WHERE version = '18'",
                     Integer.class);
 
-            Flyway latest = flyway(postgres, null);
+            Flyway latest = flyway(postgres, MigrationVersion.fromVersion("19"));
             assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
             latest.validate();
 

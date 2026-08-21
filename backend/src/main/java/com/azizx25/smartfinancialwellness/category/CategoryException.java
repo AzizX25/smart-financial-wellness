@@ -45,4 +45,10 @@ public class CategoryException extends ApiException {
                 "MERCHANT_SUGGESTION_CONFLICT",
                 "Merchant suggestion can no longer be applied");
     }
+
+    public static CategoryException memoryNotFound() {
+        return new CategoryException(
+                HttpStatus.NOT_FOUND, "MERCHANT_MEMORY_NOT_FOUND", "Merchant memory not found");
+    }
+
 }

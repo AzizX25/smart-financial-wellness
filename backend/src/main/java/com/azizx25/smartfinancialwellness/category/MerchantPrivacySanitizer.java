@@ -28,6 +28,8 @@ public class MerchantPrivacySanitizer {
         value = DATE.matcher(value).replaceAll(" ");
         value = LONG_REFERENCE.matcher(value).replaceAll(" ");
         value = LONG_NUMBER.matcher(value).replaceAll(" ");
-        return value.replaceAll("[^a-z0-9&]+", " ").trim().replaceAll("\\s+", " ");
+        String sanitized = value.replaceAll("[^a-z0-9&]+", " ").trim().replaceAll("\\s+", " ");
+        if (sanitized.length() <= 160) return sanitized;
+        return sanitized.substring(0, 160).stripTrailing();
     }
 }

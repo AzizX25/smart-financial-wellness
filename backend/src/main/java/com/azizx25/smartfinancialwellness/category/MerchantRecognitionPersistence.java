@@ -3,6 +3,7 @@ package com.azizx25.smartfinancialwellness.category;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import com.azizx25.smartfinancialwellness.bank.persistence.TransactionRecord;
 import com.azizx25.smartfinancialwellness.bank.persistence.TransactionRecordRepository;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantSuggestionResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryResponse;
+import com.azizx25.smartfinancialwellness.category.CategorizationReviewService.MemoryMatch;
 import com.azizx25.smartfinancialwellness.category.infrastructure.MerchantRecognitionAiClient.Prediction;
 import com.azizx25.smartfinancialwellness.category.persistence.Category;
 import com.azizx25.smartfinancialwellness.category.persistence.CategoryPrediction;
@@ -34,6 +36,7 @@ public class MerchantRecognitionPersistence {
     private final CategoryPredictionRepository predictionRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionCategoryHistoryRepository historyRepository;
+    private final CategorizationReviewService reviewService;
     private final AuditService auditService;
     private final Clock clock;
 
@@ -42,26 +45,104 @@ public class MerchantRecognitionPersistence {
             CategoryPredictionRepository predictionRepository,
             CategoryRepository categoryRepository,
             TransactionCategoryHistoryRepository historyRepository,
+            CategorizationReviewService reviewService,
             AuditService auditService,
             Clock clock) {
         this.transactionRepository = transactionRepository;
         this.predictionRepository = predictionRepository;
         this.categoryRepository = categoryRepository;
         this.historyRepository = historyRepository;
+        this.reviewService = reviewService;
         this.auditService = auditService;
         this.clock = clock;
     }
 
     @Transactional(readOnly = true)
     public List<Candidate> loadCandidates(UUID userId, int limit) {
-        return transactionRepository.findMerchantRecognitionCandidates(
+        List<TransactionRecord> transactions = transactionRepository.findUncategorizedForReview(
                         userId, TransactionRecord.UNCATEGORIZED_CATEGORY_ID, PageRequest.of(0, limit))
-                .stream()
+                .getContent();
+        Set<UUID> transfers = reviewService.confirmedTransfers(
+                transactions.stream().map(TransactionRecord::getId).toList());
+        return transactions.stream()
                 .map(transaction -> new Candidate(
                         transaction.getId(), transaction.getRecognizedMerchant(),
                         transaction.getNormalizedDescription(), transaction.getDirection().name(),
-                        transaction.getCurrency()))
+                        transaction.getCurrency(), reviewService.merchantKey(transaction),
+                        reviewService.exclusionReason(transaction, transfers.contains(transaction.getId())),
+                        predictionRepository.existsByTransaction_IdAndReviewStatus(
+                                transaction.getId(), ReviewStatus.PENDING)))
                 .toList();
+    }
+
+    @Transactional
+    public void persistExcluded(UUID userId, UUID transactionId, String reasonCode) {
+        TransactionRecord transaction = ownedUncategorized(userId, transactionId);
+        if (transaction != null) reviewService.recordExcluded(transaction, reasonCode);
+    }
+
+    @Transactional
+    public void persistNeedsReview(
+            UUID userId, UUID transactionId, String reasonCode, List<String> candidateCodes) {
+        TransactionRecord transaction = ownedUncategorized(userId, transactionId);
+        if (transaction != null
+                && !predictionRepository.existsByTransaction_IdAndReviewStatus(
+                        transactionId, ReviewStatus.PENDING)) {
+            reviewService.recordNeedsReview(transaction, reasonCode, candidateCodes);
+        }
+    }
+
+    @Transactional
+    public void persistBatchReview(
+            UUID userId, Map<String, Candidate> requested, String reasonCode) {
+        requested.values().stream()
+                .sorted(java.util.Comparator.comparing(Candidate::transactionId))
+                .forEach(candidate -> persistNeedsReview(
+                        userId, candidate.transactionId(), reasonCode, List.of()));
+    }
+
+    @Transactional
+    public int persistAiBatch(
+            UUID userId, Map<String, Candidate> requested, List<Prediction> predictions) {
+        int suggested = 0;
+        List<Prediction> ordered = predictions.stream()
+                .sorted(java.util.Comparator.comparing(
+                        prediction -> requested.get(prediction.requestKey()).transactionId()))
+                .toList();
+        for (Prediction prediction : ordered) {
+            Candidate candidate = requested.get(prediction.requestKey());
+            if ("UNRECOGNIZED".equals(prediction.status())) {
+                persistNeedsReview(
+                        userId, candidate.transactionId(), prediction.fallbackReason(),
+                        prediction.candidateCategoryCodes());
+            } else if (persistPending(userId, candidate.transactionId(), prediction)) {
+                suggested++;
+            }
+        }
+        return suggested;
+    }
+
+    @Transactional
+    public boolean persistMemoryPending(
+            UUID userId, UUID transactionId, MemoryMatch memory) {
+        TransactionRecord transaction = transactionRepository.findOwnedByIdForUpdate(transactionId, userId)
+                .orElse(null);
+        if (transaction == null
+                || !transactionRepository.isMerchantRecognitionEligible(
+                        transactionId, userId, TransactionRecord.UNCATEGORIZED_CATEGORY_ID)
+                || predictionRepository.existsByTransaction_IdAndReviewStatus(transactionId, ReviewStatus.PENDING)) {
+            return false;
+        }
+        Category category = categoryRepository.findVisibleActiveById(memory.categoryId(), userId).orElse(null);
+        if (category == null || (category.getDirection() != Category.Direction.BOTH
+                && !category.getDirection().name().equals(transaction.getDirection().name()))) {
+            return false;
+        }
+        CategoryPrediction prediction = CategoryPrediction.fromUserMemory(
+                transaction, category, memory.normalizedMerchantKey(), clock.instant());
+        predictionRepository.save(prediction);
+        reviewService.recordSuggestion(transaction, prediction);
+        return true;
     }
 
     @Transactional
@@ -89,6 +170,7 @@ public class MerchantRecognitionPersistence {
                         prediction.matchMethod(), prediction.modelId(), prediction.modelVersion(),
                         prediction.featureVersion(), now);
         predictionRepository.save(entity);
+        reviewService.recordSuggestion(transaction, entity);
         return true;
     }
 
@@ -118,37 +200,49 @@ public class MerchantRecognitionPersistence {
         Instant now = clock.instant();
         prediction.accept(now);
         predictionRepository.flush();
-        String source = "LLM".equals(prediction.getPredictionMethod()) ? "LLM" : "ML";
+        String source = switch (prediction.getPredictionMethod()) {
+            case "LLM" -> "LLM";
+            case "USER_HISTORY" -> "USER_MEMORY";
+            default -> "ML";
+        };
         if ("LLM".equals(source)) {
             transaction.assignByLlm(prediction.getCategory(), prediction.getId(), now);
+        } else if ("USER_MEMORY".equals(source)) {
+            transaction.assignByUserMemory(prediction.getCategory(), prediction.getId(), now);
         } else {
             transaction.assignByMl(prediction.getCategory(), prediction.getId(), now);
         }
         historyRepository.save(new TransactionCategoryHistory(
                 transaction, null, prediction.getCategory().getId(), "UNCATEGORIZED", source,
                 null, transaction.getUser(), now));
+        reviewService.resolveAccepted(transaction, prediction, now);
         auditService.record(userId, "MERCHANT_CATEGORY_SUGGESTION_ACCEPTED", "TRANSACTION", transactionId);
         return categoryResponse(transaction);
     }
 
     @Transactional
     public void reject(UUID userId, UUID transactionId, UUID predictionId) {
+        TransactionRecord transaction = transactionRepository.findOwnedByIdForUpdate(transactionId, userId)
+                .orElseThrow(CategoryException::suggestionNotFound);
         CategoryPrediction prediction = predictionRepository
                 .findOwnedPendingForUpdate(predictionId, transactionId, userId)
                 .orElseThrow(CategoryException::suggestionNotFound);
         prediction.reject(clock.instant());
+        reviewService.rejectSuggestion(transaction, prediction);
         auditService.record(userId, "MERCHANT_CATEGORY_SUGGESTION_REJECTED", "TRANSACTION", transactionId);
     }
 
     static MerchantSuggestionResponse suggestion(CategoryPrediction prediction) {
         Category category = prediction.getCategory();
+        boolean userMemory = "USER_HISTORY".equals(prediction.getPredictionMethod());
+        boolean web = "LLM".equals(prediction.getPredictionMethod());
         return new MerchantSuggestionResponse(
                 prediction.getId(), prediction.getTransactionId(), category.getId(), category.getCode(),
                 category.getLabel(), prediction.getCanonicalMerchant(),
-                "LLM".equals(prediction.getPredictionMethod()) ? "WEB_LLM" : prediction.getExplanation(),
-                "LLM".equals(prediction.getPredictionMethod()) ? "WEB_LLM" : "MODEL",
-                "LLM".equals(prediction.getPredictionMethod()) ? prediction.getExplanation() : null,
-                prediction.getEvidenceUrls(), true, false,
+                userMemory ? "USER_MEMORY" : web ? "WEB_LLM" : prediction.getExplanation(),
+                userMemory ? "USER_MEMORY" : web ? "WEB_LLM" : "MODEL",
+                web ? prediction.getExplanation() : null,
+                prediction.getEvidenceUrls(), !userMemory, false,
                 prediction.getProducedAt());
     }
 
@@ -164,6 +258,17 @@ public class MerchantRecognitionPersistence {
             String recognizedMerchant,
             String normalizedDescription,
             String direction,
-            String currency) {
+            String currency,
+            String merchantKey,
+            String exclusionReason,
+            boolean pendingSuggestion) {
+    }
+
+    private TransactionRecord ownedUncategorized(UUID userId, UUID transactionId) {
+        TransactionRecord transaction = transactionRepository.findOwnedByIdForUpdate(transactionId, userId)
+                .orElse(null);
+        return transaction != null && "UNCATEGORIZED".equals(transaction.getCategorySource())
+                && TransactionRecord.UNCATEGORIZED_CATEGORY_ID.equals(transaction.getCategory().getId())
+                ? transaction : null;
     }
 }

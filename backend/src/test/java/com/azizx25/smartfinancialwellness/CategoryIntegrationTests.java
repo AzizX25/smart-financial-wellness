@@ -180,6 +180,75 @@ class CategoryIntegrationTests {
     }
 
     @Test
+    void dashboardCategorySpendingUsesCurrentAssignmentsAndEligibleTransactionsOnly() throws Exception {
+        provider.replacePrimaryTransaction(new ExternalBankTransaction(
+                "CATEGORY-SPENDING-POSTED", LocalDate.of(2026, 8, 4), LocalDate.of(2026, 8, 4),
+                new BigDecimal("40.0000"), "DEBIT", "TND", "Courses au supermarche", "Monoprix", "POSTED"));
+        provider.addPrimaryTransaction(new ExternalBankTransaction(
+                "CATEGORY-SPENDING-PENDING", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 8, 5),
+                new BigDecimal("900.0000"), "DEBIT", "TND", "Courses au supermarche", "Monoprix", "PENDING"));
+        AppRegistration owner = registerAndActivate();
+        AppRegistration other = registerAndActivate();
+        connectAndSynchronize(owner);
+
+        UUID ownerTnd = createManualAccount(owner.userId(), "TND");
+        UUID ownerTndTransfer = createManualAccount(owner.userId(), "TND");
+        UUID ownerEur = createManualAccount(owner.userId(), "EUR");
+        UUID otherTnd = createManualAccount(other.userId(), "TND");
+        insertManualTransaction(owner.userId(), ownerTnd, category("FOOD"), "DEBIT", "10.0000", "Manual food");
+        insertManualTransaction(owner.userId(), ownerTnd, category("UNCATEGORIZED"), "DEBIT", "5.0000", "Uncategorized");
+        insertManualTransaction(owner.userId(), ownerTnd, category("INCOME_OTHER"), "CREDIT", "500.0000", "Credit");
+        insertManualTransaction(owner.userId(), ownerEur, category("FOOD"), "DEBIT", "60.0000", "EUR food");
+        insertManualTransaction(owner.userId(), ownerTnd, category("FOOD"), "DEBIT", "70.0000", "Previous month",
+                LocalDate.of(2026, 7, 10));
+        insertManualTransaction(other.userId(), otherTnd, category("FOOD"), "DEBIT", "80.0000", "Other user");
+        UUID transferOut = insertManualTransaction(
+                owner.userId(), ownerTnd, category("FOOD"), "DEBIT", "25.0000", "Confirmed transfer out");
+        UUID transferIn = insertManualTransaction(
+                owner.userId(), ownerTndTransfer, category("INCOME_OTHER"), "CREDIT", "25.0000", "Confirmed transfer in");
+        jdbcTemplate.update("INSERT INTO " + SCHEMA + "internal_transfer "
+                        + "(outgoing_transaction_id,incoming_transaction_id,detection_method,confirmed_at) "
+                        + "VALUES (?,?,'USER',CURRENT_TIMESTAMP)",
+                transferOut, transferIn);
+
+        UUID postedTransactionId = jdbcTemplate.queryForObject(
+                "SELECT id FROM " + SCHEMA + "transaction_record "
+                        + "WHERE user_id = ? AND external_transaction_id = 'CATEGORY-SPENDING-POSTED'",
+                UUID.class, owner.userId());
+        JsonNode before = dashboardSummary(owner, "2026-08");
+        JsonNode beforeTnd = currencySpending(before, "TND");
+        assertThat(beforeTnd.get("totalExpenses").decimalValue()).isEqualByComparingTo("55.0000");
+        assertThat(categoryAmount(beforeTnd, category("FOOD"))).isEqualByComparingTo("50.0000");
+        assertThat(beforeTnd.get("uncategorizedCount").asLong()).isEqualTo(1);
+        assertThat(beforeTnd.get("uncategorizedAmount").decimalValue()).isEqualByComparingTo("5.0000");
+        assertThat(currencySpending(before, "EUR").get("totalExpenses").decimalValue())
+                .isEqualByComparingTo("60.0000");
+
+        UUID educationId = category("EDUCATION");
+        mockMvc.perform(patch("/api/transactions/{id}/category", postedTransactionId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"categoryId\":\"%s\"}".formatted(educationId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categoryId").value(educationId.toString()))
+                .andExpect(jsonPath("$.categoryName").isNotEmpty())
+                .andExpect(jsonPath("$.assignmentSource").value("MANUAL"));
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT category_id FROM " + SCHEMA + "transaction_record WHERE id = ?",
+                UUID.class, postedTransactionId)).isEqualTo(educationId);
+
+        JsonNode after = dashboardSummary(owner, "2026-08");
+        JsonNode afterTnd = currencySpending(after, "TND");
+        assertThat(afterTnd.get("totalExpenses").decimalValue()).isEqualByComparingTo("55.0000");
+        assertThat(categoryAmount(afterTnd, category("FOOD"))).isEqualByComparingTo("10.0000");
+        assertThat(categoryAmount(afterTnd, educationId)).isEqualByComparingTo("40.0000");
+        assertThat(currencySpending(dashboardSummary(owner, "2026-07"), "TND")
+                .get("totalExpenses").decimalValue()).isEqualByComparingTo("70.0000");
+        assertThat(currencySpending(dashboardSummary(other, "2026-08"), "TND")
+                .get("totalExpenses").decimalValue()).isEqualByComparingTo("80.0000");
+    }
+
+    @Test
     void summariesSeparateCurrenciesAndKeepTransfersDistinctFromExpenses() throws Exception {
         AppRegistration user = registerAndActivate();
         UUID tnd = createManualAccount(user.userId(), "TND");
@@ -246,10 +315,48 @@ class CategoryIntegrationTests {
         return jdbcTemplate.queryForObject("SELECT id FROM " + SCHEMA + "category WHERE code = ? AND user_id IS NULL", UUID.class, code);
     }
 
-    private void insertManualTransaction(UUID userId, UUID accountId, UUID categoryId, String direction, String amount, String description) {
+    private UUID insertManualTransaction(
+            UUID userId, UUID accountId, UUID categoryId, String direction, String amount, String description) {
+        return insertManualTransaction(
+                userId, accountId, categoryId, direction, amount, description, LocalDate.of(2026, 8, 4));
+    }
+
+    private UUID insertManualTransaction(
+            UUID userId, UUID accountId, UUID categoryId, String direction, String amount,
+            String description, LocalDate bookingDate) {
         boolean uncategorized = categoryId.equals(category("UNCATEGORIZED"));
-        jdbcTemplate.update("INSERT INTO " + SCHEMA + "transaction_record (id,user_id,financial_account_id,category_id,source_type,client_idempotency_key,booking_date,amount,direction,currency,raw_description,normalized_description,category_source,categorized_at) VALUES (?,?,?,?,'MANUAL',?,DATE '2026-08-04',?,?,(SELECT currency FROM " + SCHEMA + "financial_account WHERE id = ?),?,?,?,?)",
-                UUID.randomUUID(), userId, accountId, categoryId, UUID.randomUUID().toString(), new BigDecimal(amount), direction, accountId, description, description.toLowerCase(), uncategorized ? "UNCATEGORIZED" : "USER", uncategorized ? null : java.sql.Timestamp.from(java.time.Instant.now()));
+        UUID transactionId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO " + SCHEMA + "transaction_record (id,user_id,financial_account_id,category_id,source_type,client_idempotency_key,booking_date,amount,direction,currency,raw_description,normalized_description,category_source,categorized_at) VALUES (?,?,?,?,'MANUAL',?,?,?,?,(SELECT currency FROM " + SCHEMA + "financial_account WHERE id = ?),?,?,?,?)",
+                transactionId, userId, accountId, categoryId, UUID.randomUUID().toString(), bookingDate,
+                new BigDecimal(amount), direction, accountId, description, description.toLowerCase(),
+                uncategorized ? "UNCATEGORIZED" : "USER",
+                uncategorized ? null : java.sql.Timestamp.from(java.time.Instant.now()));
+        return transactionId;
+    }
+
+    private JsonNode dashboardSummary(AppRegistration user, String month) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/dashboard/summary")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token()))
+                        .param("month", month))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString());
+    }
+
+    private JsonNode currencySpending(JsonNode dashboard, String currency) {
+        for (JsonNode spending : dashboard.get("categorySpending")) {
+            if (currency.equals(spending.get("currency").asText())) return spending;
+        }
+        throw new AssertionError("Missing category spending for currency " + currency);
+    }
+
+    private BigDecimal categoryAmount(JsonNode spending, UUID categoryId) {
+        for (JsonNode category : spending.get("categories")) {
+            if (categoryId.toString().equals(category.get("categoryId").asText())) {
+                return category.get("totalAmount").decimalValue();
+            }
+        }
+        return BigDecimal.ZERO;
     }
 
     private String bearer(String token) { return "Bearer " + token; }

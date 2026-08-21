@@ -18,9 +18,12 @@ public interface MerchantRecognitionAiClient {
             String modelId, String modelVersion, String featureVersion,
             boolean experimental, boolean syntheticTrainingData, boolean guaranteed,
             String fallbackReason, String rationale, List<String> evidenceUrls,
-            String providerId, String catalogVersion, String taxonomyVersion) {
+            String providerId, String catalogVersion, String taxonomyVersion,
+            List<String> candidateCategoryCodes) {
         public Prediction {
             evidenceUrls = evidenceUrls == null ? List.of() : List.copyOf(evidenceUrls);
+            candidateCategoryCodes = candidateCategoryCodes == null
+                    ? List.of() : List.copyOf(candidateCategoryCodes);
         }
     }
 }

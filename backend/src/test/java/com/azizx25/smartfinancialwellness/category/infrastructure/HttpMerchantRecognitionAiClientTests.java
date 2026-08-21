@@ -38,7 +38,8 @@ class HttpMerchantRecognitionAiClientTests {
               "featureVersion":"merchant-recognition-features-v1",
               "experimental":true,
               "syntheticTrainingData":true,
-              "guaranteed":false
+              "guaranteed":false,
+              "candidateCategoryCodes":[]
             }]}
             """;
 
@@ -89,6 +90,7 @@ class HttpMerchantRecognitionAiClientTests {
         assertThat(predictions).singleElement().satisfies(prediction -> {
             assertThat(prediction.requestKey()).isEqualTo("merchant-1");
             assertThat(prediction.status()).isEqualTo("RECOGNIZED");
+            assertThat(prediction.candidateCategoryCodes()).isEmpty();
         });
         server.verify();
     }

@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.azizx25.smartfinancialwellness.category.MerchantRecognitionPersistence.Candidate;
+import com.azizx25.smartfinancialwellness.category.CategorizationReviewService.MemoryMatch;
+import com.azizx25.smartfinancialwellness.bank.persistence.TransactionRecord;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantRecognitionRunResponse;
 import com.azizx25.smartfinancialwellness.category.infrastructure.MerchantAiClientProperties;
 import com.azizx25.smartfinancialwellness.category.infrastructure.MerchantAiExceptions.InvalidResponse;
@@ -30,19 +32,19 @@ public class MerchantRecognitionService {
 
     private final DeterministicCategorizationService deterministicService;
     private final MerchantRecognitionPersistence persistence;
-    private final MerchantPrivacySanitizer sanitizer;
+    private final CategorizationReviewService reviewService;
     private final MerchantRecognitionAiClient aiClient;
     private final MerchantAiClientProperties properties;
 
     public MerchantRecognitionService(
             DeterministicCategorizationService deterministicService,
             MerchantRecognitionPersistence persistence,
-            MerchantPrivacySanitizer sanitizer,
+            CategorizationReviewService reviewService,
             MerchantRecognitionAiClient aiClient,
             MerchantAiClientProperties properties) {
         this.deterministicService = deterministicService;
         this.persistence = persistence;
-        this.sanitizer = sanitizer;
+        this.reviewService = reviewService;
         this.aiClient = aiClient;
         this.properties = properties;
     }
@@ -50,17 +52,45 @@ public class MerchantRecognitionService {
     public MerchantRecognitionRunResponse generate(UUID userId) {
         deterministicService.categorizeUncategorized(userId);
         List<Candidate> candidates = persistence.loadCandidates(userId, BATCH_LIMIT);
-        int unsupported = (int) candidates.stream().filter(candidate -> !"TND".equals(candidate.currency())).count();
+        int unsupported = (int) candidates.stream()
+                .filter(candidate -> "UNSUPPORTED_CURRENCY".equals(candidate.exclusionReason())).count();
+        int excluded = 0;
+        int suggested = 0;
+        int reviewRequired = 0;
         Map<String, Candidate> requested = new LinkedHashMap<>();
-        List<RequestItem> items = candidates.stream()
-                .filter(candidate -> "TND".equals(candidate.currency()))
-                .map(candidate -> request(candidate, requested))
-                .filter(item -> !item.sanitizedMerchantText().isBlank())
+        for (Candidate candidate : candidates) {
+            if (candidate.pendingSuggestion()) continue;
+            if (candidate.exclusionReason() != null) {
+                persistence.persistExcluded(userId, candidate.transactionId(), candidate.exclusionReason());
+                excluded++;
+                continue;
+            }
+            if (candidate.merchantKey().isBlank()) {
+                persistence.persistNeedsReview(
+                        userId, candidate.transactionId(), "MERCHANT_TEXT_UNAVAILABLE", List.of());
+                reviewRequired++;
+                continue;
+            }
+            MemoryMatch memory = reviewService.findMemory(
+                    userId, candidate.merchantKey(),
+                    TransactionRecord.Direction.valueOf(candidate.direction()), candidate.currency());
+            if (memory != null && persistence.persistMemoryPending(
+                    userId, candidate.transactionId(), memory)) {
+                suggested++;
+                continue;
+            }
+            request(candidate, requested);
+        }
+        List<RequestItem> items = requested.entrySet().stream()
+                .map(entry -> new RequestItem(
+                        entry.getKey(), entry.getValue().merchantKey(), entry.getValue().direction(),
+                        entry.getValue().currency(), properties.expectedFeatureVersion()))
                 .toList();
         if (items.isEmpty()) {
             return new MerchantRecognitionRunResponse(
-                    0, 0, 0, unsupported,
-                    unsupported > 0 ? "UNSUPPORTED_CURRENCY" : "UNRECOGNIZED");
+                    0, suggested, 0, unsupported, reviewRequired, excluded,
+                    suggested > 0 ? "SUGGESTED"
+                            : unsupported > 0 ? "UNSUPPORTED_CURRENCY" : "UNRECOGNIZED");
         }
 
         List<Prediction> predictions;
@@ -68,36 +98,40 @@ public class MerchantRecognitionService {
             predictions = aiClient.predict(items);
             validateBatch(predictions, requested);
         } catch (Unavailable exception) {
-            return new MerchantRecognitionRunResponse(items.size(), 0, 0, unsupported, "SERVICE_UNAVAILABLE");
+            persistence.persistBatchReview(userId, requested, "SERVICE_UNAVAILABLE");
+            return new MerchantRecognitionRunResponse(
+                    items.size(), suggested, 0, unsupported,
+                    reviewRequired + items.size(), excluded, "SERVICE_UNAVAILABLE");
         } catch (InvalidResponse | IllegalArgumentException exception) {
-            return new MerchantRecognitionRunResponse(items.size(), 0, 0, unsupported, "INVALID_RESPONSE");
+            persistence.persistBatchReview(userId, requested, "INVALID_RESPONSE");
+            return new MerchantRecognitionRunResponse(
+                    items.size(), suggested, 0, unsupported,
+                    reviewRequired + items.size(), excluded, "INVALID_RESPONSE");
         }
 
         if (predictions.stream().anyMatch(this::wrongModel)) {
-            return new MerchantRecognitionRunResponse(items.size(), 0, 0, unsupported, "MODEL_VERSION_MISMATCH");
+            persistence.persistBatchReview(userId, requested, "MODEL_VERSION_MISMATCH");
+            return new MerchantRecognitionRunResponse(
+                    items.size(), suggested, 0, unsupported,
+                    reviewRequired + items.size(), excluded, "MODEL_VERSION_MISMATCH");
         }
 
-        int suggested = 0;
         int unrecognized = 0;
         for (Prediction prediction : predictions) {
             if ("UNRECOGNIZED".equals(prediction.status())) {
                 unrecognized++;
-                continue;
+                reviewRequired++;
             }
-            Candidate candidate = requested.get(prediction.requestKey());
-            if (persistence.persistPending(userId, candidate.transactionId(), prediction)) suggested++;
         }
+        suggested += persistence.persistAiBatch(userId, requested, predictions);
         return new MerchantRecognitionRunResponse(
-                items.size(), suggested, unrecognized, unsupported,
+                items.size(), suggested, unrecognized, unsupported, reviewRequired, excluded,
                 suggested > 0 ? "SUGGESTED" : "UNRECOGNIZED");
     }
 
-    private RequestItem request(Candidate candidate, Map<String, Candidate> requested) {
+    private void request(Candidate candidate, Map<String, Candidate> requested) {
         String key = "merchant-" + (requested.size() + 1);
         requested.put(key, candidate);
-        return new RequestItem(
-                key, sanitizer.sanitize(candidate.recognizedMerchant(), candidate.normalizedDescription()),
-                candidate.direction(), candidate.currency(), properties.expectedFeatureVersion());
     }
 
     private void validateBatch(List<Prediction> predictions, Map<String, Candidate> requested) {
@@ -124,7 +158,8 @@ public class MerchantRecognitionService {
         return prediction.canonicalMerchant() == null || prediction.canonicalMerchant().isBlank()
                 || prediction.canonicalMerchant().length() > 160
                 || !MerchantRecognitionPersistence.ALLOWED_CATEGORY_CODES.contains(prediction.categoryCode())
-                || !prediction.experimental() || prediction.guaranteed();
+                || !prediction.experimental() || prediction.guaranteed()
+                || !prediction.candidateCategoryCodes().isEmpty();
     }
 
     private void validateModelSuggestion(Prediction prediction) {
@@ -161,6 +196,13 @@ public class MerchantRecognitionService {
                 || prediction.taxonomyVersion() != null
                 || prediction.fallbackReason() == null
                 || !FALLBACK_REASONS.contains(prediction.fallbackReason())
+                || prediction.candidateCategoryCodes().size() > 3
+                || prediction.candidateCategoryCodes().stream().distinct().count()
+                        != prediction.candidateCategoryCodes().size()
+                || prediction.candidateCategoryCodes().stream()
+                        .anyMatch(code -> !MerchantRecognitionPersistence.ALLOWED_CATEGORY_CODES.contains(code))
+                || (!prediction.candidateCategoryCodes().isEmpty()
+                        && !"MODEL_ABSTAINED".equals(prediction.fallbackReason()))
                 || !prediction.experimental() || !prediction.syntheticTrainingData() || prediction.guaranteed()) {
             throw new InvalidResponse("Invalid merchant abstention");
         }

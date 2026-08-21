@@ -47,6 +47,12 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
                 UNION ALL
                 SELECT 1 FROM smart_financial_wellness.transaction_category_history
                  WHERE previous_category_id = :categoryId OR new_category_id = :categoryId
+                UNION ALL
+                SELECT 1 FROM smart_financial_wellness.categorization_review_candidate
+                 WHERE category_id = :categoryId
+                UNION ALL
+                SELECT 1 FROM smart_financial_wellness.user_merchant_memory
+                 WHERE category_id = :categoryId
             )
             """, nativeQuery = true)
     boolean isReferenced(@Param("categoryId") UUID categoryId);

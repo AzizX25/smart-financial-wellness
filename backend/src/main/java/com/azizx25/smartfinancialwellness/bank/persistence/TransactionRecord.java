@@ -165,6 +165,7 @@ public class TransactionRecord {
     public AppUser getUser() { return user; }
     public Category getCategory() { return category; }
     public String getCategorySource() { return categorySource; }
+    public SourceType getSourceType() { return sourceType; }
     public String getNormalizedDescription() { return normalizedDescription; }
     public Instant getCategorizedAt() { return categorizedAt; }
 
@@ -256,6 +257,17 @@ public class TransactionRecord {
         }
         category = target;
         categorySource = "LLM";
+        appliedCategoryPredictionId = predictionId;
+        matchedCategorizationRuleId = null;
+        categorizedAt = now;
+    }
+
+    public void assignByUserMemory(Category target, UUID predictionId, Instant now) {
+        if (!"UNCATEGORIZED".equals(categorySource)) {
+            return;
+        }
+        category = target;
+        categorySource = "USER_MEMORY";
         appliedCategoryPredictionId = predictionId;
         matchedCategorizationRuleId = null;
         categorizedAt = now;

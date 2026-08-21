@@ -30,6 +30,7 @@ import tools.jackson.databind.ObjectMapper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,8 +60,8 @@ class MerchantRecognitionIntegrationTests {
         UUID eurAccount = createManualAccount(user.userId(), "EUR");
         UUID deterministic = insertManualTransaction(user.userId(), tndAccount, "DEBIT", "TND", "STEG", "Facture electricite");
         UUID eligible = insertManualTransaction(user.userId(), tndAccount, "DEBIT", "TND", "Carrefour La Marsa", "contact@example.test 4111111111111111");
-        insertManualTransaction(user.userId(), tndAccount, "CREDIT", "TND", "Prime", "Credit sans regle");
-        insertManualTransaction(user.userId(), eurAccount, "DEBIT", "EUR", "Carrefour", "Paiement EUR");
+        UUID credit = insertManualTransaction(user.userId(), tndAccount, "CREDIT", "TND", "Prime", "Credit sans regle");
+        UUID euro = insertManualTransaction(user.userId(), eurAccount, "DEBIT", "EUR", "Carrefour", "Paiement EUR");
         UUID outgoing = insertManualTransaction(user.userId(), tndAccount, "DEBIT", "TND", "Carrefour", "Virement interne");
         UUID secondAccount = createManualAccount(user.userId(), "TND");
         UUID incoming = insertManualTransaction(user.userId(), secondAccount, "CREDIT", "TND", null, "Virement interne");
@@ -76,6 +77,7 @@ class MerchantRecognitionIntegrationTests {
                 .andExpect(jsonPath("$.analyzedCount").value(1))
                 .andExpect(jsonPath("$.suggestedCount").value(1))
                 .andExpect(jsonPath("$.unsupportedCurrencyCount").value(1))
+                .andExpect(jsonPath("$.excludedCount").value(4))
                 .andExpect(jsonPath("$.outcome").value("SUGGESTED"));
 
         assertThat(aiClient.transactionActiveDuringCall).isFalse();
@@ -94,6 +96,17 @@ class MerchantRecognitionIntegrationTests {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT review_status FROM " + SCHEMA + "category_prediction WHERE transaction_id = ?",
                 String.class, eligible)).isEqualTo("PENDING");
+
+        JsonNode reviews = reviews(user);
+        assertReview(reviews, eligible, "SUGGESTION_PENDING", "RELIABLE_SUGGESTION");
+        assertReview(reviews, credit, "EXCLUDED", "CREDIT_NOT_SUPPORTED");
+        assertReview(reviews, euro, "EXCLUDED", "UNSUPPORTED_CURRENCY");
+        assertReview(reviews, outgoing, "EXCLUDED", "INTERNAL_TRANSFER");
+        assertReview(reviews, incoming, "EXCLUDED", "INTERNAL_TRANSFER");
+        String reviewJson = reviews.toString();
+        assertThat(reviewJson).doesNotContain(
+                user.userId().toString(), tndAccount.toString(), eurAccount.toString(),
+                "confidence", "score", "salaryPlan", "forecast");
     }
 
     @Test
@@ -150,6 +163,11 @@ class MerchantRecognitionIntegrationTests {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT review_status FROM " + SCHEMA + "category_prediction WHERE id = ?",
                 String.class, UUID.fromString(rejected.get("predictionId").asText()))).isEqualTo("REJECTED");
+        assertReview(reviews(owner), rejectedTransaction, "NEEDS_REVIEW", "SUGGESTION_REJECTED");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + SCHEMA + "user_merchant_memory WHERE user_id = ? "
+                        + "AND normalized_merchant_key = 'carrefour'",
+                Integer.class, owner.userId())).isEqualTo(1);
     }
 
     @Test
@@ -181,8 +199,10 @@ class MerchantRecognitionIntegrationTests {
         mockMvc.perform(post("/api/categorization-runs/merchant-recognition")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.outcome").value("SERVICE_UNAVAILABLE"));
+                .andExpect(jsonPath("$.outcome").value("SERVICE_UNAVAILABLE"))
+                .andExpect(jsonPath("$.reviewRequiredCount").value(1));
         assertThat(categorySource(unavailableTransaction)).isEqualTo("UNCATEGORIZED");
+        assertReview(reviews(user), unavailableTransaction, "NEEDS_REVIEW", "SERVICE_UNAVAILABLE");
     }
 
     @Test
@@ -207,6 +227,8 @@ class MerchantRecognitionIntegrationTests {
                 Integer.class, first, second)).isZero();
         assertThat(categorySource(first)).isEqualTo("UNCATEGORIZED");
         assertThat(categorySource(second)).isEqualTo("UNCATEGORIZED");
+        assertReview(reviews(user), first, "NEEDS_REVIEW", "INVALID_RESPONSE");
+        assertReview(reviews(user), second, "NEEDS_REVIEW", "INVALID_RESPONSE");
     }
 
     @Test
@@ -299,6 +321,109 @@ class MerchantRecognitionIntegrationTests {
     }
 
     @Test
+    void modelAbstentionPersistsThreeOrderedCandidatesWithoutScores() throws Exception {
+        AppRegistration user = registerAndActivate();
+        UUID transactionId = insertManualTransaction(
+                user.userId(), createManualAccount(user.userId(), "TND"),
+                "DEBIT", "TND", "Marchand nouveau", "Paiement inconnu");
+        aiClient.modelAbstainedWithCandidates = true;
+
+        mockMvc.perform(post("/api/categorization-runs/merchant-recognition")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reviewRequiredCount").value(1))
+                .andExpect(jsonPath("$.suggestedCount").value(0));
+
+        JsonNode item = assertReview(
+                reviews(user), transactionId, "NEEDS_REVIEW", "MODEL_ABSTAINED");
+        List<String> candidateCodes = new ArrayList<>();
+        item.get("candidateCategories").forEach(
+                candidate -> candidateCodes.add(candidate.get("categoryCode").asText()));
+        assertThat(candidateCodes).containsExactly("FOOD", "SHOPPING", "TRANSPORT");
+        assertThat(item.toString()).doesNotContain("confidence", "score");
+        assertThat(item.get("manualCategorizationAllowed").asBoolean()).isTrue();
+    }
+
+    @Test
+    void pendingAndReversedBankTransactionsHaveExplicitExcludedReviews() throws Exception {
+        AppRegistration user = registerAndActivate();
+        BankSyncFixture bank = createBankSyncFixture(user.userId());
+        UUID pending = insertBankTransaction(bank, "PENDING");
+        UUID reversed = insertBankTransaction(bank, "REVERSED");
+
+        mockMvc.perform(post("/api/categorization-runs/merchant-recognition")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.analyzedCount").value(0))
+                .andExpect(jsonPath("$.excludedCount").value(2));
+
+        assertThat(aiClient.requests).isEmpty();
+        assertReview(reviews(user), pending, "EXCLUDED", "NOT_POSTED");
+        assertReview(reviews(user), reversed, "EXCLUDED", "REVERSED");
+    }
+
+    @Test
+    void explicitChoicesCreatePrivateMemoryExactMatchAvoidsAiAndOwnerCanForgetIt() throws Exception {
+        AppRegistration owner = registerAndActivate();
+        AppRegistration other = registerAndActivate();
+        UUID ownerAccount = createManualAccount(owner.userId(), "TND");
+        UUID original = insertManualTransaction(
+                owner.userId(), ownerAccount, "DEBIT", "TND", "Boutique Privee", "Premier achat");
+
+        mockMvc.perform(patch("/api/transactions/{transactionId}/category", original)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"categoryId\":\"" + category("FOOD") + "\"}"))
+                .andExpect(status().isOk());
+        JsonNode memories = memories(owner);
+        assertThat(memories).hasSize(1);
+        UUID memoryId = UUID.fromString(memories.get(0).get("id").asText());
+        assertThat(memories.get(0).get("normalizedMerchant").asText()).isEqualTo("boutique privee");
+
+        UUID repeated = insertManualTransaction(
+                owner.userId(), ownerAccount, "DEBIT", "TND", "Boutique Privee", "Deuxieme achat");
+        aiClient.reset();
+        runRecognition(owner);
+        assertThat(aiClient.requests).isEmpty();
+        JsonNode memorySuggestion = pendingSuggestion(owner, repeated);
+        assertThat(memorySuggestion.get("matchMethod").asText()).isEqualTo("USER_MEMORY");
+        mockMvc.perform(post("/api/transactions/{transactionId}/merchant-suggestions/{predictionId}/accept",
+                        repeated, memorySuggestion.get("predictionId").asText())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignmentSource").value("USER_MEMORY"));
+
+        mockMvc.perform(patch("/api/transactions/{transactionId}/category", original)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"categoryId\":\"" + category("SHOPPING") + "\"}"))
+                .andExpect(status().isOk());
+        assertThat(memories(owner).get(0).get("categoryName").asText()).isEqualTo("Shopping");
+
+        UUID foreignTransaction = insertManualTransaction(
+                other.userId(), createManualAccount(other.userId(), "TND"),
+                "DEBIT", "TND", "Boutique Privee", "Achat autre utilisateur");
+        aiClient.reset();
+        runRecognition(other);
+        assertThat(aiClient.requests).hasSize(1);
+        assertThat(memories(other)).isEmpty();
+        assertThat(categorySource(foreignTransaction)).isEqualTo("UNCATEGORIZED");
+        mockMvc.perform(delete("/api/merchant-memories/{memoryId}", memoryId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(other.token())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("MERCHANT_MEMORY_NOT_FOUND"));
+
+        mockMvc.perform(delete("/api/merchant-memories/{memoryId}", memoryId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token())))
+                .andExpect(status().isNoContent());
+        assertThat(memories(owner)).isEmpty();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + SCHEMA + "audit_log_entry WHERE actor_id = ? "
+                        + "AND action IN ('MERCHANT_MEMORY_CREATED','MERCHANT_MEMORY_UPDATED','MERCHANT_MEMORY_DELETED')",
+                Integer.class, owner.userId())).isEqualTo(3);
+    }
+
+    @Test
     void migrationRejectsIncompatibleMlEvidenceAndProtectsPendingEvidence() throws Exception {
         AppRegistration user = registerAndActivate();
         UUID transactionId = insertManualTransaction(
@@ -357,6 +482,33 @@ class MerchantRecognitionIntegrationTests {
         throw new AssertionError("No pending suggestion for transaction " + transactionId);
     }
 
+    private JsonNode reviews(AppRegistration user) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/categorization-reviews?page=0&size=100")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("items");
+    }
+
+    private JsonNode assertReview(JsonNode reviews, UUID transactionId, String state, String reason) {
+        for (JsonNode review : reviews) {
+            if (transactionId.toString().equals(review.get("transactionId").asText())) {
+                assertThat(review.get("reviewStatus").asText()).isEqualTo(state);
+                assertThat(review.get("reasonCode").asText()).isEqualTo(reason);
+                return review;
+            }
+        }
+        throw new AssertionError("No categorization review for transaction " + transactionId);
+    }
+
+    private JsonNode memories(AppRegistration user) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/merchant-memories")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
+                .andExpect(status().isOk()).andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString());
+    }
+
     private AppRegistration registerAndActivate() throws Exception {
         String email = "merchant-" + UUID.randomUUID() + "@example.test";
         MvcResult result = mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
@@ -398,6 +550,54 @@ class MerchantRecognitionIntegrationTests {
         return id;
     }
 
+    private BankSyncFixture createBankSyncFixture(UUID userId) {
+        UUID connectionId = UUID.randomUUID();
+        UUID authorizationId = UUID.randomUUID();
+        UUID syncJobId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        String providerCode = "REVIEW_" + connectionId.toString().substring(0, 8);
+        jdbcTemplate.update(
+                "INSERT INTO " + SCHEMA + "bank_connection "
+                        + "(id, user_id, provider_code, external_customer_id, status) "
+                        + "VALUES (?, ?, ?, ?, 'ACTIVE')",
+                connectionId, userId, providerCode, "CUSTOMER-" + connectionId);
+        jdbcTemplate.update(
+                "INSERT INTO " + SCHEMA + "bank_connection_authorization "
+                        + "(id, bank_connection_id, status, secret_reference, granted_scopes, consented_at, expires_at) "
+                        + "VALUES (?, ?, 'ACTIVE', ?, "
+                        + "ARRAY['ACCOUNTS_READ','BALANCES_READ','TRANSACTIONS_READ']::VARCHAR(40)[], "
+                        + "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '1 day')",
+                authorizationId, connectionId, "test://review/" + authorizationId);
+        jdbcTemplate.update(
+                "INSERT INTO " + SCHEMA + "sync_job "
+                        + "(id, bank_connection_id, authorization_id, status, started_at) "
+                        + "VALUES (?, ?, ?, 'RUNNING', CURRENT_TIMESTAMP)",
+                syncJobId, connectionId, authorizationId);
+        jdbcTemplate.update(
+                "INSERT INTO " + SCHEMA + "financial_account "
+                        + "(id, user_id, bank_connection_id, account_origin, external_account_id, name, "
+                        + "account_type, currency, provider_code) "
+                        + "VALUES (?, ?, ?, 'BANK_CONNECTION', ?, 'Review bank account', 'CHECKING', 'TND', ?)",
+                accountId, userId, connectionId, "ACCOUNT-" + accountId, providerCode);
+        return new BankSyncFixture(userId, accountId, syncJobId);
+    }
+
+    private UUID insertBankTransaction(BankSyncFixture fixture, String providerStatus) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO " + SCHEMA + "transaction_record "
+                        + "(id, user_id, financial_account_id, category_id, source_type, sync_job_id, "
+                        + "external_transaction_id, booking_date, amount, direction, currency, raw_description, "
+                        + "normalized_description, recognized_merchant, category_source, provider_status, "
+                        + "first_imported_at, last_synchronized_at) "
+                        + "VALUES (?, ?, ?, ?, 'BANK_SYNC', ?, ?, DATE '2026-08-20', 10.0000, 'DEBIT', 'TND', "
+                        + "'Provider transaction', 'provider transaction', 'Provider merchant', "
+                        + "'UNCATEGORIZED', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                id, fixture.userId(), fixture.accountId(), category("UNCATEGORIZED"), fixture.syncJobId(),
+                "TX-" + id, providerStatus);
+        return id;
+    }
+
     private UUID category(String code) {
         return jdbcTemplate.queryForObject(
                 "SELECT id FROM " + SCHEMA + "category WHERE code = ? AND user_id IS NULL",
@@ -413,6 +613,7 @@ class MerchantRecognitionIntegrationTests {
     private String bearer(String token) { return "Bearer " + token; }
 
     private record AppRegistration(UUID userId, String token) { }
+    private record BankSyncFixture(UUID userId, UUID accountId, UUID syncJobId) { }
 
     @TestConfiguration(proxyBeanMethods = false)
     static class AiTestConfiguration {
@@ -430,6 +631,7 @@ class MerchantRecognitionIntegrationTests {
         private boolean invalidSecondPrediction;
         private boolean webEnriched;
         private boolean enrichmentAbstained;
+        private boolean modelAbstainedWithCandidates;
         private boolean transactionActiveDuringCall;
 
         @Override
@@ -443,7 +645,15 @@ class MerchantRecognitionIntegrationTests {
                         item.requestKey(), "UNRECOGNIZED", null, null, null, null,
                         "merchant-recognition-synthetic-v1", "1.0.0",
                         "merchant-recognition-features-v1", true, true, false,
-                        "ENRICHMENT_UNAVAILABLE", null, List.of(), null, null, null)).toList();
+                        "ENRICHMENT_UNAVAILABLE", null, List.of(), null, null, null, List.of())).toList();
+            }
+            if (modelAbstainedWithCandidates) {
+                return items.stream().map(item -> new Prediction(
+                        item.requestKey(), "UNRECOGNIZED", null, null, null, null,
+                        "merchant-recognition-synthetic-v1", "1.0.0",
+                        "merchant-recognition-features-v1", true, true, false,
+                        "MODEL_ABSTAINED", null, List.of(), null, null, null,
+                        List.of("FOOD", "SHOPPING", "TRANSPORT"))).toList();
             }
             if (webEnriched) {
                 return items.stream().map(item -> new Prediction(
@@ -452,13 +662,13 @@ class MerchantRecognitionIntegrationTests {
                         true, false, false, null,
                         "Le resultat public decrit un commerce de detail.",
                         List.of("https://example.test/merchant"), "ollama",
-                        "merchant-catalog-v1", "system-taxonomy-v2")).toList();
+                        "merchant-catalog-v1", "system-taxonomy-v2", List.of())).toList();
             }
             List<Prediction> predictions = new ArrayList<>(items.stream().map(item -> new Prediction(
                     item.requestKey(), "RECOGNIZED", "Carrefour", "FOOD", "EXACT_ALIAS",
                     new BigDecimal("1.0000"), "merchant-recognition-synthetic-v1", "1.0.0",
                     "merchant-recognition-features-v1", true, true, false,
-                    null, null, List.of(), null, null, null)).toList());
+                    null, null, List.of(), null, null, null, List.of())).toList());
             if (invalidSecondPrediction && predictions.size() > 1) {
                 Prediction original = predictions.get(1);
                 predictions.set(1, new Prediction(
@@ -467,7 +677,8 @@ class MerchantRecognitionIntegrationTests {
                         original.modelId(), original.modelVersion(), original.featureVersion(),
                         original.experimental(), original.syntheticTrainingData(), original.guaranteed(),
                         original.fallbackReason(), original.rationale(), original.evidenceUrls(),
-                        original.providerId(), original.catalogVersion(), original.taxonomyVersion()));
+                        original.providerId(), original.catalogVersion(), original.taxonomyVersion(),
+                        original.candidateCategoryCodes()));
             }
             return predictions;
         }
@@ -479,6 +690,7 @@ class MerchantRecognitionIntegrationTests {
             invalidSecondPrediction = false;
             webEnriched = false;
             enrichmentAbstained = false;
+            modelAbstainedWithCandidates = false;
             transactionActiveDuringCall = true;
         }
     }

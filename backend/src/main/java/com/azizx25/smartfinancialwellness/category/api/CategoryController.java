@@ -5,25 +5,36 @@ import java.util.List;
 import java.util.UUID;
 
 import com.azizx25.smartfinancialwellness.category.CategoryService;
+import com.azizx25.smartfinancialwellness.category.CategorizationReviewService;
 import com.azizx25.smartfinancialwellness.category.DeterministicCategorizationService;
 import com.azizx25.smartfinancialwellness.category.MerchantRecognitionPersistence;
 import com.azizx25.smartfinancialwellness.category.MerchantRecognitionService;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategorizationRunResponse;
+import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategorizationReviewPageResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategoryRequest;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategoryResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategorySummaryResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantRecognitionRunResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantSuggestionResponse;
+import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantMemoryResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryRequest;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryResponse;
 import com.azizx25.smartfinancialwellness.security.CurrentUserPrincipal;
+import com.azizx25.smartfinancialwellness.common.web.ApiError;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,16 +53,19 @@ public class CategoryController {
     private final DeterministicCategorizationService categorizationService;
     private final MerchantRecognitionService merchantRecognitionService;
     private final MerchantRecognitionPersistence merchantRecognitionPersistence;
+    private final CategorizationReviewService reviewService;
 
     public CategoryController(
             CategoryService categoryService,
             DeterministicCategorizationService categorizationService,
             MerchantRecognitionService merchantRecognitionService,
-            MerchantRecognitionPersistence merchantRecognitionPersistence) {
+            MerchantRecognitionPersistence merchantRecognitionPersistence,
+            CategorizationReviewService reviewService) {
         this.categoryService = categoryService;
         this.categorizationService = categorizationService;
         this.merchantRecognitionService = merchantRecognitionService;
         this.merchantRecognitionPersistence = merchantRecognitionPersistence;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("/categories")
@@ -107,6 +121,28 @@ public class CategoryController {
         return merchantRecognitionPersistence.listPending(principal.userId());
     }
 
+    @GetMapping("/categorization-reviews")
+    public CategorizationReviewPageResponse reviews(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return reviewService.list(principal.userId(), page, size);
+    }
+
+    @GetMapping("/merchant-memories")
+    public List<MerchantMemoryResponse> merchantMemories(
+            @AuthenticationPrincipal CurrentUserPrincipal principal) {
+        return reviewService.listMemories(principal.userId());
+    }
+
+    @DeleteMapping("/merchant-memories/{memoryId}")
+    public ResponseEntity<Void> forgetMerchantMemory(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @PathVariable UUID memoryId) {
+        reviewService.forget(principal.userId(), memoryId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/transactions/{transactionId}/merchant-suggestions/{predictionId}/accept")
     public TransactionCategoryResponse acceptMerchantSuggestion(
             @AuthenticationPrincipal CurrentUserPrincipal principal,
@@ -129,5 +165,19 @@ public class CategoryController {
             @AuthenticationPrincipal CurrentUserPrincipal principal,
             @RequestParam @Pattern(regexp = "[0-9]{4}-(0[1-9]|1[0-2])") String month) {
         return categoryService.summary(principal.userId(), YearMonth.parse(month));
+    }
+
+    @ExceptionHandler({
+            DataIntegrityViolationException.class,
+            ObjectOptimisticLockingFailureException.class,
+            PessimisticLockingFailureException.class
+    })
+    ResponseEntity<ApiError> categorizationConflict(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(
+                        HttpStatus.CONFLICT,
+                        "CATEGORIZATION_CONFLICT",
+                        "Categorization state changed concurrently",
+                        request.getRequestURI()));
     }
 }

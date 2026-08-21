@@ -69,6 +69,34 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
             @Param("userId") UUID userId,
             @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId);
 
+    @Query("""
+            select transaction from TransactionRecord transaction
+            where transaction.user.id = :userId
+              and transaction.category.id = :uncategorizedCategoryId
+              and transaction.categorySource = 'UNCATEGORIZED'
+            order by transaction.bookingDate, transaction.id
+            """)
+    Page<TransactionRecord> findUncategorizedForReview(
+            @Param("userId") UUID userId,
+            @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId,
+            Pageable pageable);
+
+    @Query(value = """
+            SELECT DISTINCT linked.transaction_id
+              FROM (
+                    SELECT outgoing_transaction_id AS transaction_id
+                      FROM smart_financial_wellness.internal_transfer
+                     WHERE confirmed_at IS NOT NULL
+                    UNION ALL
+                    SELECT incoming_transaction_id AS transaction_id
+                      FROM smart_financial_wellness.internal_transfer
+                     WHERE confirmed_at IS NOT NULL
+              ) linked
+             WHERE linked.transaction_id IN (:transactionIds)
+            """, nativeQuery = true)
+    List<UUID> findConfirmedInternalTransferTransactionIds(
+            @Param("transactionIds") Collection<UUID> transactionIds);
+
     @Query(value = """
             SELECT transaction.*
               FROM smart_financial_wellness.transaction_record transaction
@@ -142,6 +170,40 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
             @Param("fromDate") LocalDate fromDate,
             @Param("toDateExclusive") LocalDate toDateExclusive);
 
+    @Query(value = """
+            SELECT transaction.currency AS currency,
+                   category.id AS categoryId,
+                   category.label AS categoryName,
+                   COUNT(*) AS transactionCount,
+                   SUM(transaction.amount) AS totalAmount
+              FROM smart_financial_wellness.transaction_record transaction
+              JOIN smart_financial_wellness.category category
+                ON category.id = transaction.category_id
+             WHERE transaction.user_id = :userId
+               AND transaction.booking_date >= :fromDate
+               AND transaction.booking_date < :toDateExclusive
+               AND transaction.direction = 'DEBIT'
+               AND (category.nature = 'EXPENSE' OR category.id = :uncategorizedCategoryId)
+               AND ((transaction.source_type IN ('MANUAL', 'FILE_IMPORT')
+                     AND transaction.provider_status IS NULL)
+                    OR (transaction.source_type = 'BANK_SYNC'
+                        AND transaction.provider_status = 'POSTED'))
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM smart_financial_wellness.internal_transfer transfer
+                    WHERE transfer.confirmed_at IS NOT NULL
+                      AND (transfer.outgoing_transaction_id = transaction.id
+                           OR transfer.incoming_transaction_id = transaction.id)
+               )
+             GROUP BY transaction.currency, category.id, category.label
+             ORDER BY transaction.currency, SUM(transaction.amount) DESC, category.label, category.id
+            """, nativeQuery = true)
+    List<MonthlyCategoryExpenseTotal> summarizeMonthlyCategoryExpenses(
+            @Param("userId") UUID userId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDateExclusive") LocalDate toDateExclusive,
+            @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId);
+
     interface MonthlyCashFlowTotal {
 
         String getCurrency();
@@ -149,5 +211,18 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
         BigDecimal getIncome();
 
         BigDecimal getExpenses();
+    }
+
+    interface MonthlyCategoryExpenseTotal {
+
+        String getCurrency();
+
+        UUID getCategoryId();
+
+        String getCategoryName();
+
+        long getTransactionCount();
+
+        BigDecimal getTotalAmount();
     }
 }

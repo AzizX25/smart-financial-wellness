@@ -1,16 +1,22 @@
 package com.azizx25.smartfinancialwellness.bank;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.LocalAccountResponse;
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.AccountBalanceTotalResponse;
+import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.CategoryExpenseResponse;
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.DashboardSummaryResponse;
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.LocalTransactionPageResponse;
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.LocalTransactionResponse;
 import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.MonthlyCashFlowResponse;
+import com.azizx25.smartfinancialwellness.bank.api.LocalBankDtos.MonthlyCategorySpendingResponse;
 import com.azizx25.smartfinancialwellness.bank.exception.BankAccountNotFoundException;
 import com.azizx25.smartfinancialwellness.bank.exception.InvalidBankRequestException;
 import com.azizx25.smartfinancialwellness.bank.persistence.FinancialAccount;
@@ -117,7 +123,36 @@ public class LocalBankDataService {
                         total.getExpenses(),
                         total.getIncome().subtract(total.getExpenses())))
                 .toList();
-        return new DashboardSummaryResponse(month.toString(), balances, cashFlows);
+        Map<String, MutableCategorySpending> spendingByCurrency = new LinkedHashMap<>();
+        transactionRepository.summarizeMonthlyCategoryExpenses(
+                        userId,
+                        month.atDay(1),
+                        month.plusMonths(1).atDay(1),
+                        TransactionRecord.UNCATEGORIZED_CATEGORY_ID)
+                .forEach(total -> {
+                    MutableCategorySpending spending = spendingByCurrency.computeIfAbsent(
+                            total.getCurrency(), ignored -> new MutableCategorySpending());
+                    spending.totalExpenses = spending.totalExpenses.add(total.getTotalAmount());
+                    if (TransactionRecord.UNCATEGORIZED_CATEGORY_ID.equals(total.getCategoryId())) {
+                        spending.uncategorizedCount = total.getTransactionCount();
+                        spending.uncategorizedAmount = total.getTotalAmount();
+                    } else {
+                        spending.categories.add(new CategoryExpenseResponse(
+                                total.getCategoryId(),
+                                total.getCategoryName(),
+                                total.getTransactionCount(),
+                                total.getTotalAmount()));
+                    }
+                });
+        List<MonthlyCategorySpendingResponse> categorySpending = spendingByCurrency.entrySet().stream()
+                .map(entry -> new MonthlyCategorySpendingResponse(
+                        entry.getKey(),
+                        entry.getValue().totalExpenses,
+                        entry.getValue().categories,
+                        entry.getValue().uncategorizedCount,
+                        entry.getValue().uncategorizedAmount))
+                .toList();
+        return new DashboardSummaryResponse(month.toString(), balances, cashFlows, categorySpending);
     }
 
     private String normalizeSearch(String search) {
@@ -164,10 +199,19 @@ public class LocalBankDataService {
                     case "USER" -> "MANUAL";
                     case "RULES" -> "DETERMINISTIC_RULE";
                     case "ML" -> "ML";
+                    case "LLM" -> "WEB_LLM";
+                    case "USER_MEMORY" -> "USER_MEMORY";
                     default -> "UNCATEGORIZED";
                 },
                 transaction.getCategorizedAt(),
                 transaction.getFirstImportedAt(),
                 transaction.getLastSynchronizedAt());
+    }
+
+    private static final class MutableCategorySpending {
+        private BigDecimal totalExpenses = new BigDecimal("0.0000");
+        private final List<CategoryExpenseResponse> categories = new ArrayList<>();
+        private long uncategorizedCount;
+        private BigDecimal uncategorizedAmount = new BigDecimal("0.0000");
     }
 }
