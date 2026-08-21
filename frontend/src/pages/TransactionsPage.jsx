@@ -36,6 +36,51 @@ const merchantMethodLabels = {
   EXACT_ALIAS: 'Alias connu',
   FUZZY_ALIAS: 'Correspondance proche',
   ML: 'Suggestion intelligente',
+  WEB_LLM: 'Recherche web + IA locale',
+}
+
+function safeEvidenceUrls(urls) {
+  if (!Array.isArray(urls)) return []
+  return urls.filter((value) => {
+    try {
+      const url = new URL(value)
+      return url.protocol === 'https:' && url.hostname && !url.username && !url.password
+    } catch {
+      return false
+    }
+  })
+}
+
+function MerchantSuggestion({ busy, onReview, suggestion, transaction }) {
+  const webEnriched = suggestion.matchMethod === 'WEB_LLM'
+  const evidenceUrls = webEnriched ? safeEvidenceUrls(suggestion.evidenceUrls) : []
+
+  return (
+    <div className="merchant-suggestion" aria-label={`Suggestion pour ${transaction.description}`}>
+      <div>
+        <strong>{suggestion.canonicalMerchant}</strong>
+        <span>{suggestion.categoryName} · {merchantMethodLabels[suggestion.matchMethod] || 'Suggestion intelligente'}</span>
+      </div>
+      {webEnriched ? (
+        <>
+          {suggestion.rationale && <p>{suggestion.rationale}</p>}
+          {evidenceUrls.length > 0 && (
+            <div className="merchant-suggestion__evidence">
+              <span>Sources publiques consultées</span>
+              <ul>{evidenceUrls.map((url, index) => <li key={url}><a href={url} rel="noopener noreferrer" target="_blank">Voir la source {index + 1}</a></li>)}</ul>
+            </div>
+          )}
+          <p className="merchant-suggestion__warning">Suggestion expérimentale, informative et non garantie. Vérifiez la catégorie avant de l'accepter.</p>
+        </>
+      ) : (
+        <p>Suggestion expérimentale fondée sur un modèle entraîné avec des libellés marchands synthétiques. Vérifiez la catégorie avant de l'accepter.</p>
+      )}
+      <div className="merchant-suggestion__actions">
+        <button className="button button--primary" disabled={busy} onClick={() => onReview(transaction, suggestion, true)} type="button">Accepter</button>
+        <button className="button button--secondary" disabled={busy} onClick={() => onReview(transaction, suggestion, false)} type="button">Refuser</button>
+      </div>
+    </div>
+  )
 }
 
 export default function TransactionsPage() {
@@ -247,7 +292,7 @@ export default function TransactionsPage() {
               <div className="transaction-row__main"><h2>{transaction.description || 'Opération sans libellé'}</h2><p>{formatDate(transaction.bookingDate)} · {accountNames.get(transaction.accountId) || 'Compte synchronisé'}</p>{transaction.counterpartyName && <small>{transaction.counterpartyName}</small>}<label className="transaction-category-select"><span className="sr-only">Catégorie de {transaction.description}</span><select aria-label={`Catégorie de ${transaction.description}`} disabled={assigningId === transaction.id} onChange={(event) => assignCategory(transaction, event.target.value)} value={transaction.categoryId || ''}><option value="">Non catégorisée</option>{allowedCategories(transaction).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>{transaction.categoryAssignmentSource === 'MANUAL' && <small>Choix manuel</small>}</label></div>
               <Badge tone={transaction.direction === 'CREDIT' ? 'mint' : 'peach'}>{transaction.direction === 'CREDIT' ? 'Crédit' : 'Débit'}</Badge>
               <div className="transaction-row__amount"><strong className={transaction.direction === 'CREDIT' ? 'amount-credit' : 'amount-debit'}>{transaction.direction === 'CREDIT' ? '+' : '−'} {formatCurrency(transaction.amount, transaction.currency)}</strong><small>{transaction.currency}</small></div>
-              {merchantSuggestions[transaction.id] && <div className="merchant-suggestion" aria-label={`Suggestion pour ${transaction.description}`}><div><strong>{merchantSuggestions[transaction.id].canonicalMerchant}</strong><span>{merchantSuggestions[transaction.id].categoryName} · {merchantMethodLabels[merchantSuggestions[transaction.id].matchMethod]}</span></div><p>Suggestion expérimentale fondée sur un modèle entraîné avec des libellés marchands synthétiques. Vérifiez la catégorie avant de l'accepter.</p><div className="merchant-suggestion__actions"><button className="button button--primary" disabled={suggestionActionId === merchantSuggestions[transaction.id].predictionId} onClick={() => reviewSuggestion(transaction, merchantSuggestions[transaction.id], true)} type="button">Accepter</button><button className="button button--secondary" disabled={suggestionActionId === merchantSuggestions[transaction.id].predictionId} onClick={() => reviewSuggestion(transaction, merchantSuggestions[transaction.id], false)} type="button">Refuser</button></div></div>}
+              {merchantSuggestions[transaction.id] && <MerchantSuggestion busy={suggestionActionId === merchantSuggestions[transaction.id].predictionId} onReview={reviewSuggestion} suggestion={merchantSuggestions[transaction.id]} transaction={transaction} />}
             </article>)}
       </section>
       {result.totalPages > 1 && <nav aria-label="Pagination des transactions" className="pagination-controls"><button className="button button--secondary" disabled={loading || result.first} onClick={() => setPage((value) => Math.max(0, value - 1))} type="button">Précédente</button><span>Page {result.page + 1} sur {result.totalPages}</span><button className="button button--secondary" disabled={loading || result.last} onClick={() => setPage((value) => value + 1)} type="button">Suivante</button></nav>}

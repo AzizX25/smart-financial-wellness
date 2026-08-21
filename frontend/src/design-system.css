@@ -1832,6 +1832,32 @@ p {
   font-size: 0.76rem;
 }
 
+.merchant-suggestion__evidence {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.merchant-suggestion__evidence ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.merchant-suggestion__evidence a {
+  color: var(--color-brand-blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.merchant-suggestion__warning {
+  font-weight: 700;
+}
+
 .merchant-suggestion__actions {
   display: flex;
   flex-wrap: wrap;

@@ -83,6 +83,47 @@ describe('suggestions marchandes des transactions', () => {
     expect(await screen.findByText(/reste non catégorisée/)).toBeInTheDocument()
   })
 
+  it('affiche une suggestion web bornée avec des liens sûrs puis permet de la refuser', async () => {
+    const webSuggestion = {
+      ...suggestion,
+      canonicalMerchant: 'Commerce Exemple',
+      categoryCode: 'SHOPPING',
+      categoryName: 'Achats',
+      matchMethod: 'WEB_LLM',
+      source: 'WEB_LLM',
+      rationale: 'Les sources publiques décrivent un commerce de détail.',
+      evidenceUrls: [
+        'https://example.test/merchant',
+        'http://example.test/insecure',
+        'https://user:password@example.test/credentials',
+      ],
+      experimental: true,
+      guaranteed: false,
+      providerId: 'internal-provider',
+      modelVersion: 'internal-version',
+      prompt: 'internal-prompt',
+    }
+    listMerchantSuggestions.mockResolvedValueOnce([webSuggestion]).mockResolvedValue([])
+    rejectMerchantSuggestion.mockResolvedValue(null)
+
+    render(<TransactionsPage />)
+
+    expect(await screen.findByText('Commerce Exemple')).toBeInTheDocument()
+    expect(screen.getByText(/Recherche web \+ IA locale/)).toBeInTheDocument()
+    expect(screen.getByText(webSuggestion.rationale)).toBeInTheDocument()
+    expect(screen.getByText(/expérimentale, informative et non garantie/)).toBeInTheDocument()
+    const evidenceLink = screen.getByRole('link', { name: 'Voir la source 1' })
+    expect(evidenceLink).toHaveAttribute('href', 'https://example.test/merchant')
+    expect(evidenceLink).toHaveAttribute('target', '_blank')
+    expect(evidenceLink).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+    expect(screen.queryByText(/%|confiance/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/internal-provider|internal-version|internal-prompt/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refuser' }))
+    await waitFor(() => expect(rejectMerchantSuggestion).toHaveBeenCalledWith('TX-DEBIT', 'PREDICTION-1'))
+  })
+
   it('affiche une indisponibilité contrôlée sans altérer les transactions', async () => {
     runMerchantRecognition.mockResolvedValue({ outcome: 'SERVICE_UNAVAILABLE', suggestedCount: 0 })
     render(<TransactionsPage />)
