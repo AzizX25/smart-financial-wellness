@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useFinancialData } from '../financial/FinancialDataContext'
 import {
   acceptMerchantSuggestion,
+  assignTransactionCategory,
+  forgetMerchantMemory,
+  listCategorizationReviews,
   listCategories,
+  listMerchantMemories,
   listMerchantSuggestions,
   rejectMerchantSuggestion,
   runMerchantRecognition,
@@ -16,7 +20,10 @@ vi.mock('../services/financialApi', () => ({ listLocalTransactions: vi.fn() }))
 vi.mock('../services/categoryApi', () => ({
   acceptMerchantSuggestion: vi.fn(),
   assignTransactionCategory: vi.fn(),
+  forgetMerchantMemory: vi.fn(),
+  listCategorizationReviews: vi.fn(),
   listCategories: vi.fn(),
+  listMerchantMemories: vi.fn(),
   listMerchantSuggestions: vi.fn(),
   rejectMerchantSuggestion: vi.fn(),
   runMerchantRecognition: vi.fn(),
@@ -35,23 +42,29 @@ const suggestion = {
   categoryCode: 'FOOD', categoryName: 'Alimentation et courses', canonicalMerchant: 'Carrefour',
   matchMethod: 'ML',
 }
+const emptyReviewPage = {
+  items: [], page: 0, size: 20, totalElements: 0, totalPages: 0, first: true, last: true,
+}
 
 describe('suggestions marchandes des transactions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useFinancialData.mockReturnValue({
       accounts: [{ id: 'ACCOUNT-1', displayName: 'Compte courant' }], connected: true,
-      dataVersion: 1, historical: false, synchronizationError: '', synchronize: vi.fn(), synchronizing: false,
+      dataVersion: 1, historical: false, reload: vi.fn().mockResolvedValue(true),
+      synchronizationError: '', synchronize: vi.fn(), synchronizing: false,
     })
     listCategories.mockResolvedValue([{
       id: 'CAT-FOOD', code: 'FOOD', name: 'Alimentation et courses', nature: 'EXPENSE', system: true,
     }])
     listLocalTransactions.mockResolvedValue(transactionPage)
     listMerchantSuggestions.mockResolvedValue([])
+    listCategorizationReviews.mockResolvedValue(emptyReviewPage)
+    listMerchantMemories.mockResolvedValue([])
   })
 
   it('analyse, affiche et accepte une suggestion sans afficher de score', async () => {
-    listMerchantSuggestions.mockResolvedValueOnce([]).mockResolvedValue([suggestion])
+    listMerchantSuggestions.mockResolvedValueOnce([]).mockResolvedValueOnce([suggestion]).mockResolvedValue([])
     runMerchantRecognition.mockResolvedValue({ outcome: 'SUGGESTED', suggestedCount: 1 })
     acceptMerchantSuggestion.mockResolvedValue({
       transactionId: 'TX-DEBIT', categoryId: 'CAT-FOOD', categoryName: 'Alimentation et courses',
@@ -132,5 +145,98 @@ describe('suggestions marchandes des transactions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Analyser les transactions non catégorisées' }))
     expect(await screen.findByText(/service de suggestion est momentanément indisponible/)).toBeInTheDocument()
     expect(screen.getByLabelText('Catégorie de Paiement marchand')).toHaveValue('')
+  })
+
+  it('affiche les candidats à vérifier sans en appliquer un avant confirmation', async () => {
+    listCategorizationReviews.mockResolvedValue({
+      ...emptyReviewPage,
+      items: [{
+        transactionId: 'TX-DEBIT', bookingDate: '2026-08-19', description: 'Paiement marchand',
+        direction: 'DEBIT', amount: 25, currency: 'TND', reviewStatus: 'NEEDS_REVIEW',
+        reasonCode: 'MODEL_ABSTAINED', pendingSuggestion: null, manualCategorizationAllowed: true,
+        candidateCategories: [
+          { rank: 1, categoryId: 'CAT-FOOD', categoryCode: 'FOOD', categoryName: 'Alimentation et courses' },
+          { rank: 2, categoryId: 'CAT-SHOPPING', categoryCode: 'SHOPPING', categoryName: 'Shopping' },
+        ],
+      }],
+      totalElements: 1, totalPages: 1,
+    })
+    listCategories.mockResolvedValue([
+      { id: 'CAT-FOOD', code: 'FOOD', name: 'Alimentation et courses', nature: 'EXPENSE', system: true },
+      { id: 'CAT-CUSTOM', code: 'PERSONAL', name: 'Mes animaux', nature: 'EXPENSE', system: false },
+    ])
+    assignTransactionCategory.mockResolvedValue({
+      transactionId: 'TX-DEBIT', categoryId: 'CAT-FOOD', categoryName: 'Alimentation et courses',
+      categoryNature: 'EXPENSE', assignmentSource: 'MANUAL',
+    })
+
+    render(<TransactionsPage />)
+
+    expect(await screen.findByText('À vérifier')).toBeInTheDocument()
+    expect(screen.getAllByRole('option', { name: 'Mes animaux' }).length).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('button', { name: 'Alimentation et courses' }))
+    expect(assignTransactionCategory).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Alimentation et courses' })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmer ce choix' }))
+    await waitFor(() => expect(assignTransactionCategory).toHaveBeenCalledWith('TX-DEBIT', 'CAT-FOOD'))
+    expect(screen.queryByText(/%|confiance/i)).not.toBeInTheDocument()
+  })
+
+  it('explique une exclusion tout en conservant le choix manuel', async () => {
+    listCategorizationReviews.mockResolvedValue({
+      ...emptyReviewPage,
+      items: [{
+        transactionId: 'TX-DEBIT', bookingDate: '2026-08-19', description: 'Paiement en euros',
+        direction: 'DEBIT', amount: 25, currency: 'EUR', reviewStatus: 'EXCLUDED',
+        reasonCode: 'UNSUPPORTED_CURRENCY', pendingSuggestion: null, candidateCategories: [],
+        manualCategorizationAllowed: true,
+      }],
+      totalElements: 1, totalPages: 1,
+    })
+
+    render(<TransactionsPage />)
+
+    expect(await screen.findByText('Analyse non disponible')).toBeInTheDocument()
+    expect(screen.getByText(/prend actuellement en charge les débits en TND uniquement/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Choisir une catégorie pour Paiement en euros')).toBeInTheDocument()
+  })
+
+  it('affiche la mémoire privée, reconnaît sa suggestion et permet de l’oublier avec confirmation', async () => {
+    const memorySuggestion = { ...suggestion, matchMethod: 'USER_MEMORY', source: 'USER_MEMORY' }
+    listCategorizationReviews.mockResolvedValue({
+      ...emptyReviewPage,
+      items: [{
+        transactionId: 'TX-DEBIT', bookingDate: '2026-08-19', description: 'Paiement marchand',
+        direction: 'DEBIT', amount: 25, currency: 'TND', reviewStatus: 'SUGGESTION_PENDING',
+        reasonCode: 'RELIABLE_SUGGESTION', pendingSuggestion: memorySuggestion,
+        candidateCategories: [], manualCategorizationAllowed: true,
+      }],
+      totalElements: 1, totalPages: 1,
+    })
+    listMerchantMemories.mockResolvedValue([{
+      id: 'MEMORY-1', normalizedMerchant: 'carrefour', direction: 'DEBIT', currency: 'TND',
+      categoryId: 'CAT-FOOD', categoryName: 'Alimentation et courses',
+    }])
+    forgetMerchantMemory.mockResolvedValue(null)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(<TransactionsPage />)
+
+    expect((await screen.findAllByText(/Appris de vos choix/)).length).toBeGreaterThan(0)
+    expect(screen.getByText('carrefour')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Oublier' }))
+    await waitFor(() => expect(forgetMerchantMemory).toHaveBeenCalledWith('MEMORY-1'))
+    expect(window.confirm).toHaveBeenCalled()
+    expect(screen.queryByText('carrefour')).not.toBeInTheDocument()
+    expect(screen.queryByText(/%|confiance/i)).not.toBeInTheDocument()
+  })
+
+  it('distingue une erreur de revue d’un véritable état vide', async () => {
+    listCategorizationReviews.mockRejectedValue(new Error('review unavailable'))
+
+    render(<TransactionsPage />)
+
+    expect(await screen.findByText(/transactions à vérifier n’ont pas pu être chargées/)).toBeInTheDocument()
+    expect(screen.queryByText('Tout est à jour')).not.toBeInTheDocument()
   })
 })

@@ -6,7 +6,10 @@ import { ApiError } from '../services/apiClient'
 import {
   acceptMerchantSuggestion,
   assignTransactionCategory,
+  forgetMerchantMemory,
+  listCategorizationReviews,
   listCategories,
+  listMerchantMemories,
   listMerchantSuggestions,
   rejectMerchantSuggestion,
   runMerchantRecognition,
@@ -37,6 +40,30 @@ const merchantMethodLabels = {
   FUZZY_ALIAS: 'Correspondance proche',
   ML: 'Suggestion intelligente',
   WEB_LLM: 'Recherche web + IA locale',
+  USER_MEMORY: 'Appris de vos choix',
+}
+
+const reviewStatusLabels = {
+  SUGGESTION_PENDING: 'Suggestion à confirmer',
+  NEEDS_REVIEW: 'À vérifier',
+  EXCLUDED: 'Analyse non disponible',
+}
+
+const reviewReasonLabels = {
+  NOT_ANALYZED: 'Cette transaction n’a pas encore été analysée.',
+  NO_RELIABLE_SUGGESTION: 'Aucune suggestion suffisamment fiable n’a été trouvée.',
+  MODEL_ABSTAINED: 'Le modèle préfère vous laisser choisir plutôt que de proposer une catégorie incertaine.',
+  SUGGESTION_REJECTED: 'La suggestion a été refusée. Choisissez une catégorie si vous le souhaitez.',
+  MERCHANT_TEXT_UNAVAILABLE: 'Le libellé disponible ne permet pas d’identifier le marchand.',
+  SERVICE_UNAVAILABLE: 'Le service de suggestion était indisponible. Le choix manuel reste possible.',
+  INVALID_RESPONSE: 'La réponse du service n’a pas pu être vérifiée.',
+  MODEL_VERSION_MISMATCH: 'La version du modèle ne correspond pas à celle attendue.',
+  NOT_POSTED: 'Cette opération bancaire n’est pas encore comptabilisée.',
+  REVERSED: 'Cette opération a été annulée par la banque.',
+  INTERNAL_TRANSFER: 'Cette opération fait partie d’un transfert entre vos comptes.',
+  UNSUPPORTED_CURRENCY: 'L’analyse automatique prend actuellement en charge les débits en TND uniquement.',
+  CREDIT_NOT_SUPPORTED: 'L’analyse automatique des crédits n’est pas encore disponible.',
+  CATEGORY_REMOVED: 'La catégorie précédente a été retirée.',
 }
 
 function safeEvidenceUrls(urls) {
@@ -53,6 +80,7 @@ function safeEvidenceUrls(urls) {
 
 function MerchantSuggestion({ busy, onReview, suggestion, transaction }) {
   const webEnriched = suggestion.matchMethod === 'WEB_LLM'
+  const userMemory = suggestion.matchMethod === 'USER_MEMORY'
   const evidenceUrls = webEnriched ? safeEvidenceUrls(suggestion.evidenceUrls) : []
 
   return (
@@ -72,6 +100,8 @@ function MerchantSuggestion({ busy, onReview, suggestion, transaction }) {
           )}
           <p className="merchant-suggestion__warning">Suggestion expérimentale, informative et non garantie. Vérifiez la catégorie avant de l'accepter.</p>
         </>
+      ) : userMemory ? (
+        <p>Cette suggestion reprend un choix que vous avez confirmé auparavant. Elle reste privée à votre compte et nécessite votre validation.</p>
       ) : (
         <p>Suggestion expérimentale fondée sur un modèle entraîné avec des libellés marchands synthétiques. Vérifiez la catégorie avant de l'accepter.</p>
       )}
@@ -83,8 +113,99 @@ function MerchantSuggestion({ busy, onReview, suggestion, transaction }) {
   )
 }
 
+function CategorizationReview({
+  busy,
+  categories,
+  choice,
+  onChoice,
+  onConfirm,
+  onReviewSuggestion,
+  review,
+}) {
+  const statusLabel = reviewStatusLabels[review.reviewStatus] || 'À vérifier'
+  const reason = reviewReasonLabels[review.reasonCode] || 'Cette transaction nécessite votre vérification.'
+
+  return (
+    <article className={`categorization-review categorization-review--${review.reviewStatus.toLowerCase()}`}>
+      <div className="categorization-review__heading">
+        <div>
+          <Badge tone={review.reviewStatus === 'EXCLUDED' ? 'peach' : 'gold'}>{statusLabel}</Badge>
+          <h3>{review.description || 'Opération sans libellé'}</h3>
+          <p>{formatDate(review.bookingDate)} · {review.direction === 'CREDIT' ? 'Crédit' : 'Débit'}</p>
+        </div>
+        <strong className={review.direction === 'CREDIT' ? 'amount-credit' : 'amount-debit'}>
+          {review.direction === 'CREDIT' ? '+' : '−'} {formatCurrency(review.amount, review.currency)}
+        </strong>
+      </div>
+
+      {review.pendingSuggestion ? (
+        <MerchantSuggestion
+          busy={busy}
+          onReview={onReviewSuggestion}
+          suggestion={review.pendingSuggestion}
+          transaction={{ id: review.transactionId, description: review.description }}
+        />
+      ) : (
+        <>
+          <p className="categorization-review__reason">{reason}</p>
+          {review.candidateCategories.length > 0 && (
+            <div className="categorization-review__candidates" aria-label="Catégories proposées à vérifier">
+              <span>Suggestions à vérifier — aucun choix n’est appliqué automatiquement</span>
+              <div>{review.candidateCategories.map((candidate) => (
+                <button
+                  aria-pressed={choice === candidate.categoryId}
+                  className="button button--secondary"
+                  disabled={busy}
+                  key={candidate.categoryId}
+                  onClick={() => onChoice(review.transactionId, candidate.categoryId)}
+                  type="button"
+                >
+                  {candidate.categoryName}
+                </button>
+              ))}</div>
+            </div>
+          )}
+          {review.manualCategorizationAllowed && (
+            <div className="categorization-review__manual">
+              <label>
+                <span>Choisir une catégorie</span>
+                <select
+                  aria-label={`Choisir une catégorie pour ${review.description}`}
+                  disabled={busy}
+                  onChange={(event) => onChoice(review.transactionId, event.target.value)}
+                  value={choice || ''}
+                >
+                  <option value="">Sélectionnez une catégorie</option>
+                  {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+              </label>
+              <button
+                className="button button--primary"
+                disabled={busy || !choice}
+                onClick={() => onConfirm(review)}
+                type="button"
+              >
+                Confirmer ce choix
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </article>
+  )
+}
+
 export default function TransactionsPage() {
-  const { accounts, connected, dataVersion, historical, synchronizationError, synchronize, synchronizing } = useFinancialData()
+  const {
+    accounts,
+    connected,
+    dataVersion,
+    historical,
+    reload: reloadFinancialData,
+    synchronizationError,
+    synchronize,
+    synchronizing,
+  } = useFinancialData()
   const [accountId, setAccountId] = useState('')
   const [direction, setDirection] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -105,6 +226,15 @@ export default function TransactionsPage() {
   const [suggestionActionId, setSuggestionActionId] = useState('')
   const [merchantMessage, setMerchantMessage] = useState('')
   const [merchantError, setMerchantError] = useState('')
+  const [reviewResult, setReviewResult] = useState(emptyPage)
+  const [reviewPage, setReviewPage] = useState(0)
+  const [reviewLoading, setReviewLoading] = useState(true)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewChoices, setReviewChoices] = useState({})
+  const [merchantMemories, setMerchantMemories] = useState([])
+  const [memoryLoading, setMemoryLoading] = useState(true)
+  const [memoryError, setMemoryError] = useState('')
+  const [forgettingMemoryId, setForgettingMemoryId] = useState('')
   const accountNames = useMemo(() => new Map(accounts.map((account) => [account.id, account.displayName])), [accounts])
 
   useEffect(() => {
@@ -133,7 +263,7 @@ export default function TransactionsPage() {
       .catch((requestError) => { if (active) setError(controlledTransactionError(requestError)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [accountId, categoryFilter, dataVersion, direction, from, page, recognitionVersion, search, size, to])
+  }, [accountId, categoryFilter, dataVersion, direction, from, page, search, size, to])
 
   useEffect(() => {
     let active = true
@@ -142,6 +272,28 @@ export default function TransactionsPage() {
         if (active) setMerchantSuggestions(Object.fromEntries(items.map((item) => [item.transactionId, item])))
       })
       .catch(() => { if (active) setMerchantError('Les suggestions marchandes n’ont pas pu être chargées.') })
+    return () => { active = false }
+  }, [dataVersion, recognitionVersion])
+
+  useEffect(() => {
+    let active = true
+    setReviewLoading(true)
+    setReviewError('')
+    listCategorizationReviews(reviewPage, 20)
+      .then((response) => { if (active) setReviewResult(response) })
+      .catch(() => { if (active) setReviewError('Les transactions à vérifier n’ont pas pu être chargées.') })
+      .finally(() => { if (active) setReviewLoading(false) })
+    return () => { active = false }
+  }, [dataVersion, recognitionVersion, reviewPage])
+
+  useEffect(() => {
+    let active = true
+    setMemoryLoading(true)
+    setMemoryError('')
+    listMerchantMemories()
+      .then((items) => { if (active) setMerchantMemories(items) })
+      .catch(() => { if (active) setMemoryError('Vos choix marchands appris n’ont pas pu être chargés.') })
+      .finally(() => { if (active) setMemoryLoading(false) })
     return () => { active = false }
   }, [dataVersion, recognitionVersion])
 
@@ -155,6 +307,10 @@ export default function TransactionsPage() {
       || category.nature === 'NEUTRAL'
       || (transaction.direction === 'DEBIT' && category.nature === 'EXPENSE')
       || (transaction.direction === 'CREDIT' && category.nature === 'INCOME')))
+  }
+
+  function chooseReviewCategory(transactionId, categoryId) {
+    setReviewChoices((current) => ({ ...current, [transactionId]: categoryId }))
   }
 
   async function assignCategory(transaction, categoryId) {
@@ -178,10 +334,28 @@ export default function TransactionsPage() {
         delete next[transaction.id]
         return next
       })
+      setRecognitionVersion((value) => value + 1)
+      await reloadFinancialData({ quiet: true })
+      return true
     } catch {
       setAssignmentError('La catégorie de cette transaction n’a pas pu être modifiée.')
+      return false
     } finally {
       setAssigningId('')
+    }
+  }
+
+  async function confirmReviewCategory(review) {
+    const selectedCategory = reviewChoices[review.transactionId]
+    if (!selectedCategory) return
+    const changed = await assignCategory({ id: review.transactionId }, selectedCategory)
+    if (changed) {
+      setReviewChoices((current) => {
+        const next = { ...current }
+        delete next[review.transactionId]
+        return next
+      })
+      setMerchantMessage('Catégorie confirmée. Votre choix privé pourra être reproposé pour ce marchand.')
     }
   }
 
@@ -228,6 +402,7 @@ export default function TransactionsPage() {
           } : item),
         }))
         setMerchantMessage('Suggestion acceptée. La catégorie de la transaction a été mise à jour.')
+        await reloadFinancialData({ quiet: true })
       } else {
         await rejectMerchantSuggestion(transaction.id, suggestion.predictionId)
         setMerchantMessage('Suggestion refusée. La transaction reste non catégorisée.')
@@ -237,10 +412,26 @@ export default function TransactionsPage() {
         delete next[transaction.id]
         return next
       })
+      setRecognitionVersion((value) => value + 1)
     } catch {
       setMerchantError('Cette suggestion n’a pas pu être traitée. Actualisez la page puis réessayez.')
     } finally {
       setSuggestionActionId('')
+    }
+  }
+
+  async function forgetMemory(memory) {
+    if (!window.confirm(`Oublier le choix appris pour « ${memory.normalizedMerchant} » ?`)) return
+    setForgettingMemoryId(memory.id)
+    setMemoryError('')
+    try {
+      await forgetMerchantMemory(memory.id)
+      setMerchantMemories((current) => current.filter((item) => item.id !== memory.id))
+      setMerchantMessage('Ce choix marchand a été oublié. Les transactions déjà catégorisées restent inchangées.')
+    } catch {
+      setMemoryError('Ce choix appris n’a pas pu être oublié. Actualisez la page puis réessayez.')
+    } finally {
+      setForgettingMemoryId('')
     }
   }
 
@@ -263,6 +454,8 @@ export default function TransactionsPage() {
       {error && <InlineNotice live tone="warning" icon="alert">{error} {result.items.length > 0 && 'La page précédente reste affichée.'}</InlineNotice>}
       {assignmentError && <InlineNotice live tone="warning" icon="alert">{assignmentError}</InlineNotice>}
       {merchantError && <InlineNotice live tone="warning" icon="alert">{merchantError}</InlineNotice>}
+      {reviewError && <InlineNotice live tone="warning" icon="alert">{reviewError}</InlineNotice>}
+      {memoryError && <InlineNotice live tone="warning" icon="alert">{memoryError}</InlineNotice>}
       {merchantMessage && <InlineNotice live tone="success" icon="info">{merchantMessage}</InlineNotice>}
 
       <Card className="merchant-recognition-panel">
@@ -271,6 +464,63 @@ export default function TransactionsPage() {
           <Icon name="search" size={18} />
           {analyzingMerchants ? 'Analyse en cours…' : 'Analyser les transactions non catégorisées'}
         </button>
+      </Card>
+
+      <section className="categorization-review-panel" aria-busy={reviewLoading} aria-label="Transactions à catégoriser">
+        <div className="categorization-review-panel__header">
+          <div>
+            <p className="eyebrow">Validation humaine</p>
+            <h2>Transactions à catégoriser</h2>
+            <p>Chaque opération non catégorisée reste visible, même lorsque l’analyse automatique préfère s’abstenir.</p>
+          </div>
+          {!reviewError && <Badge tone="blue">{reviewResult.totalElements} à traiter</Badge>}
+        </div>
+        {reviewLoading && reviewResult.items.length === 0 ? (
+          <Card className="bank-state"><span className="auth-spinner" /> Chargement des transactions à vérifier…</Card>
+        ) : !reviewError && reviewResult.items.length === 0 ? (
+          <Card className="empty-state"><Icon name="check" /><h3>Tout est à jour</h3><p>Aucune transaction ne demande votre attention.</p></Card>
+        ) : (
+          <div className="categorization-review-list">
+            {reviewResult.items.map((review) => (
+              <CategorizationReview
+                busy={assigningId === review.transactionId || suggestionActionId === review.pendingSuggestion?.predictionId}
+                categories={allowedCategories(review)}
+                choice={reviewChoices[review.transactionId]}
+                key={review.transactionId}
+                onChoice={chooseReviewCategory}
+                onConfirm={confirmReviewCategory}
+                onReviewSuggestion={reviewSuggestion}
+                review={review}
+              />
+            ))}
+          </div>
+        )}
+        {reviewResult.totalPages > 1 && (
+          <nav aria-label="Pagination des transactions à catégoriser" className="pagination-controls">
+            <button className="button button--secondary" disabled={reviewLoading || reviewResult.first} onClick={() => setReviewPage((value) => Math.max(0, value - 1))} type="button">Précédente</button>
+            <span>Page {reviewResult.page + 1} sur {reviewResult.totalPages}</span>
+            <button className="button button--secondary" disabled={reviewLoading || reviewResult.last} onClick={() => setReviewPage((value) => value + 1)} type="button">Suivante</button>
+          </nav>
+        )}
+      </section>
+
+      <Card className="merchant-memory-panel">
+        <div className="merchant-memory-panel__header">
+          <div><h2>Choix marchands appris</h2><p>Ces associations viennent uniquement de vos confirmations et restent privées à votre compte.</p></div>
+          <Badge tone="teal">{merchantMemories.length}</Badge>
+        </div>
+        {memoryLoading && merchantMemories.length === 0 ? (
+          <p className="muted">Chargement de vos choix appris…</p>
+        ) : !memoryError && merchantMemories.length === 0 ? (
+          <p className="muted">Aucun choix appris pour le moment.</p>
+        ) : (
+          <div className="merchant-memory-list">{merchantMemories.map((memory) => (
+            <div key={memory.id}>
+              <span><strong>{memory.normalizedMerchant}</strong><small>{memory.categoryName} · {memory.direction === 'CREDIT' ? 'Crédit' : 'Débit'} · {memory.currency}</small></span>
+              <button className="button button--ghost" disabled={forgettingMemoryId === memory.id} onClick={() => forgetMemory(memory)} type="button">Oublier</button>
+            </div>
+          ))}</div>
+        )}
       </Card>
 
       <Card className="transaction-toolbar transaction-toolbar--dynamic">

@@ -4,8 +4,11 @@ import {
   assignTransactionCategory,
   createCategory,
   deleteCategory,
+  forgetMerchantMemory,
   getCategorySummary,
+  listCategorizationReviews,
   listCategories,
+  listMerchantMemories,
   runCategorization,
   updateCategory,
 } from './categoryApi'
@@ -112,8 +115,13 @@ describe('client API principal', () => {
     await runCategorization()
     await getCategorySummary('2026-08')
     await assignTransactionCategory('TRANSACTION-1', 'CATEGORY-2')
+    await listCategorizationReviews(1, 20)
+    await listMerchantMemories()
+    await forgetMerchantMemory('MEMORY/1')
 
-    expect(fetch).toHaveBeenCalledTimes(7)
+    expect(fetch).toHaveBeenCalledTimes(10)
+    expect(fetch.mock.calls[7][0]).toContain('/api/categorization-reviews?page=1&size=20')
+    expect(fetch.mock.calls[9][0]).toContain('/api/merchant-memories/MEMORY%2F1')
     fetch.mock.calls.forEach(([url]) => {
       expect(url).toMatch(/^http:\/\/localhost:8080\/api\//)
       expect(url).not.toContain(':8081')

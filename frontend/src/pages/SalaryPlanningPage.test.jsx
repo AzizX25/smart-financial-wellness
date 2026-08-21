@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../services/apiClient'
+import { getDashboardSummary } from '../services/financialApi'
 import {
   getSalaryPlan,
   getSalaryPlanProposals,
@@ -15,6 +16,7 @@ vi.mock('../services/salaryPlanningApi', () => ({
   listSalaryPlans: vi.fn(),
   saveSalaryPlan: vi.fn(),
 }))
+vi.mock('../services/financialApi', () => ({ getDashboardSummary: vi.fn() }))
 
 const today = new Date()
 const DEFAULT_MONTH = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
@@ -80,6 +82,22 @@ function page(items = []) {
   return { items, page: 0, size: 12, totalElements: items.length, totalPages: items.length ? 1 : 0 }
 }
 
+function dashboardSpending(categories = [], overrides = {}) {
+  return {
+    month: DEFAULT_MONTH,
+    balanceTotals: [],
+    monthlyCashFlows: [],
+    categorySpending: [{
+      currency: 'TND',
+      totalExpenses: 125,
+      categories,
+      uncategorizedCount: 1,
+      uncategorizedAmount: 5,
+      ...overrides,
+    }],
+  }
+}
+
 describe('Salary Planning connecté', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -87,6 +105,9 @@ describe('Salary Planning connecté', () => {
     getSalaryPlanProposals.mockResolvedValue(proposal())
     listSalaryPlans.mockResolvedValue(page())
     saveSalaryPlan.mockResolvedValue(plan())
+    getDashboardSummary.mockResolvedValue(dashboardSpending([
+      { categoryId: FOOD, categoryName: 'Alimentation réelle', transactionCount: 2, totalAmount: 120 },
+    ]))
   })
 
   it('charge le plan existant sans demander de propositions', async () => {
@@ -195,6 +216,59 @@ describe('Salary Planning connecté', () => {
     expect(await screen.findByText(/Les détails de cette recommandation ne sont pas disponibles/)).toBeInTheDocument()
     expect(screen.getByText(/Votre plan présente un déficit de/)).toBeInTheDocument()
     expect(screen.getAllByText(/150,000 TND/).length).toBeGreaterThan(0)
+  })
+
+  it('sépare les dépenses réelles du budget prévu et recharge les données serveur au retour', async () => {
+    const { unmount } = render(<SalaryPlanningPage />)
+
+    const initialActual = await screen.findByRole('region', { name: 'Dépenses réelles par catégorie' })
+    expect(within(initialActual).getByText('Alimentation réelle')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Budget prévu par catégorie' })).toBeInTheDocument()
+    unmount()
+
+    getDashboardSummary.mockResolvedValueOnce(dashboardSpending([
+      { categoryId: 'EDUCATION', categoryName: 'Éducation', transactionCount: 1, totalAmount: 120 },
+    ]))
+    render(<SalaryPlanningPage />)
+
+    const refreshedActual = await screen.findByRole('region', { name: 'Dépenses réelles par catégorie' })
+    expect(await within(refreshedActual).findByText('Éducation')).toBeInTheDocument()
+    expect(within(refreshedActual).queryByText('Alimentation réelle')).not.toBeInTheDocument()
+    expect(getDashboardSummary).toHaveBeenCalledTimes(2)
+    expect(getDashboardSummary).toHaveBeenLastCalledWith(DEFAULT_MONTH)
+  })
+
+  it('empêche une réponse de dépenses obsolète de remplacer le mois sélectionné', async () => {
+    let resolveInitial
+    const previousMonth = shiftMonth(DEFAULT_MONTH, -1)
+    getDashboardSummary
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveInitial = resolve }))
+      .mockResolvedValueOnce(dashboardSpending([
+        { categoryId: 'EDUCATION', categoryName: 'Éducation actuelle', transactionCount: 1, totalAmount: 40 },
+      ], { totalExpenses: 40, uncategorizedCount: 0, uncategorizedAmount: 0 }))
+    render(<SalaryPlanningPage />)
+
+    fireEvent.change(screen.getByLabelText('Mois'), { target: { value: previousMonth } })
+    expect(await screen.findByText('Éducation actuelle')).toBeInTheDocument()
+    resolveInitial(dashboardSpending([
+      { categoryId: FOOD, categoryName: 'Ancienne valeur', transactionCount: 1, totalAmount: 999 },
+    ]))
+    await waitFor(() => expect(screen.queryByText('Ancienne valeur')).not.toBeInTheDocument())
+    expect(getDashboardSummary).toHaveBeenLastCalledWith(previousMonth)
+  })
+
+  it('conserve des états de chargement, erreur et absence contrôlés', async () => {
+    let resolveSpending
+    getDashboardSummary.mockImplementationOnce(() => new Promise((resolve) => { resolveSpending = resolve }))
+    const first = render(<SalaryPlanningPage />)
+    expect(screen.getByText('Chargement des dépenses réelles…')).toBeInTheDocument()
+    resolveSpending({ month: DEFAULT_MONTH, balanceTotals: [], monthlyCashFlows: [], categorySpending: [] })
+    expect(await screen.findByText('Aucune dépense comptabilisée pour ce mois et cette devise.')).toBeInTheDocument()
+    first.unmount()
+
+    getDashboardSummary.mockRejectedValueOnce(new Error('unavailable'))
+    render(<SalaryPlanningPage />)
+    expect(await screen.findByText('Les dépenses réelles n’ont pas pu être chargées.')).toBeInTheDocument()
   })
 
   it('recharge par mois et devise et permet d’ouvrir un plan précédent', async () => {

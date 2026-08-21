@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useFinancialData } from '../financial/FinancialDataContext'
 import {
   assignTransactionCategory,
+  listCategorizationReviews,
   listCategories,
+  listMerchantMemories,
   listMerchantSuggestions,
 } from '../services/categoryApi'
 import { listLocalTransactions } from '../services/financialApi'
@@ -14,7 +16,10 @@ vi.mock('../services/financialApi', () => ({ listLocalTransactions: vi.fn() }))
 vi.mock('../services/categoryApi', () => ({
   acceptMerchantSuggestion: vi.fn(),
   assignTransactionCategory: vi.fn(),
+  forgetMerchantMemory: vi.fn(),
+  listCategorizationReviews: vi.fn(),
   listCategories: vi.fn(),
+  listMerchantMemories: vi.fn(),
   listMerchantSuggestions: vi.fn(),
   rejectMerchantSuggestion: vi.fn(),
   runMerchantRecognition: vi.fn(),
@@ -33,9 +38,22 @@ const page = {
   ],
   page: 0, size: 20, totalElements: 22, totalPages: 2, first: true, last: false,
 }
+const emptyReviewPage = {
+  items: [], page: 0, size: 20, totalElements: 0, totalPages: 0, first: true, last: true,
+}
 
 function state(overrides = {}) {
-  return { accounts: [account], connected: true, dataVersion: 1, historical: false, synchronizationError: '', synchronize: vi.fn(), synchronizing: false, ...overrides }
+  return {
+    accounts: [account],
+    connected: true,
+    dataVersion: 1,
+    historical: false,
+    reload: vi.fn().mockResolvedValue(true),
+    synchronizationError: '',
+    synchronize: vi.fn(),
+    synchronizing: false,
+    ...overrides,
+  }
 }
 
 describe('transactions locales catégorisées', () => {
@@ -44,6 +62,8 @@ describe('transactions locales catégorisées', () => {
     useFinancialData.mockReturnValue(state())
     listCategories.mockResolvedValue(categories)
     listMerchantSuggestions.mockResolvedValue([])
+    listCategorizationReviews.mockResolvedValue({ ...emptyReviewPage })
+    listMerchantMemories.mockResolvedValue([])
     listLocalTransactions.mockResolvedValue(page)
   })
 
@@ -67,6 +87,8 @@ describe('transactions locales catégorisées', () => {
   })
 
   it('applique et retire un choix manuel sans recharger la page', async () => {
+    const financialState = state()
+    useFinancialData.mockReturnValue(financialState)
     assignTransactionCategory.mockResolvedValueOnce({ transactionId: 'TX-D', categoryId: 'CAT-FOOD', categoryName: 'Alimentation et courses', categoryNature: 'EXPENSE', assignmentSource: 'MANUAL' })
       .mockResolvedValueOnce({ transactionId: 'TX-D', categoryId: null, categoryName: null, categoryNature: null, assignmentSource: 'UNCATEGORIZED' })
     render(<TransactionsPage />)
@@ -74,6 +96,7 @@ describe('transactions locales catégorisées', () => {
     const select = screen.getByLabelText('Catégorie de Débit réel')
     fireEvent.change(select, { target: { value: 'CAT-FOOD' } })
     await waitFor(() => expect(select).toHaveValue('CAT-FOOD'))
+    expect(financialState.reload).toHaveBeenCalledWith({ quiet: true })
     expect(screen.getByText('Choix manuel')).toBeInTheDocument()
     fireEvent.change(select, { target: { value: '' } })
     await waitFor(() => expect(select).toHaveValue(''))

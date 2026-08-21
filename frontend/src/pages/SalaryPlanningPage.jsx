@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card, InlineNotice, MetricCard, PageHeader } from '../components/Ui'
 import { ApiError } from '../services/apiClient'
+import { getDashboardSummary } from '../services/financialApi'
 import {
   getSalaryPlan,
   getSalaryPlanProposals,
@@ -167,6 +168,10 @@ export default function SalaryPlanningPage() {
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyError, setHistoryError] = useState('')
   const [historyToken, setHistoryToken] = useState(0)
+  const [actualSpending, setActualSpending] = useState(null)
+  const [actualSpendingLoading, setActualSpendingLoading] = useState(true)
+  const [actualSpendingError, setActualSpendingError] = useState('')
+  const [actualSpendingToken, setActualSpendingToken] = useState(0)
 
   const dirty = Boolean(draft) && editableSnapshot(draft) !== baseline
   const estimate = useMemo(() => estimateDraft(draft), [draft])
@@ -223,6 +228,34 @@ export default function SalaryPlanningPage() {
     loadSelection()
     return () => { active = false }
   }, [currency, month, reloadToken])
+
+  useEffect(() => {
+    let active = true
+    setActualSpending(null)
+    setActualSpendingLoading(true)
+    setActualSpendingError('')
+    getDashboardSummary(month)
+      .then((summary) => {
+        if (!active) return
+        if (!Array.isArray(summary.categorySpending)) {
+          throw new Error('Category spending is unavailable')
+        }
+        setActualSpending(summary.categorySpending.find((item) => item.currency === currency) || {
+          currency,
+          totalExpenses: '0.0000',
+          categories: [],
+          uncategorizedCount: 0,
+          uncategorizedAmount: '0.0000',
+        })
+      })
+      .catch(() => {
+        if (active) setActualSpendingError('Les dépenses réelles n’ont pas pu être chargées.')
+      })
+      .finally(() => {
+        if (active) setActualSpendingLoading(false)
+      })
+    return () => { active = false }
+  }, [actualSpendingToken, currency, month])
 
   useEffect(() => {
     let active = true
@@ -395,6 +428,38 @@ export default function SalaryPlanningPage() {
       {saveError && <InlineNotice live tone="warning" icon="alert">{saveError}</InlineNotice>}
       {success && <InlineNotice live tone="success" icon="check">{success}</InlineNotice>}
 
+      <Card className="salary-editor-section" as="section" aria-labelledby="actual-spending-title">
+        <div className="section-heading">
+          <div><p className="eyebrow">Transactions comptabilisées</p><h2 id="actual-spending-title">Dépenses réelles par catégorie</h2></div>
+          {actualSpending && <div><span>Total réel</span><strong>{formatScale4(parseScale4(actualSpending.totalExpenses), currency)}</strong></div>}
+        </div>
+        {actualSpendingError ? (
+          <InlineNotice live tone="warning" icon="alert">
+            <p>{actualSpendingError}</p>
+            <button className="button button--secondary" onClick={() => setActualSpendingToken((value) => value + 1)} type="button">Réessayer</button>
+          </InlineNotice>
+        ) : actualSpendingLoading ? (
+          <p className="muted" aria-live="polite">Chargement des dépenses réelles…</p>
+        ) : actualSpending && actualSpending.categories.length === 0 && actualSpending.uncategorizedCount === 0 ? (
+          <div className="salary-empty-state"><p>Aucune dépense comptabilisée pour ce mois et cette devise.</p></div>
+        ) : actualSpending ? (
+          <div className="category-total-list">
+            {actualSpending.categories.map((item) => (
+              <div key={item.categoryId}>
+                <span><strong>{item.categoryName}</strong><small>{item.transactionCount} transaction{item.transactionCount === 1 ? '' : 's'}</small></span>
+                <strong>{formatScale4(parseScale4(item.totalAmount), currency)}</strong>
+              </div>
+            ))}
+            {actualSpending.uncategorizedCount > 0 && (
+              <div>
+                <span><strong>Non catégorisé</strong><small>{actualSpending.uncategorizedCount} transaction{actualSpending.uncategorizedCount === 1 ? '' : 's'}</small></span>
+                <strong>{formatScale4(parseScale4(actualSpending.uncategorizedAmount), currency)}</strong>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </Card>
+
       {loading ? (
         <Card className="salary-plan-state" aria-live="polite"><span className="auth-spinner" /> Chargement de votre plan…</Card>
       ) : draft ? (
@@ -473,7 +538,7 @@ export default function SalaryPlanningPage() {
 
           <Card className="salary-editor-section" as="section" aria-labelledby="allocation-editor-title">
             <div className="section-heading">
-              <div><p className="eyebrow">Repères personnalisés</p><h2 id="allocation-editor-title">Dépenses par catégorie</h2></div>
+              <div><p className="eyebrow">Repères personnalisés</p><h2 id="allocation-editor-title">Budget prévu par catégorie</h2></div>
             </div>
             <div className="allocation-editor-list">
               {draft.allocations.map((allocation) => {

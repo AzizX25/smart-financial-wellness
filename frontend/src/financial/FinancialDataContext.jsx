@@ -63,6 +63,7 @@ export function FinancialDataProvider({ children }) {
     month: currentMonth(),
     balanceTotals: [],
     monthlyCashFlows: [],
+    categorySpending: [],
   })
   const [recentTransactions, setRecentTransactions] = useState([])
   const [synchronizationStatus, setSynchronizationStatus] = useState(null)

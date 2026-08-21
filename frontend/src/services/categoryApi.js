@@ -20,6 +20,17 @@ export const runMerchantRecognition = () => apiRequest('/api/categorization-runs
 
 export const listMerchantSuggestions = () => apiRequest('/api/merchant-suggestions')
 
+export function listCategorizationReviews(page = 0, size = 20) {
+  return apiRequest(`/api/categorization-reviews?${new URLSearchParams({ page, size })}`)
+}
+
+export const listMerchantMemories = () => apiRequest('/api/merchant-memories')
+
+export const forgetMerchantMemory = (memoryId) => apiRequest(
+  `/api/merchant-memories/${encodeURIComponent(memoryId)}`,
+  { method: 'DELETE' },
+)
+
 export const acceptMerchantSuggestion = (transactionId, predictionId) => apiRequest(
   `/api/transactions/${encodeURIComponent(transactionId)}/merchant-suggestions/${encodeURIComponent(predictionId)}/accept`,
   { method: 'POST' },
