@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -39,6 +41,23 @@ class HttpMerchantRecognitionAiClientTests {
               "guaranteed":false
             }]}
             """;
+
+    @Test
+    void bindsIndependentMerchantAndForecastTimeoutDefaults() {
+        new ApplicationContextRunner()
+                .withInitializer(new ConfigDataApplicationContextInitializer())
+                .withUserConfiguration(MerchantAiClientConfiguration.class)
+                .run(context -> {
+                    MerchantAiClientProperties merchant = context.getBean(MerchantAiClientProperties.class);
+
+                    assertThat(merchant.connectTimeout()).isEqualTo(Duration.ofSeconds(2));
+                    assertThat(merchant.readTimeout()).isEqualTo(Duration.ofSeconds(90));
+                    assertThat(context.getEnvironment().getProperty(
+                            "app.integrations.ai-forecast.connect-timeout")).isEqualTo("2s");
+                    assertThat(context.getEnvironment().getProperty(
+                            "app.integrations.ai-forecast.read-timeout")).isEqualTo("5s");
+                });
+    }
 
     @Test
     void serializesTheCanonicalStrictMerchantRequest() {
@@ -93,7 +112,9 @@ class HttpMerchantRecognitionAiClientTests {
             MerchantAiClientProperties properties = new MerchantAiClientProperties(
                     baseUrl, Duration.ofSeconds(2), Duration.ofSeconds(2),
                     "merchant-recognition-synthetic-v1", "1.0.0",
-                    "merchant-recognition-features-v1");
+                    "merchant-recognition-features-v1", "ollama", "qwen3:4b",
+                    "ollama-api-v1", "merchant-enrichment-features-v1",
+                    "merchant-catalog-v1", "system-taxonomy-v2");
             MerchantRecognitionAiClient client = new MerchantAiClientConfiguration()
                     .merchantRecognitionAiClient(properties);
 

@@ -81,7 +81,15 @@ public final class CategoryDtos {
             String categoryName,
             String canonicalMerchant,
             String matchMethod,
+            String source,
+            String rationale,
+            List<String> evidenceUrls,
+            boolean experimental,
+            boolean guaranteed,
             Instant producedAt) {
+        public MerchantSuggestionResponse {
+            evidenceUrls = List.copyOf(evidenceUrls);
+        }
     }
 
     public record CategorySummaryResponse(String month, List<CurrencyCategorySummary> currencies) {

@@ -13,9 +13,10 @@ import jakarta.persistence.LockModeType;
 public interface CategoryPredictionRepository extends JpaRepository<CategoryPrediction, UUID> {
 
     @Query("""
-            select prediction from CategoryPrediction prediction
+            select distinct prediction from CategoryPrediction prediction
             join fetch prediction.transaction transaction
             join fetch prediction.category
+            left join fetch prediction.evidence
             where transaction.user.id = :userId
               and transaction.categorySource = 'UNCATEGORIZED'
               and prediction.reviewStatus = com.azizx25.smartfinancialwellness.category.persistence.CategoryPrediction.ReviewStatus.PENDING

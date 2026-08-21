@@ -1,6 +1,7 @@
 package com.azizx25.smartfinancialwellness.category;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,11 @@ import org.springframework.stereotype.Service;
 public class MerchantRecognitionService {
 
     private static final int BATCH_LIMIT = 50;
-    private static final Set<String> METHODS = Set.of("EXACT_ALIAS", "FUZZY_ALIAS", "ML");
+    private static final Set<String> MODEL_METHODS = Set.of("EXACT_ALIAS", "FUZZY_ALIAS", "ML");
+    private static final Set<String> FALLBACK_REASONS = Set.of(
+            "UNSUPPORTED_TRANSACTION", "ENRICHMENT_DISABLED", "ENRICHMENT_NOT_CONFIGURED",
+            "MODEL_ABSTAINED", "INVALID_EVIDENCE", "ENRICHMENT_UNAVAILABLE",
+            "ENRICHMENT_INVALID_RESPONSE");
 
     private final DeterministicCategorizationService deterministicService;
     private final MerchantRecognitionPersistence persistence;
@@ -100,23 +105,88 @@ public class MerchantRecognitionService {
         Set<String> responseKeys = predictions.stream().map(Prediction::requestKey).collect(java.util.stream.Collectors.toSet());
         if (!responseKeys.equals(requested.keySet())) throw new InvalidResponse("Unexpected merchant response keys");
         for (Prediction prediction : predictions) {
-            if ("UNRECOGNIZED".equals(prediction.status())) continue;
-            if (!"RECOGNIZED".equals(prediction.status())
-                    || prediction.canonicalMerchant() == null || prediction.canonicalMerchant().isBlank()
-                    || prediction.canonicalMerchant().length() > 160
-                    || !MerchantRecognitionPersistence.ALLOWED_CATEGORY_CODES.contains(prediction.categoryCode())
-                    || !METHODS.contains(prediction.matchMethod())
-                    || prediction.matchScore() == null
-                    || prediction.matchScore().compareTo(BigDecimal.ZERO) < 0
-                    || prediction.matchScore().compareTo(BigDecimal.ONE) > 0
-                    || prediction.matchScore().scale() > 4
-                    || !prediction.experimental() || !prediction.syntheticTrainingData() || prediction.guaranteed()) {
+            if ("UNRECOGNIZED".equals(prediction.status())) {
+                validateAbstention(prediction);
+                continue;
+            }
+            if (!"RECOGNIZED".equals(prediction.status()) || invalidCommonSuggestion(prediction)) {
                 throw new InvalidResponse("Invalid merchant prediction");
+            }
+            if ("WEB_LLM".equals(prediction.matchMethod())) {
+                validateWebSuggestion(prediction);
+            } else {
+                validateModelSuggestion(prediction);
             }
         }
     }
 
+    private boolean invalidCommonSuggestion(Prediction prediction) {
+        return prediction.canonicalMerchant() == null || prediction.canonicalMerchant().isBlank()
+                || prediction.canonicalMerchant().length() > 160
+                || !MerchantRecognitionPersistence.ALLOWED_CATEGORY_CODES.contains(prediction.categoryCode())
+                || !prediction.experimental() || prediction.guaranteed();
+    }
+
+    private void validateModelSuggestion(Prediction prediction) {
+        if (!MODEL_METHODS.contains(prediction.matchMethod())
+                || prediction.matchScore() == null
+                || prediction.matchScore().compareTo(BigDecimal.ZERO) < 0
+                || prediction.matchScore().compareTo(BigDecimal.ONE) > 0
+                || prediction.matchScore().scale() > 4
+                || !prediction.syntheticTrainingData()
+                || prediction.providerId() != null
+                || prediction.rationale() != null
+                || !prediction.evidenceUrls().isEmpty()) {
+            throw new InvalidResponse("Invalid merchant model prediction");
+        }
+    }
+
+    private void validateWebSuggestion(Prediction prediction) {
+        if (prediction.matchScore() != null
+                || prediction.syntheticTrainingData()
+                || prediction.rationale() == null || prediction.rationale().isBlank()
+                || prediction.rationale().length() > 300
+                || prediction.evidenceUrls().isEmpty() || prediction.evidenceUrls().size() > 3
+                || prediction.evidenceUrls().stream().distinct().count() != prediction.evidenceUrls().size()
+                || prediction.evidenceUrls().stream().anyMatch(this::invalidEvidenceUrl)) {
+            throw new InvalidResponse("Invalid merchant enrichment prediction");
+        }
+    }
+
+    private void validateAbstention(Prediction prediction) {
+        if (prediction.canonicalMerchant() != null || prediction.categoryCode() != null
+                || prediction.matchMethod() != null || prediction.matchScore() != null
+                || prediction.rationale() != null || !prediction.evidenceUrls().isEmpty()
+                || prediction.providerId() != null || prediction.catalogVersion() != null
+                || prediction.taxonomyVersion() != null
+                || prediction.fallbackReason() == null
+                || !FALLBACK_REASONS.contains(prediction.fallbackReason())
+                || !prediction.experimental() || !prediction.syntheticTrainingData() || prediction.guaranteed()) {
+            throw new InvalidResponse("Invalid merchant abstention");
+        }
+    }
+
+    private boolean invalidEvidenceUrl(String value) {
+        if (value == null || value.length() > 2048) return true;
+        try {
+            URI uri = URI.create(value);
+            return !"https".equalsIgnoreCase(uri.getScheme())
+                    || uri.getHost() == null
+                    || uri.getUserInfo() != null;
+        } catch (IllegalArgumentException exception) {
+            return true;
+        }
+    }
+
     private boolean wrongModel(Prediction prediction) {
+        if ("WEB_LLM".equals(prediction.matchMethod())) {
+            return !properties.expectedEnrichmentProviderId().equals(prediction.providerId())
+                    || !properties.expectedEnrichmentModelId().equals(prediction.modelId())
+                    || !properties.expectedEnrichmentModelVersion().equals(prediction.modelVersion())
+                    || !properties.expectedEnrichmentFeatureVersion().equals(prediction.featureVersion())
+                    || !properties.expectedCatalogVersion().equals(prediction.catalogVersion())
+                    || !properties.expectedTaxonomyVersion().equals(prediction.taxonomyVersion());
+        }
         return !properties.expectedModelId().equals(prediction.modelId())
                 || !properties.expectedModelVersion().equals(prediction.modelVersion())
                 || !properties.expectedFeatureVersion().equals(prediction.featureVersion());

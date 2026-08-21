@@ -78,10 +78,17 @@ public class MerchantRecognitionPersistence {
         if (category == null || !category.isActive() || category.getDirection() != Category.Direction.DEBIT) {
             return false;
         }
-        predictionRepository.save(new CategoryPrediction(
-                transaction, category, prediction.canonicalMerchant(), prediction.matchScore(),
-                prediction.matchMethod(), prediction.modelId(), prediction.modelVersion(),
-                prediction.featureVersion(), clock.instant()));
+        Instant now = clock.instant();
+        CategoryPrediction entity = "WEB_LLM".equals(prediction.matchMethod())
+                ? new CategoryPrediction(
+                        transaction, category, prediction.canonicalMerchant(), prediction.providerId(),
+                        prediction.modelId(), prediction.modelVersion(), prediction.featureVersion(),
+                        prediction.rationale(), prediction.evidenceUrls(), now)
+                : new CategoryPrediction(
+                        transaction, category, prediction.canonicalMerchant(), prediction.matchScore(),
+                        prediction.matchMethod(), prediction.modelId(), prediction.modelVersion(),
+                        prediction.featureVersion(), now);
+        predictionRepository.save(entity);
         return true;
     }
 
@@ -111,9 +118,14 @@ public class MerchantRecognitionPersistence {
         Instant now = clock.instant();
         prediction.accept(now);
         predictionRepository.flush();
-        transaction.assignByMl(prediction.getCategory(), prediction.getId(), now);
+        String source = "LLM".equals(prediction.getPredictionMethod()) ? "LLM" : "ML";
+        if ("LLM".equals(source)) {
+            transaction.assignByLlm(prediction.getCategory(), prediction.getId(), now);
+        } else {
+            transaction.assignByMl(prediction.getCategory(), prediction.getId(), now);
+        }
         historyRepository.save(new TransactionCategoryHistory(
-                transaction, null, prediction.getCategory().getId(), "UNCATEGORIZED", "ML",
+                transaction, null, prediction.getCategory().getId(), "UNCATEGORIZED", source,
                 null, transaction.getUser(), now));
         auditService.record(userId, "MERCHANT_CATEGORY_SUGGESTION_ACCEPTED", "TRANSACTION", transactionId);
         return categoryResponse(transaction);
@@ -132,7 +144,11 @@ public class MerchantRecognitionPersistence {
         Category category = prediction.getCategory();
         return new MerchantSuggestionResponse(
                 prediction.getId(), prediction.getTransactionId(), category.getId(), category.getCode(),
-                category.getLabel(), prediction.getCanonicalMerchant(), prediction.getExplanation(),
+                category.getLabel(), prediction.getCanonicalMerchant(),
+                "LLM".equals(prediction.getPredictionMethod()) ? "WEB_LLM" : prediction.getExplanation(),
+                "LLM".equals(prediction.getPredictionMethod()) ? "WEB_LLM" : "MODEL",
+                "LLM".equals(prediction.getPredictionMethod()) ? prediction.getExplanation() : null,
+                prediction.getEvidenceUrls(), true, false,
                 prediction.getProducedAt());
     }
 
@@ -140,7 +156,7 @@ public class MerchantRecognitionPersistence {
         Category category = transaction.getCategory();
         return new TransactionCategoryResponse(
                 transaction.getId(), category.getId(), category.getLabel(), category.getNature().name(),
-                "ML", transaction.getCategorizedAt());
+                transaction.getCategorySource(), transaction.getCategorizedAt());
     }
 
     public record Candidate(

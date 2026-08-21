@@ -210,6 +210,95 @@ class MerchantRecognitionIntegrationTests {
     }
 
     @Test
+    void webEnrichedSuggestionIsPendingOwnerScopedImmutableAndAcceptedAsLlm() throws Exception {
+        AppRegistration owner = registerAndActivate();
+        AppRegistration other = registerAndActivate();
+        UUID transactionId = insertManualTransaction(
+                owner.userId(), createManualAccount(owner.userId(), "TND"),
+                "DEBIT", "TND", "Commerce Exemple", "Paiement marchand inconnu");
+        aiClient.webEnriched = true;
+
+        mockMvc.perform(post("/api/categorization-runs/merchant-recognition")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.suggestedCount").value(1))
+                .andExpect(jsonPath("$.outcome").value("SUGGESTED"));
+
+        MvcResult otherResult = mockMvc.perform(get("/api/merchant-suggestions")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(other.token())))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(objectMapper.readTree(otherResult.getResponse().getContentAsString()).size()).isZero();
+
+        JsonNode suggestion = pendingSuggestion(owner, transactionId);
+        UUID predictionId = UUID.fromString(suggestion.get("predictionId").asText());
+        assertThat(suggestion.get("matchMethod").asText()).isEqualTo("WEB_LLM");
+        assertThat(suggestion.get("source").asText()).isEqualTo("WEB_LLM");
+        assertThat(suggestion.get("rationale").asText()).isEqualTo(
+                "Le resultat public decrit un commerce de detail.");
+        assertThat(suggestion.get("evidenceUrls").get(0).asText()).isEqualTo(
+                "https://example.test/merchant");
+        assertThat(suggestion.get("experimental").asBoolean()).isTrue();
+        assertThat(suggestion.get("guaranteed").asBoolean()).isFalse();
+        assertThat(categorySource(transactionId)).isEqualTo("UNCATEGORIZED");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT prediction_method || '|' || review_status FROM " + SCHEMA
+                        + "category_prediction WHERE id = ?",
+                String.class, predictionId)).isEqualTo("LLM|PENDING");
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "UPDATE " + SCHEMA + "category_prediction_evidence "
+                        + "SET evidence_url = 'https://example.test/changed' WHERE prediction_id = ?",
+                predictionId)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "DELETE FROM " + SCHEMA + "category_prediction_evidence WHERE prediction_id = ?",
+                predictionId)).isInstanceOf(DataAccessException.class);
+
+        mockMvc.perform(post("/api/transactions/{transactionId}/merchant-suggestions/{predictionId}/accept",
+                        transactionId, predictionId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignmentSource").value("LLM"));
+        assertThat(categorySource(transactionId)).isEqualTo("LLM");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + SCHEMA + "transaction_category_history "
+                        + "WHERE transaction_id = ? AND new_source = 'LLM'",
+                Integer.class, transactionId)).isEqualTo(1);
+    }
+
+    @Test
+    void webEnrichmentAbstentionAndRejectionLeaveTransactionsUncategorized() throws Exception {
+        AppRegistration user = registerAndActivate();
+        UUID accountId = createManualAccount(user.userId(), "TND");
+        UUID abstained = insertManualTransaction(
+                user.userId(), accountId, "DEBIT", "TND", "Commerce Inconnu", "Paiement inconnu");
+        aiClient.enrichmentAbstained = true;
+
+        mockMvc.perform(post("/api/categorization-runs/merchant-recognition")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("UNRECOGNIZED"))
+                .andExpect(jsonPath("$.suggestedCount").value(0));
+        assertThat(categorySource(abstained)).isEqualTo("UNCATEGORIZED");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + SCHEMA + "category_prediction WHERE transaction_id = ?",
+                Integer.class, abstained)).isZero();
+
+        AppRegistration reviewer = registerAndActivate();
+        UUID rejected = insertManualTransaction(
+                reviewer.userId(), createManualAccount(reviewer.userId(), "TND"),
+                "DEBIT", "TND", "Commerce Exemple", "Autre paiement inconnu");
+        aiClient.reset();
+        aiClient.webEnriched = true;
+        runRecognition(reviewer);
+        JsonNode suggestion = pendingSuggestion(reviewer, rejected);
+        mockMvc.perform(post("/api/transactions/{transactionId}/merchant-suggestions/{predictionId}/reject",
+                        rejected, suggestion.get("predictionId").asText())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(reviewer.token())))
+                .andExpect(status().isNoContent());
+        assertThat(categorySource(rejected)).isEqualTo("UNCATEGORIZED");
+    }
+
+    @Test
     void migrationRejectsIncompatibleMlEvidenceAndProtectsPendingEvidence() throws Exception {
         AppRegistration user = registerAndActivate();
         UUID transactionId = insertManualTransaction(
@@ -339,6 +428,8 @@ class MerchantRecognitionIntegrationTests {
         private Runnable duringCall;
         private boolean unavailable;
         private boolean invalidSecondPrediction;
+        private boolean webEnriched;
+        private boolean enrichmentAbstained;
         private boolean transactionActiveDuringCall;
 
         @Override
@@ -347,17 +438,36 @@ class MerchantRecognitionIntegrationTests {
             requests.addAll(items);
             if (duringCall != null) duringCall.run();
             if (unavailable) throw new Unavailable(new IllegalStateException("test unavailable"));
+            if (enrichmentAbstained) {
+                return items.stream().map(item -> new Prediction(
+                        item.requestKey(), "UNRECOGNIZED", null, null, null, null,
+                        "merchant-recognition-synthetic-v1", "1.0.0",
+                        "merchant-recognition-features-v1", true, true, false,
+                        "ENRICHMENT_UNAVAILABLE", null, List.of(), null, null, null)).toList();
+            }
+            if (webEnriched) {
+                return items.stream().map(item -> new Prediction(
+                        item.requestKey(), "RECOGNIZED", "Commerce Exemple", "SHOPPING", "WEB_LLM", null,
+                        "qwen3:4b", "ollama-api-v1", "merchant-enrichment-features-v1",
+                        true, false, false, null,
+                        "Le resultat public decrit un commerce de detail.",
+                        List.of("https://example.test/merchant"), "ollama",
+                        "merchant-catalog-v1", "system-taxonomy-v2")).toList();
+            }
             List<Prediction> predictions = new ArrayList<>(items.stream().map(item -> new Prediction(
                     item.requestKey(), "RECOGNIZED", "Carrefour", "FOOD", "EXACT_ALIAS",
                     new BigDecimal("1.0000"), "merchant-recognition-synthetic-v1", "1.0.0",
-                    "merchant-recognition-features-v1", true, true, false)).toList());
+                    "merchant-recognition-features-v1", true, true, false,
+                    null, null, List.of(), null, null, null)).toList());
             if (invalidSecondPrediction && predictions.size() > 1) {
                 Prediction original = predictions.get(1);
                 predictions.set(1, new Prediction(
                         original.requestKey(), original.status(), original.canonicalMerchant(),
                         "INCOME_SALARY", original.matchMethod(), original.matchScore(),
                         original.modelId(), original.modelVersion(), original.featureVersion(),
-                        original.experimental(), original.syntheticTrainingData(), original.guaranteed()));
+                        original.experimental(), original.syntheticTrainingData(), original.guaranteed(),
+                        original.fallbackReason(), original.rationale(), original.evidenceUrls(),
+                        original.providerId(), original.catalogVersion(), original.taxonomyVersion()));
             }
             return predictions;
         }
@@ -367,6 +477,8 @@ class MerchantRecognitionIntegrationTests {
             duringCall = null;
             unavailable = false;
             invalidSecondPrediction = false;
+            webEnriched = false;
+            enrichmentAbstained = false;
             transactionActiveDuringCall = true;
         }
     }

@@ -16,5 +16,11 @@ public record MerchantAiClientProperties(
         @NotNull Duration readTimeout,
         @NotBlank String expectedModelId,
         @NotBlank String expectedModelVersion,
-        @NotBlank String expectedFeatureVersion) {
+        @NotBlank String expectedFeatureVersion,
+        @NotBlank String expectedEnrichmentProviderId,
+        @NotBlank String expectedEnrichmentModelId,
+        @NotBlank String expectedEnrichmentModelVersion,
+        @NotBlank String expectedEnrichmentFeatureVersion,
+        @NotBlank String expectedCatalogVersion,
+        @NotBlank String expectedTaxonomyVersion) {
 }
