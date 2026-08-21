@@ -275,6 +275,16 @@ def test_nonsense_merchant_with_no_useful_evidence_abstains() -> None:
     assert outcome.recognized is False
     assert outcome.fallback_reason == "MODEL_ABSTAINED"
 
+    with api_with(MerchantEnricher(
+            settings(), FakeEmbeddingProvider(), FakeSearchProvider([]), reasoning)) as api:
+        prediction = api.post(
+            "/api/v1/merchant-recognition/predict",
+            json={"items": [request_item("zxqv local service ariana")]},
+        ).json()["items"][0]
+    assert prediction["status"] == "UNRECOGNIZED"
+    assert 1 <= len(prediction["candidateCategoryCodes"]) <= 3
+    assert len(prediction["candidateCategoryCodes"]) == len(set(prediction["candidateCategoryCodes"]))
+
 
 def test_ambiguous_merchant_with_conflicting_business_types_abstains() -> None:
     evidence = [
@@ -391,6 +401,7 @@ def test_unavailable_provider_abstains_without_exposing_secret_or_sensitive_logs
             metadata = api.get("/api/v1/merchant-recognition/model").json()
     assert all(prediction["status"] == "UNRECOGNIZED" for prediction in predictions)
     assert all(prediction["fallbackReason"] == "ENRICHMENT_UNAVAILABLE" for prediction in predictions)
+    assert all(prediction["candidateCategoryCodes"] == [] for prediction in predictions)
     assert metadata["enrichmentAvailable"] is True
     assert secret not in str(metadata)
     assert secret not in caplog.text

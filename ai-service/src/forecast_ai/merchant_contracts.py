@@ -4,13 +4,17 @@ import re
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 FEATURE_VERSION = "merchant-recognition-features-v1"
 ALLOWED_CATEGORIES = frozenset({
     "FOOD", "BILLS_SUBSCRIPTIONS", "TRANSPORT", "HEALTH", "SHOPPING",
     "LEISURE", "EDUCATION", "HOUSING", "BANK_FEES", "TAXES",
 })
+AllowedCategory = Literal[
+    "FOOD", "BILLS_SUBSCRIPTIONS", "TRANSPORT", "HEALTH", "SHOPPING",
+    "LEISURE", "EDUCATION", "HOUSING", "BANK_FEES", "TAXES",
+]
 _SENSITIVE = re.compile(
     r"(?:\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|"
     r"(?:\+?\d[\d\s.-]{7,}\d)|\b\d{8,}\b)", re.IGNORECASE,
@@ -80,6 +84,20 @@ class MerchantPrediction(StrictModel):
     provider_id: str | None = Field(default=None, max_length=60)
     catalog_version: str | None = Field(default=None, max_length=100)
     taxonomy_version: str | None = Field(default=None, max_length=100)
+    candidate_category_codes: list[AllowedCategory] = Field(default_factory=list, max_length=3)
+
+    @field_validator("candidate_category_codes")
+    @classmethod
+    def require_unique_candidates(cls, value: list[AllowedCategory]) -> list[AllowedCategory]:
+        if len(value) != len(set(value)):
+            raise ValueError("candidate category codes must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def recognized_results_have_no_candidates(self) -> MerchantPrediction:
+        if self.status == "RECOGNIZED" and self.candidate_category_codes:
+            raise ValueError("recognized results cannot contain fallback candidates")
+        return self
 
 
 class MerchantBatchResponse(StrictModel):

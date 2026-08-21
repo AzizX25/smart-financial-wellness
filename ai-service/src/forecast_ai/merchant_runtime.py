@@ -86,11 +86,12 @@ class MerchantRuntime:
             return self._recognized(item.request_key, aliases[alias], "FUZZY_ALIAS", ratio)
         pipeline = self.artifact["pipeline"]
         probabilities = np.asarray(pipeline.predict_proba([text])[0], dtype=float)
+        candidate_codes = _ranked_category_candidates(probabilities, pipeline.classes_)
         index = int(probabilities.argmax())
         score = float(probabilities[index])
         category = str(pipeline.classes_[index])
         if not math.isfinite(score) or score < float(self.artifact["threshold"]) or category not in ALLOWED_CATEGORIES:
-            return self._enrich_or_unrecognized(item, text)
+            return self._enrich_or_unrecognized(item, text, candidate_codes)
         compatible = [(candidate, data) for candidate, data in aliases.items() if data["categoryCode"] == category]
         canonical_alias, canonical = max(compatible, key=lambda pair: SequenceMatcher(None, text, pair[0]).ratio())
         del canonical_alias
@@ -104,12 +105,14 @@ class MerchantRuntime:
             experimental=True, synthetic_training_data=True, guaranteed=False,
         )
 
-    def _enrich_or_unrecognized(self, item: MerchantItem, text: str) -> MerchantPrediction:
+    def _enrich_or_unrecognized(
+            self, item: MerchantItem, text: str, candidate_codes: list[str]) -> MerchantPrediction:
         if self.enricher is None:
             return self._unrecognized(item.request_key, "ENRICHMENT_DISABLED")
         outcome = self.enricher.enrich(text, self.catalog)
         if not outcome.recognized:
-            return self._unrecognized(item.request_key, outcome.fallback_reason)
+            candidates = candidate_codes if outcome.fallback_reason == "MODEL_ABSTAINED" else []
+            return self._unrecognized(item.request_key, outcome.fallback_reason, candidates)
         settings = self.enricher.settings
         return MerchantPrediction(
             request_key=item.request_key,
@@ -131,12 +134,15 @@ class MerchantRuntime:
             taxonomy_version=str(self.metadata["taxonomyVersion"]),
         )
 
-    def _unrecognized(self, key: str, fallback_reason: str | None = None) -> MerchantPrediction:
+    def _unrecognized(
+            self, key: str, fallback_reason: str | None = None,
+            candidate_codes: list[str] | None = None) -> MerchantPrediction:
         return MerchantPrediction(
             request_key=key, status="UNRECOGNIZED", canonical_merchant=None, category_code=None,
             match_method=None, match_score=None, model_id=MODEL_ID, model_version=MODEL_VERSION,
             feature_version=FEATURE_VERSION, experimental=True, synthetic_training_data=True,
             guaranteed=False, fallback_reason=fallback_reason,
+            candidate_category_codes=candidate_codes or [],
         )
 
 
@@ -164,3 +170,15 @@ def _catalog_entries(aliases: dict[str, dict[str, str]]) -> tuple[CatalogEntry, 
         CatalogEntry(canonical, category, tuple(sorted(values)))
         for (canonical, category), values in sorted(grouped.items())
     )
+
+
+def _ranked_category_candidates(probabilities: np.ndarray, classes: np.ndarray) -> list[str]:
+    ranked = sorted(
+        (
+            (float(score), str(category))
+            for score, category in zip(probabilities, classes, strict=True)
+            if math.isfinite(float(score)) and str(category) in ALLOWED_CATEGORIES
+        ),
+        key=lambda item: (-item[0], item[1]),
+    )
+    return [category for _, category in ranked[:3]]

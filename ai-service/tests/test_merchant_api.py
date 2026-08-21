@@ -4,9 +4,12 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from forecast_ai.main import create_app
+from forecast_ai.merchant_contracts import MerchantPrediction
 from forecast_ai.merchant_runtime import MerchantRuntime
 from forecast_ai.runtime import ModelRuntime
 
@@ -55,6 +58,9 @@ def test_exact_fuzzy_ml_unknown_and_unsupported_currency() -> None:
         assert results[2]["status"] == "RECOGNIZED"
         assert results[3]["status"] == "UNRECOGNIZED"
         assert results[4]["status"] == "UNRECOGNIZED"
+        assert all(result["candidateCategoryCodes"] == [] for result in results[:3])
+        assert results[3]["candidateCategoryCodes"] == []
+        assert results[4]["candidateCategoryCodes"] == []
         assert all(result["guaranteed"] is False for result in results)
         assert model.status_code == 200 and model.json()["syntheticTrainingData"] is True
 
@@ -112,3 +118,27 @@ def test_artifact_failure_isolated_to_merchant_endpoint(tmp_path: Path) -> None:
         assert api.get("/api/v1/merchant-recognition/model").status_code == 503
         assert api.post("/api/v1/merchant-recognition/predict", json={"items": [item("carrefour")]}).status_code == 503
         assert api.get("/api/v1/forecast/model").status_code == 200
+
+
+def test_candidate_contract_rejects_duplicates_foreign_codes_and_recognized_candidates() -> None:
+    valid = {
+        "requestKey": "request-1", "status": "UNRECOGNIZED",
+        "canonicalMerchant": None, "categoryCode": None, "matchMethod": None,
+        "matchScore": None, "modelId": "merchant-recognition-synthetic-v1",
+        "modelVersion": "1.0.0", "featureVersion": "merchant-recognition-features-v1",
+        "experimental": True, "syntheticTrainingData": True, "guaranteed": False,
+        "fallbackReason": "MODEL_ABSTAINED", "candidateCategoryCodes": ["FOOD", "SHOPPING"],
+    }
+    assert MerchantPrediction.model_validate(valid).candidate_category_codes == ["FOOD", "SHOPPING"]
+    for candidates in (["FOOD", "FOOD"], ["FOOD", "INCOME_SALARY"]):
+        with pytest.raises(ValidationError):
+            MerchantPrediction.model_validate({**valid, "candidateCategoryCodes": candidates})
+    with pytest.raises(ValidationError):
+        MerchantPrediction.model_validate({
+            **valid,
+            "status": "RECOGNIZED",
+            "canonicalMerchant": "Commerce",
+            "categoryCode": "FOOD",
+            "matchMethod": "ML",
+            "matchScore": 0.9,
+        })
