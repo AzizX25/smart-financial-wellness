@@ -1787,6 +1787,62 @@ p {
   box-shadow: var(--shadow-xs);
 }
 
+.merchant-recognition-panel.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
+.merchant-recognition-panel h2,
+.merchant-recognition-panel p,
+.merchant-suggestion p {
+  margin: 0;
+}
+
+.merchant-recognition-panel h2 {
+  font-size: 1rem;
+}
+
+.merchant-recognition-panel p {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.merchant-suggestion {
+  display: grid;
+  grid-column: 2 / -1;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-info-soft);
+}
+
+.merchant-suggestion > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.merchant-suggestion span,
+.merchant-suggestion p {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.merchant-suggestion__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.merchant-suggestion__actions .button {
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+}
+
 .transaction-list__summary {
   display: flex;
   min-height: 52px;
@@ -4830,6 +4886,15 @@ p {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .merchant-recognition-panel.card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .merchant-recognition-panel .button {
+    width: 100%;
+  }
+
   .transaction-toolbar--dynamic.card {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4999,6 +5064,10 @@ p {
 
   .transaction-row > .badge {
     grid-column: 2;
+  }
+
+  .merchant-suggestion {
+    grid-column: 1 / -1;
   }
 
   .mapping-grid > div {

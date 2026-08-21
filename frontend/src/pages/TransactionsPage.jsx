@@ -3,7 +3,14 @@ import Icon from '../components/Icon'
 import { Badge, Card, formatCurrency, InlineNotice, PageHeader } from '../components/Ui'
 import { useFinancialData } from '../financial/FinancialDataContext'
 import { ApiError } from '../services/apiClient'
-import { assignTransactionCategory, listCategories } from '../services/categoryApi'
+import {
+  acceptMerchantSuggestion,
+  assignTransactionCategory,
+  listCategories,
+  listMerchantSuggestions,
+  rejectMerchantSuggestion,
+  runMerchantRecognition,
+} from '../services/categoryApi'
 import { listLocalTransactions } from '../services/financialApi'
 
 const directions = [
@@ -25,6 +32,11 @@ function controlledTransactionError(error) {
 }
 
 const emptyPage = { items: [], page: 0, size: 20, totalElements: 0, totalPages: 0, first: true, last: true }
+const merchantMethodLabels = {
+  EXACT_ALIAS: 'Alias connu',
+  FUZZY_ALIAS: 'Correspondance proche',
+  ML: 'Suggestion intelligente',
+}
 
 export default function TransactionsPage() {
   const { accounts, connected, dataVersion, historical, synchronizationError, synchronize, synchronizing } = useFinancialData()
@@ -42,6 +54,12 @@ export default function TransactionsPage() {
   const [error, setError] = useState('')
   const [assignmentError, setAssignmentError] = useState('')
   const [assigningId, setAssigningId] = useState('')
+  const [merchantSuggestions, setMerchantSuggestions] = useState({})
+  const [recognitionVersion, setRecognitionVersion] = useState(0)
+  const [analyzingMerchants, setAnalyzingMerchants] = useState(false)
+  const [suggestionActionId, setSuggestionActionId] = useState('')
+  const [merchantMessage, setMerchantMessage] = useState('')
+  const [merchantError, setMerchantError] = useState('')
   const accountNames = useMemo(() => new Map(accounts.map((account) => [account.id, account.displayName])), [accounts])
 
   useEffect(() => {
@@ -70,7 +88,17 @@ export default function TransactionsPage() {
       .catch((requestError) => { if (active) setError(controlledTransactionError(requestError)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [accountId, categoryFilter, dataVersion, direction, from, page, search, size, to])
+  }, [accountId, categoryFilter, dataVersion, direction, from, page, recognitionVersion, search, size, to])
+
+  useEffect(() => {
+    let active = true
+    listMerchantSuggestions()
+      .then((items) => {
+        if (active) setMerchantSuggestions(Object.fromEntries(items.map((item) => [item.transactionId, item])))
+      })
+      .catch(() => { if (active) setMerchantError('Les suggestions marchandes n’ont pas pu être chargées.') })
+    return () => { active = false }
+  }, [dataVersion, recognitionVersion])
 
   function resetPage(update) {
     setPage(0)
@@ -100,10 +128,74 @@ export default function TransactionsPage() {
           categorizedAt: assignment.categorizedAt,
         } : item),
       }))
+      setMerchantSuggestions((current) => {
+        const next = { ...current }
+        delete next[transaction.id]
+        return next
+      })
     } catch {
       setAssignmentError('La catégorie de cette transaction n’a pas pu être modifiée.')
     } finally {
       setAssigningId('')
+    }
+  }
+
+  async function analyzeMerchants() {
+    setAnalyzingMerchants(true)
+    setMerchantError('')
+    setMerchantMessage('')
+    try {
+      const response = await runMerchantRecognition()
+      if (response.outcome === 'SERVICE_UNAVAILABLE') {
+        setMerchantError('Le service de suggestion est momentanément indisponible. Vos transactions restent inchangées.')
+      } else if (response.outcome === 'INVALID_RESPONSE' || response.outcome === 'MODEL_VERSION_MISMATCH') {
+        setMerchantError('Les suggestions reçues n’ont pas pu être vérifiées. Aucune catégorie n’a été modifiée.')
+      } else if (response.suggestedCount > 0) {
+        setMerchantMessage(`${response.suggestedCount} suggestion${response.suggestedCount > 1 ? 's' : ''} à vérifier.`)
+      } else if (response.outcome === 'UNSUPPORTED_CURRENCY') {
+        setMerchantMessage('Aucune suggestion : cette version analyse uniquement les débits en TND.')
+      } else {
+        setMerchantMessage('Aucune suggestion fiable n’a été trouvée. Vos transactions restent non catégorisées.')
+      }
+      setRecognitionVersion((value) => value + 1)
+    } catch {
+      setMerchantError('L’analyse n’a pas pu être lancée. Vos transactions restent inchangées.')
+    } finally {
+      setAnalyzingMerchants(false)
+    }
+  }
+
+  async function reviewSuggestion(transaction, suggestion, accepted) {
+    setSuggestionActionId(suggestion.predictionId)
+    setMerchantError('')
+    try {
+      if (accepted) {
+        const assignment = await acceptMerchantSuggestion(transaction.id, suggestion.predictionId)
+        setResult((current) => ({
+          ...current,
+          items: current.items.map((item) => item.id === transaction.id ? {
+            ...item,
+            categoryId: assignment.categoryId,
+            categoryName: assignment.categoryName,
+            categoryNature: assignment.categoryNature,
+            categoryAssignmentSource: assignment.assignmentSource,
+            categorizedAt: assignment.categorizedAt,
+          } : item),
+        }))
+        setMerchantMessage('Suggestion acceptée. La catégorie de la transaction a été mise à jour.')
+      } else {
+        await rejectMerchantSuggestion(transaction.id, suggestion.predictionId)
+        setMerchantMessage('Suggestion refusée. La transaction reste non catégorisée.')
+      }
+      setMerchantSuggestions((current) => {
+        const next = { ...current }
+        delete next[transaction.id]
+        return next
+      })
+    } catch {
+      setMerchantError('Cette suggestion n’a pas pu être traitée. Actualisez la page puis réessayez.')
+    } finally {
+      setSuggestionActionId('')
     }
   }
 
@@ -125,6 +217,16 @@ export default function TransactionsPage() {
       {synchronizationError && <InlineNotice live tone="warning" icon="alert">{synchronizationError} Les transactions précédentes restent affichées.</InlineNotice>}
       {error && <InlineNotice live tone="warning" icon="alert">{error} {result.items.length > 0 && 'La page précédente reste affichée.'}</InlineNotice>}
       {assignmentError && <InlineNotice live tone="warning" icon="alert">{assignmentError}</InlineNotice>}
+      {merchantError && <InlineNotice live tone="warning" icon="alert">{merchantError}</InlineNotice>}
+      {merchantMessage && <InlineNotice live tone="success" icon="info">{merchantMessage}</InlineNotice>}
+
+      <Card className="merchant-recognition-panel">
+        <div><h2>Suggestions de catégories</h2><p>Analyse expérimentale des débits non catégorisés en TND, toujours soumise à votre validation.</p></div>
+        <button className="button button--secondary" disabled={analyzingMerchants} onClick={analyzeMerchants} type="button">
+          <Icon name="search" size={18} />
+          {analyzingMerchants ? 'Analyse en cours…' : 'Analyser les transactions non catégorisées'}
+        </button>
+      </Card>
 
       <Card className="transaction-toolbar transaction-toolbar--dynamic">
         <label className="search-field"><span className="sr-only">Rechercher une transaction</span><Icon name="search" size={20} /><input maxLength={160} onChange={(event) => resetPage(() => setSearch(event.target.value))} placeholder="Description ou contrepartie" type="search" value={search} /></label>
@@ -145,6 +247,7 @@ export default function TransactionsPage() {
               <div className="transaction-row__main"><h2>{transaction.description || 'Opération sans libellé'}</h2><p>{formatDate(transaction.bookingDate)} · {accountNames.get(transaction.accountId) || 'Compte synchronisé'}</p>{transaction.counterpartyName && <small>{transaction.counterpartyName}</small>}<label className="transaction-category-select"><span className="sr-only">Catégorie de {transaction.description}</span><select aria-label={`Catégorie de ${transaction.description}`} disabled={assigningId === transaction.id} onChange={(event) => assignCategory(transaction, event.target.value)} value={transaction.categoryId || ''}><option value="">Non catégorisée</option>{allowedCategories(transaction).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>{transaction.categoryAssignmentSource === 'MANUAL' && <small>Choix manuel</small>}</label></div>
               <Badge tone={transaction.direction === 'CREDIT' ? 'mint' : 'peach'}>{transaction.direction === 'CREDIT' ? 'Crédit' : 'Débit'}</Badge>
               <div className="transaction-row__amount"><strong className={transaction.direction === 'CREDIT' ? 'amount-credit' : 'amount-debit'}>{transaction.direction === 'CREDIT' ? '+' : '−'} {formatCurrency(transaction.amount, transaction.currency)}</strong><small>{transaction.currency}</small></div>
+              {merchantSuggestions[transaction.id] && <div className="merchant-suggestion" aria-label={`Suggestion pour ${transaction.description}`}><div><strong>{merchantSuggestions[transaction.id].canonicalMerchant}</strong><span>{merchantSuggestions[transaction.id].categoryName} · {merchantMethodLabels[merchantSuggestions[transaction.id].matchMethod]}</span></div><p>Suggestion expérimentale fondée sur un modèle entraîné avec des libellés marchands synthétiques. Vérifiez la catégorie avant de l'accepter.</p><div className="merchant-suggestion__actions"><button className="button button--primary" disabled={suggestionActionId === merchantSuggestions[transaction.id].predictionId} onClick={() => reviewSuggestion(transaction, merchantSuggestions[transaction.id], true)} type="button">Accepter</button><button className="button button--secondary" disabled={suggestionActionId === merchantSuggestions[transaction.id].predictionId} onClick={() => reviewSuggestion(transaction, merchantSuggestions[transaction.id], false)} type="button">Refuser</button></div></div>}
             </article>)}
       </section>
       {result.totalPages > 1 && <nav aria-label="Pagination des transactions" className="pagination-controls"><button className="button button--secondary" disabled={loading || result.first} onClick={() => setPage((value) => Math.max(0, value - 1))} type="button">Précédente</button><span>Page {result.page + 1} sur {result.totalPages}</span><button className="button button--secondary" disabled={loading || result.last} onClick={() => setPage((value) => value + 1)} type="button">Suivante</button></nav>}

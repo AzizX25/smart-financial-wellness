@@ -16,6 +16,20 @@ export const deleteCategory = (categoryId) => apiRequest(`/api/categories/${cate
 
 export const runCategorization = () => apiRequest('/api/categorization-runs', { method: 'POST' })
 
+export const runMerchantRecognition = () => apiRequest('/api/categorization-runs/merchant-recognition', { method: 'POST' })
+
+export const listMerchantSuggestions = () => apiRequest('/api/merchant-suggestions')
+
+export const acceptMerchantSuggestion = (transactionId, predictionId) => apiRequest(
+  `/api/transactions/${encodeURIComponent(transactionId)}/merchant-suggestions/${encodeURIComponent(predictionId)}/accept`,
+  { method: 'POST' },
+)
+
+export const rejectMerchantSuggestion = (transactionId, predictionId) => apiRequest(
+  `/api/transactions/${encodeURIComponent(transactionId)}/merchant-suggestions/${encodeURIComponent(predictionId)}/reject`,
+  { method: 'POST' },
+)
+
 export function getCategorySummary(month) {
   return apiRequest(`/api/categories/summary?${new URLSearchParams({ month })}`)
 }

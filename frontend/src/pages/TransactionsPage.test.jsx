@@ -1,13 +1,24 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useFinancialData } from '../financial/FinancialDataContext'
-import { assignTransactionCategory, listCategories } from '../services/categoryApi'
+import {
+  assignTransactionCategory,
+  listCategories,
+  listMerchantSuggestions,
+} from '../services/categoryApi'
 import { listLocalTransactions } from '../services/financialApi'
 import TransactionsPage from './TransactionsPage'
 
 vi.mock('../financial/FinancialDataContext', () => ({ useFinancialData: vi.fn() }))
 vi.mock('../services/financialApi', () => ({ listLocalTransactions: vi.fn() }))
-vi.mock('../services/categoryApi', () => ({ assignTransactionCategory: vi.fn(), listCategories: vi.fn() }))
+vi.mock('../services/categoryApi', () => ({
+  acceptMerchantSuggestion: vi.fn(),
+  assignTransactionCategory: vi.fn(),
+  listCategories: vi.fn(),
+  listMerchantSuggestions: vi.fn(),
+  rejectMerchantSuggestion: vi.fn(),
+  runMerchantRecognition: vi.fn(),
+}))
 
 const account = { id: 'ACCOUNT-1', displayName: 'Compte réel' }
 const categories = [
@@ -32,6 +43,7 @@ describe('transactions locales catégorisées', () => {
     vi.clearAllMocks()
     useFinancialData.mockReturnValue(state())
     listCategories.mockResolvedValue(categories)
+    listMerchantSuggestions.mockResolvedValue([])
     listLocalTransactions.mockResolvedValue(page)
   })
 
