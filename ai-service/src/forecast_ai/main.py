@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,7 +20,14 @@ from forecast_ai.contracts import (
 )
 from forecast_ai.runtime import MODEL_ID, MODEL_VERSION, ModelRuntime, ModelUnavailableError
 from forecast_ai.merchant_contracts import MerchantBatchRequest, MerchantBatchResponse, MerchantModelResponse
+from forecast_ai.merchant_enrichment import (
+    ENRICHMENT_FEATURE_VERSION,
+    ENRICHMENT_PROVIDER_ID,
+    MerchantEnricher,
+    MerchantEnrichmentSettings,
+)
 from forecast_ai.merchant_runtime import MerchantRuntime
+from forecast_ai.ollama_providers import create_ollama_providers
 
 LOGGER = logging.getLogger("forecast_ai")
 DEFAULT_MODEL_DIRECTORY = Path(__file__).parents[2] / "models/forecast"
@@ -29,8 +37,11 @@ def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRu
     model_runtime = runtime or ModelRuntime(
         os.getenv("FORECAST_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY))
     )
+    enrichment_settings = MerchantEnrichmentSettings.from_env()
+    providers = create_ollama_providers(enrichment_settings)
     merchant_model_runtime = merchant_runtime or MerchantRuntime(
-        os.getenv("MERCHANT_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY.parent / "merchant"))
+        os.getenv("MERCHANT_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY.parent / "merchant")),
+        MerchantEnricher(enrichment_settings, *providers),
     )
 
     @asynccontextmanager
@@ -72,7 +83,13 @@ def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRu
                 status_code=503,
                 content={"status": "UNAVAILABLE", "modelAvailable": False},
             )
-        return JSONResponse(content={"status": "UP", "modelAvailable": True})
+        enrichment = merchant_model_runtime.enricher
+        return JSONResponse(content={
+            "status": "UP",
+            "modelAvailable": True,
+            "merchantModelAvailable": merchant_model_runtime.available,
+            "merchantEnrichmentAvailable": enrichment.available if enrichment is not None else False,
+        })
 
     @app.get("/api/v1/forecast/model", response_model=ModelResponse, response_model_by_alias=True)
     async def model() -> ModelResponse:
@@ -116,18 +133,28 @@ def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRu
         if not merchant_model_runtime.available:
             raise ModelUnavailableError("merchant model is unavailable")
         metadata = merchant_model_runtime.metadata
+        enrichment = merchant_model_runtime.enricher
+        settings = enrichment.settings if enrichment is not None else None
         return MerchantModelResponse(
             model_id=metadata["modelId"], model_version=metadata["modelVersion"],
             feature_version=metadata["featureVersion"], catalog_version=metadata["catalogVersion"],
             taxonomy_version=metadata["taxonomyVersion"], threshold=metadata["threshold"],
             experimental=True, synthetic_training_data=True, guaranteed=False,
+            enrichment_enabled=settings.enabled if settings is not None else False,
+            enrichment_available=enrichment.available if enrichment is not None else False,
+            enrichment_provider_id=ENRICHMENT_PROVIDER_ID if settings is not None else None,
+            enrichment_reasoning_model=settings.reasoning_model if settings is not None else None,
+            enrichment_embedding_model=settings.embedding_model if settings is not None else None,
+            enrichment_feature_version=ENRICHMENT_FEATURE_VERSION if settings is not None else None,
         )
 
     @app.post("/api/v1/merchant-recognition/predict", response_model=MerchantBatchResponse, response_model_by_alias=True)
     async def merchant_predict(request: MerchantBatchRequest) -> MerchantBatchResponse:
         if not merchant_model_runtime.available:
             raise ModelUnavailableError("merchant model is unavailable")
-        predictions = [merchant_model_runtime.predict(item) for item in request.items]
+        predictions = []
+        for item in request.items:
+            predictions.append(await asyncio.to_thread(merchant_model_runtime.predict, item))
         LOGGER.info("merchant_prediction outcome=success item_count=%s", len(predictions))
         return MerchantBatchResponse(items=predictions)
 

@@ -66,7 +66,7 @@ class MerchantPrediction(StrictModel):
     status: Literal["RECOGNIZED", "UNRECOGNIZED"]
     canonical_merchant: str | None
     category_code: str | None
-    match_method: Literal["EXACT_ALIAS", "FUZZY_ALIAS", "ML"] | None
+    match_method: Literal["EXACT_ALIAS", "FUZZY_ALIAS", "ML", "WEB_LLM"] | None
     match_score: float | None
     model_id: str
     model_version: str
@@ -74,6 +74,12 @@ class MerchantPrediction(StrictModel):
     experimental: bool
     synthetic_training_data: bool
     guaranteed: bool
+    fallback_reason: str | None = Field(default=None, max_length=100)
+    rationale: str | None = Field(default=None, max_length=300)
+    evidence_urls: list[str] = Field(default_factory=list, max_length=3)
+    provider_id: str | None = Field(default=None, max_length=60)
+    catalog_version: str | None = Field(default=None, max_length=100)
+    taxonomy_version: str | None = Field(default=None, max_length=100)
 
 
 class MerchantBatchResponse(StrictModel):
@@ -90,4 +96,9 @@ class MerchantModelResponse(StrictModel):
     experimental: bool
     synthetic_training_data: bool
     guaranteed: bool
-
+    enrichment_enabled: bool
+    enrichment_available: bool
+    enrichment_provider_id: str | None
+    enrichment_reasoning_model: str | None
+    enrichment_embedding_model: str | None
+    enrichment_feature_version: str | None

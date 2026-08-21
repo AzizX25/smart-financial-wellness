@@ -12,6 +12,13 @@ import joblib
 import numpy as np
 
 from forecast_ai.merchant_contracts import ALLOWED_CATEGORIES, FEATURE_VERSION, MerchantItem, MerchantPrediction
+from forecast_ai.merchant_enrichment import (
+    ENRICHMENT_FEATURE_VERSION,
+    ENRICHMENT_MODEL_VERSION,
+    ENRICHMENT_PROVIDER_ID,
+    CatalogEntry,
+    MerchantEnricher,
+)
 from forecast_ai.runtime import ModelUnavailableError
 
 MODEL_ID = "merchant-recognition-synthetic-v1"
@@ -20,7 +27,7 @@ FUZZY_THRESHOLD = 0.88
 
 
 class MerchantRuntime:
-    def __init__(self, model_directory: str | Path) -> None:
+    def __init__(self, model_directory: str | Path, enricher: MerchantEnricher | None = None) -> None:
         root = Path(model_directory)
         self.artifact_path = root / "merchant_recognition_v1.joblib"
         self.metadata_path = root / "merchant_recognition_v1.metadata.json"
@@ -28,6 +35,8 @@ class MerchantRuntime:
         self.artifact: dict[str, object] | None = None
         self.metadata: dict[str, object] | None = None
         self.failure_reason: str | None = None
+        self.enricher = enricher
+        self.catalog: tuple[CatalogEntry, ...] = ()
 
     @property
     def available(self) -> bool:
@@ -36,6 +45,7 @@ class MerchantRuntime:
     def load(self) -> None:
         self.artifact = None
         self.metadata = None
+        self.catalog = ()
         try:
             metadata = json.loads(self.metadata_path.read_text(encoding="utf-8"))
             sidecar = self.checksum_path.read_text(encoding="ascii").split()
@@ -53,6 +63,7 @@ class MerchantRuntime:
                 raise ValueError("merchant artifact contract mismatch")
             self.artifact = artifact
             self.metadata = metadata
+            self.catalog = _catalog_entries(artifact["aliases"])
             self.failure_reason = None
         except Exception as exception:
             self.failure_reason = type(exception).__name__
@@ -61,7 +72,7 @@ class MerchantRuntime:
         if not self.available:
             raise ModelUnavailableError("merchant model is unavailable")
         if item.currency != "TND" or item.direction != "DEBIT":
-            return self._unrecognized(item.request_key)
+            return self._unrecognized(item.request_key, "UNSUPPORTED_TRANSACTION")
         text = _normalize(item.sanitized_merchant_text)
         aliases: dict[str, dict[str, str]] = self.artifact["aliases"]
         exact = aliases.get(text)
@@ -79,7 +90,7 @@ class MerchantRuntime:
         score = float(probabilities[index])
         category = str(pipeline.classes_[index])
         if not math.isfinite(score) or score < float(self.artifact["threshold"]) or category not in ALLOWED_CATEGORIES:
-            return self._unrecognized(item.request_key)
+            return self._enrich_or_unrecognized(item, text)
         compatible = [(candidate, data) for candidate, data in aliases.items() if data["categoryCode"] == category]
         canonical_alias, canonical = max(compatible, key=lambda pair: SequenceMatcher(None, text, pair[0]).ratio())
         del canonical_alias
@@ -93,12 +104,39 @@ class MerchantRuntime:
             experimental=True, synthetic_training_data=True, guaranteed=False,
         )
 
-    def _unrecognized(self, key: str) -> MerchantPrediction:
+    def _enrich_or_unrecognized(self, item: MerchantItem, text: str) -> MerchantPrediction:
+        if self.enricher is None:
+            return self._unrecognized(item.request_key, "ENRICHMENT_DISABLED")
+        outcome = self.enricher.enrich(text, self.catalog)
+        if not outcome.recognized:
+            return self._unrecognized(item.request_key, outcome.fallback_reason)
+        settings = self.enricher.settings
+        return MerchantPrediction(
+            request_key=item.request_key,
+            status="RECOGNIZED",
+            canonical_merchant=outcome.canonical_merchant,
+            category_code=outcome.category_code,
+            match_method="WEB_LLM",
+            match_score=None,
+            model_id=settings.reasoning_model,
+            model_version=ENRICHMENT_MODEL_VERSION,
+            feature_version=ENRICHMENT_FEATURE_VERSION,
+            experimental=True,
+            synthetic_training_data=False,
+            guaranteed=False,
+            rationale=outcome.rationale,
+            evidence_urls=list(outcome.evidence_urls),
+            provider_id=ENRICHMENT_PROVIDER_ID,
+            catalog_version=str(self.metadata["catalogVersion"]),
+            taxonomy_version=str(self.metadata["taxonomyVersion"]),
+        )
+
+    def _unrecognized(self, key: str, fallback_reason: str | None = None) -> MerchantPrediction:
         return MerchantPrediction(
             request_key=key, status="UNRECOGNIZED", canonical_merchant=None, category_code=None,
             match_method=None, match_score=None, model_id=MODEL_ID, model_version=MODEL_VERSION,
             feature_version=FEATURE_VERSION, experimental=True, synthetic_training_data=True,
-            guaranteed=False,
+            guaranteed=False, fallback_reason=fallback_reason,
         )
 
 
@@ -115,3 +153,14 @@ def _sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _catalog_entries(aliases: dict[str, dict[str, str]]) -> tuple[CatalogEntry, ...]:
+    grouped: dict[tuple[str, str], list[str]] = {}
+    for alias, data in aliases.items():
+        key = (data["canonicalMerchant"], data["categoryCode"])
+        grouped.setdefault(key, []).append(alias)
+    return tuple(
+        CatalogEntry(canonical, category, tuple(sorted(values)))
+        for (canonical, category), values in sorted(grouped.items())
+    )
