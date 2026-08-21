@@ -65,6 +65,25 @@ public final class CategoryDtos {
     public record CategorizationRunResponse(int categorizedCount, long uncategorizedCount) {
     }
 
+    public record MerchantRecognitionRunResponse(
+            int analyzedCount,
+            int suggestedCount,
+            int unrecognizedCount,
+            int unsupportedCurrencyCount,
+            String outcome) {
+    }
+
+    public record MerchantSuggestionResponse(
+            UUID predictionId,
+            UUID transactionId,
+            UUID categoryId,
+            String categoryCode,
+            String categoryName,
+            String canonicalMerchant,
+            String matchMethod,
+            Instant producedAt) {
+    }
+
     public record CategorySummaryResponse(String month, List<CurrencyCategorySummary> currencies) {
         public CategorySummaryResponse { currencies = List.copyOf(currencies); }
     }

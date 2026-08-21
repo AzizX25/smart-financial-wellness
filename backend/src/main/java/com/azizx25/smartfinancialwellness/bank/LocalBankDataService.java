@@ -163,6 +163,7 @@ public class LocalBankDataService {
                 switch (transaction.getCategorySource()) {
                     case "USER" -> "MANUAL";
                     case "RULES" -> "DETERMINISTIC_RULE";
+                    case "ML" -> "ML";
                     default -> "UNCATEGORIZED";
                 },
                 transaction.getCategorizedAt(),

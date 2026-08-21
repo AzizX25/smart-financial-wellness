@@ -34,4 +34,15 @@ public class CategoryException extends ApiException {
     public static CategoryException transactionNotFound() {
         return new CategoryException(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND", "Transaction not found");
     }
+
+    public static CategoryException suggestionNotFound() {
+        return new CategoryException(HttpStatus.NOT_FOUND, "MERCHANT_SUGGESTION_NOT_FOUND", "Merchant suggestion not found");
+    }
+
+    public static CategoryException suggestionConflict() {
+        return new CategoryException(
+                HttpStatus.CONFLICT,
+                "MERCHANT_SUGGESTION_CONFLICT",
+                "Merchant suggestion can no longer be applied");
+    }
 }

@@ -239,6 +239,17 @@ public class TransactionRecord {
         categorizedAt = now;
     }
 
+    public void assignByMl(Category target, UUID predictionId, Instant now) {
+        if (!"UNCATEGORIZED".equals(categorySource)) {
+            return;
+        }
+        category = target;
+        categorySource = "ML";
+        appliedCategoryPredictionId = predictionId;
+        matchedCategorizationRuleId = null;
+        categorizedAt = now;
+    }
+
     public void synchronize(
             SyncJob job,
             LocalDate transactionBookingDate,

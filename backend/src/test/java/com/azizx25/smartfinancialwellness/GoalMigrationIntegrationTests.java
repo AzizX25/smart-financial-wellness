@@ -2,19 +2,17 @@ package com.azizx25.smartfinancialwellness;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Import(PostgresTestConfiguration.class)
@@ -25,7 +23,7 @@ class GoalMigrationIntegrationTests {
     @Autowired JdbcTemplate jdbcTemplate;
 
     @Test
-    void appliesV1ThroughV17AndKeepsProgressDerived() {
+    void appliesV1ThroughV18AndKeepsProgressDerived()  {
         Integer successfulMigrations = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM " + SCHEMA + "flyway_schema_history "
                         + "WHERE version IS NOT NULL AND success",
@@ -45,7 +43,7 @@ class GoalMigrationIntegrationTests {
                         + "AND NOT trigger.tgisinternal",
                 Integer.class);
 
-        assertThat(successfulMigrations).isEqualTo(17);
+        assertThat(successfulMigrations).isEqualTo(18);
         assertThat(derivedProgressColumns).isZero();
         assertThat(identityTrigger).isOne();
     }

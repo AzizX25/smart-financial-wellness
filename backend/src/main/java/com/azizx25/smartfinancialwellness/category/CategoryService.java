@@ -21,6 +21,8 @@ import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CurrencyCate
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryResponse;
 import com.azizx25.smartfinancialwellness.category.persistence.Category;
 import com.azizx25.smartfinancialwellness.category.persistence.CategoryRepository;
+import com.azizx25.smartfinancialwellness.category.persistence.CategoryPrediction;
+import com.azizx25.smartfinancialwellness.category.persistence.CategoryPredictionRepository;
 import com.azizx25.smartfinancialwellness.category.persistence.TransactionCategoryHistory;
 import com.azizx25.smartfinancialwellness.category.persistence.TransactionCategoryHistoryRepository;
 import com.azizx25.smartfinancialwellness.user.persistence.AppUser;
@@ -35,6 +37,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final TransactionRecordRepository transactionRepository;
     private final TransactionCategoryHistoryRepository historyRepository;
+    private final CategoryPredictionRepository predictionRepository;
     private final AppUserRepository userRepository;
     private final AuditService auditService;
     private final Clock clock;
@@ -43,12 +46,14 @@ public class CategoryService {
             CategoryRepository categoryRepository,
             TransactionRecordRepository transactionRepository,
             TransactionCategoryHistoryRepository historyRepository,
+            CategoryPredictionRepository predictionRepository,
             AppUserRepository userRepository,
             AuditService auditService,
             Clock clock) {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.historyRepository = historyRepository;
+        this.predictionRepository = predictionRepository;
         this.userRepository = userRepository;
         this.auditService = auditService;
         this.clock = clock;
@@ -142,8 +147,11 @@ public class CategoryService {
         }
 
         if (previous.getId().equals(target.getId()) && previousSource.equals(newSource)) {
+            rejectPendingSuggestion(transactionId);
             return response(transaction);
         }
+
+        rejectPendingSuggestion(transactionId);
 
         if (removing) {
             transaction.removeCategory(target);
@@ -215,10 +223,17 @@ public class CategoryService {
         return TransactionRecord.UNCATEGORIZED_CATEGORY_ID.equals(category.getId()) ? null : category.getId();
     }
 
+    private void rejectPendingSuggestion(UUID transactionId) {
+        predictionRepository.findByTransaction_IdAndReviewStatus(
+                        transactionId, CategoryPrediction.ReviewStatus.PENDING)
+                .ifPresent(prediction -> prediction.reject(clock.instant()));
+    }
+
     private String externalSource(String source) {
         return switch (source) {
             case "USER" -> "MANUAL";
             case "RULES" -> "DETERMINISTIC_RULE";
+            case "ML" -> "ML";
             default -> "UNCATEGORIZED";
         };
     }

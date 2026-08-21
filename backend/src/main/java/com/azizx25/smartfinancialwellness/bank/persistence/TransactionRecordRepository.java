@@ -69,6 +69,53 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
             @Param("userId") UUID userId,
             @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId);
 
+    @Query(value = """
+            SELECT transaction.*
+              FROM smart_financial_wellness.transaction_record transaction
+             WHERE transaction.user_id = :userId
+               AND transaction.category_id = :uncategorizedCategoryId
+               AND transaction.category_source = 'UNCATEGORIZED'
+               AND transaction.direction = 'DEBIT'
+               AND ((transaction.source_type IN ('MANUAL', 'FILE_IMPORT') AND transaction.provider_status IS NULL)
+                    OR (transaction.source_type = 'BANK_SYNC' AND transaction.provider_status = 'POSTED'))
+               AND NOT EXISTS (
+                   SELECT 1 FROM smart_financial_wellness.internal_transfer transfer
+                    WHERE transfer.confirmed_at IS NOT NULL
+                      AND (transfer.outgoing_transaction_id = transaction.id
+                           OR transfer.incoming_transaction_id = transaction.id)
+               )
+             ORDER BY transaction.booking_date, transaction.id
+            """, nativeQuery = true)
+    List<TransactionRecord> findMerchantRecognitionCandidates(
+            @Param("userId") UUID userId,
+            @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId,
+            Pageable pageable);
+
+    @Query(value = """
+            SELECT EXISTS (
+                SELECT 1
+                  FROM smart_financial_wellness.transaction_record transaction
+                 WHERE transaction.id = :transactionId
+                   AND transaction.user_id = :userId
+                   AND transaction.category_id = :uncategorizedCategoryId
+                   AND transaction.category_source = 'UNCATEGORIZED'
+                   AND transaction.direction = 'DEBIT'
+                   AND transaction.currency = 'TND'
+                   AND ((transaction.source_type IN ('MANUAL', 'FILE_IMPORT') AND transaction.provider_status IS NULL)
+                        OR (transaction.source_type = 'BANK_SYNC' AND transaction.provider_status = 'POSTED'))
+                   AND NOT EXISTS (
+                       SELECT 1 FROM smart_financial_wellness.internal_transfer transfer
+                        WHERE transfer.confirmed_at IS NOT NULL
+                          AND (transfer.outgoing_transaction_id = transaction.id
+                               OR transfer.incoming_transaction_id = transaction.id)
+                   )
+            )
+            """, nativeQuery = true)
+    boolean isMerchantRecognitionEligible(
+            @Param("transactionId") UUID transactionId,
+            @Param("userId") UUID userId,
+            @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId);
+
     long countByUser_IdAndCategory_Id(UUID userId, UUID categoryId);
 
     @Query(value = """

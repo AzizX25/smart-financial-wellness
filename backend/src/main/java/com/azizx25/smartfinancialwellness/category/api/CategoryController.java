@@ -6,10 +6,14 @@ import java.util.UUID;
 
 import com.azizx25.smartfinancialwellness.category.CategoryService;
 import com.azizx25.smartfinancialwellness.category.DeterministicCategorizationService;
+import com.azizx25.smartfinancialwellness.category.MerchantRecognitionPersistence;
+import com.azizx25.smartfinancialwellness.category.MerchantRecognitionService;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategorizationRunResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategoryRequest;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategoryResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.CategorySummaryResponse;
+import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantRecognitionRunResponse;
+import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.MerchantSuggestionResponse;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryRequest;
 import com.azizx25.smartfinancialwellness.category.api.CategoryDtos.TransactionCategoryResponse;
 import com.azizx25.smartfinancialwellness.security.CurrentUserPrincipal;
@@ -36,12 +40,18 @@ public class CategoryController {
 
     private final CategoryService categoryService;
     private final DeterministicCategorizationService categorizationService;
+    private final MerchantRecognitionService merchantRecognitionService;
+    private final MerchantRecognitionPersistence merchantRecognitionPersistence;
 
     public CategoryController(
             CategoryService categoryService,
-            DeterministicCategorizationService categorizationService) {
+            DeterministicCategorizationService categorizationService,
+            MerchantRecognitionService merchantRecognitionService,
+            MerchantRecognitionPersistence merchantRecognitionPersistence) {
         this.categoryService = categoryService;
         this.categorizationService = categorizationService;
+        this.merchantRecognitionService = merchantRecognitionService;
+        this.merchantRecognitionPersistence = merchantRecognitionPersistence;
     }
 
     @GetMapping("/categories")
@@ -83,6 +93,35 @@ public class CategoryController {
     @PostMapping("/categorization-runs")
     public CategorizationRunResponse run(@AuthenticationPrincipal CurrentUserPrincipal principal) {
         return categorizationService.categorizeUncategorized(principal.userId());
+    }
+
+    @PostMapping("/categorization-runs/merchant-recognition")
+    public MerchantRecognitionRunResponse runMerchantRecognition(
+            @AuthenticationPrincipal CurrentUserPrincipal principal) {
+        return merchantRecognitionService.generate(principal.userId());
+    }
+
+    @GetMapping("/merchant-suggestions")
+    public List<MerchantSuggestionResponse> pendingMerchantSuggestions(
+            @AuthenticationPrincipal CurrentUserPrincipal principal) {
+        return merchantRecognitionPersistence.listPending(principal.userId());
+    }
+
+    @PostMapping("/transactions/{transactionId}/merchant-suggestions/{predictionId}/accept")
+    public TransactionCategoryResponse acceptMerchantSuggestion(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @PathVariable UUID transactionId,
+            @PathVariable UUID predictionId) {
+        return merchantRecognitionPersistence.accept(principal.userId(), transactionId, predictionId);
+    }
+
+    @PostMapping("/transactions/{transactionId}/merchant-suggestions/{predictionId}/reject")
+    public ResponseEntity<Void> rejectMerchantSuggestion(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @PathVariable UUID transactionId,
+            @PathVariable UUID predictionId) {
+        merchantRecognitionPersistence.reject(principal.userId(), transactionId, predictionId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/categories/summary")
