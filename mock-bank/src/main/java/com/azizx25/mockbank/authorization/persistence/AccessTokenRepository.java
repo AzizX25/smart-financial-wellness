@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> {
 
+    void deleteByBankConsent_Id(UUID bankConsentId);
+
     Optional<AccessToken> findByTokenHash(String tokenHash);
 
     Optional<AccessToken> findByTokenHashAndRevokedAtIsNullAndExpiresAtAfter(String tokenHash, OffsetDateTime asOf);

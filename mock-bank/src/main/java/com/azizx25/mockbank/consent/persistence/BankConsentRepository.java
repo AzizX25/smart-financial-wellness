@@ -1,6 +1,7 @@
 package com.azizx25.mockbank.consent.persistence;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BankConsentRepository extends JpaRepository<BankConsent, UUID> {
+
+    List<BankConsent> findByBankCustomer_Id(UUID bankCustomerId);
 
     @EntityGraph(attributePaths = {"bankCustomer", "oauthClient"})
     @Query("select consent from BankConsent consent where consent.id = :id")

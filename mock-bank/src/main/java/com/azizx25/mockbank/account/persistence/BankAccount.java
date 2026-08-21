@@ -135,4 +135,8 @@ public class BankAccount {
         this.currentBalance = currentBalance.subtract(amount);
         this.availableBalance = availableBalance.subtract(amount);
     }
+
+    public void reserveDebit(BigDecimal amount) {
+        this.availableBalance = availableBalance.subtract(amount);
+    }
 }
