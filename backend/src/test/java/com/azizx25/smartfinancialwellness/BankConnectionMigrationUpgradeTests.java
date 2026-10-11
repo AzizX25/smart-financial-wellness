@@ -4,6 +4,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
@@ -12,16 +14,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 class BankConnectionMigrationUpgradeTests {
 
     private static final String SCHEMA = "smart_financial_wellness";
     private static final String MIGRATIONS = "classpath:db/migration";
 
     @Test
-    void v11ThroughV20UpgradeExistingRowsAndAlsoMigrateAnEmptyDatabase() {
+    void v11ThroughV21UpgradeExistingRowsAndAlsoMigrateAnEmptyDatabase() {
         try (PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine")
                 .withDatabaseName("bank_connection_upgrade_test")
                 .withUsername("test_user")
@@ -78,7 +77,7 @@ class BankConnectionMigrationUpgradeTests {
                     connectionId);
 
             Flyway latest = flyway(postgres, null);
-            assertThat(latest.migrate().migrationsExecuted).isEqualTo(9);
+            assertThat(latest.migrate().migrationsExecuted).isEqualTo(10);
             String upgradedAccount = jdbc.queryForObject(
                     "SELECT provider_code || '|' || COALESCE(provider_account_status, 'NULL') "
                             + "FROM smart_financial_wellness.financial_account WHERE id = ?",
@@ -117,12 +116,12 @@ class BankConnectionMigrationUpgradeTests {
                     .isInstanceOf(DataAccessException.class);
 
             jdbc.execute("DROP SCHEMA smart_financial_wellness CASCADE");
-            assertThat(flyway(postgres, null).migrate().migrationsExecuted).isEqualTo(20);
+            assertThat(flyway(postgres, null).migrate().migrationsExecuted).isEqualTo(21);
             Integer successfulMigrations = jdbc.queryForObject(
                     "SELECT COUNT(*) FROM smart_financial_wellness.flyway_schema_history "
                             + "WHERE version IS NOT NULL AND success",
                     Integer.class);
-            assertThat(successfulMigrations).isEqualTo(20);
+            assertThat(successfulMigrations).isEqualTo(21);
         }
     }
 

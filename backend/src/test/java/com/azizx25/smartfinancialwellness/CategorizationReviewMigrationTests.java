@@ -3,6 +3,8 @@ package com.azizx25.smartfinancialwellness;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
@@ -10,9 +12,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CategorizationReviewMigrationTests {
 
@@ -22,7 +21,7 @@ class CategorizationReviewMigrationTests {
     private static final UUID SHOPPING = UUID.fromString("00000000-0000-0000-0000-000000000013");
 
     @Test
-    void upgradesV19ToV20AndEnforcesReviewMemoryAndExistingEvidenceIntegrity() {
+    void upgradesV19ToV21AndEnforcesReviewMemoryAndExistingEvidenceIntegrity() {
         try (PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine")
                 .withDatabaseName("categorization_review_upgrade_test")
                 .withUsername("test_user")
@@ -38,12 +37,12 @@ class CategorizationReviewMigrationTests {
                     Integer.class);
 
             Flyway latest = flyway(postgres, null);
-            assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
             latest.validate();
             assertThat(jdbc.queryForObject(
                     "SELECT version FROM smart_financial_wellness.flyway_schema_history "
                             + "WHERE success AND version IS NOT NULL ORDER BY installed_rank DESC LIMIT 1",
-                    String.class)).isEqualTo("20");
+                    String.class)).isEqualTo("21");
             assertThat(jdbc.queryForObject(
                     "SELECT checksum FROM smart_financial_wellness.flyway_schema_history WHERE version = '19'",
                     Integer.class)).isEqualTo(v19Checksum);

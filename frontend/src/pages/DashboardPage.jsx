@@ -1,8 +1,10 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import Icon from '../components/Icon'
 import { Badge, Card, formatCurrency, InlineNotice, MetricCard, PageHeader } from '../components/Ui'
 import { useFinancialData } from '../financial/FinancialDataContext'
+import { calculateCurrentFinancialScore } from '../services/financialScoreApi'
 
 const accountTypes = {
   CASH: 'Espèces',
@@ -18,6 +20,17 @@ const syncLabels = {
   SUCCEEDED: 'À jour',
 }
 
+const factorLabels = {
+  BALANCE_RESILIENCE: 'Résilience du solde',
+  ESSENTIAL_EXPENSE_BURDEN: 'Poids des dépenses essentielles',
+  GOAL_PROGRESS: 'Progression des objectifs',
+  INCOME_STABILITY: 'Stabilité des revenus',
+  SALARY_PLAN_ADHERENCE: 'Respect du budget prévu',
+  SAVINGS_RATE: "Taux d'épargne",
+}
+
+const emptyList = Object.freeze([])
+
 function formatDate(value, options = { dateStyle: 'long', timeStyle: 'short' }) {
   if (!value) return 'Jamais'
   const date = new Date(value)
@@ -32,6 +45,7 @@ export default function DashboardPage() {
     accounts,
     connected,
     dashboardSummary,
+    dataVersion,
     error,
     historical,
     loading,
@@ -43,16 +57,53 @@ export default function DashboardPage() {
   } = useFinancialData()
   const greetingName = user?.firstName?.trim() || user?.displayName?.trim()
   const accountNames = new Map(accounts.map((account) => [account.id, account.displayName]))
-  const balanceTotals = dashboardSummary?.balanceTotals || []
-  const cashFlows = dashboardSummary?.monthlyCashFlows || []
+  const balanceTotals = dashboardSummary?.balanceTotals || emptyList
+  const cashFlows = dashboardSummary?.monthlyCashFlows || emptyList
   const singleCurrencyFlow = balanceTotals.length === 1
     ? cashFlows.find((flow) => flow.currency === balanceTotals[0].currency)
     : null
-  const currencies = [...new Set([
+  const currencies = useMemo(() => [...new Set([
     ...balanceTotals.map((total) => total.currency),
     ...cashFlows.map((flow) => flow.currency),
-  ])].sort()
+  ])].sort(), [balanceTotals, cashFlows])
+  const [scoreCurrency, setScoreCurrency] = useState('')
+  const [financialScore, setFinancialScore] = useState(null)
+  const [scoreError, setScoreError] = useState('')
+  const [scoreLoading, setScoreLoading] = useState(false)
+  const scoreRequest = useRef(0)
+  const displayedScore = financialScore?.currency === scoreCurrency ? financialScore : null
   const today = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'full' }).format(new Date())
+
+  useEffect(() => {
+    if (currencies.length === 0) {
+      setScoreCurrency('')
+      setFinancialScore(null)
+      return
+    }
+    setScoreCurrency((current) => currencies.includes(current) ? current : currencies[0])
+  }, [currencies])
+
+  useEffect(() => {
+    if (!scoreCurrency) return undefined
+    const requestId = ++scoreRequest.current
+    setScoreLoading(true)
+    setScoreError('')
+    calculateCurrentFinancialScore(scoreCurrency)
+      .then((response) => {
+        if (requestId === scoreRequest.current) setFinancialScore(response)
+      })
+      .catch(() => {
+        if (requestId === scoreRequest.current) {
+          setScoreError("L'indicateur de bien-être financier n'a pas pu être calculé.")
+        }
+      })
+      .finally(() => {
+        if (requestId === scoreRequest.current) setScoreLoading(false)
+      })
+    return () => {
+      if (requestId === scoreRequest.current) scoreRequest.current += 1
+    }
+  }, [dataVersion, scoreCurrency])
 
   return (
     <div className="page">
@@ -113,6 +164,85 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+
+      <section className="section-block" aria-labelledby="financial-score-title">
+        <div className="section-heading">
+          <div><p className="eyebrow">Indicateur pédagogique</p><h2 id="financial-score-title">Bien-être financier</h2></div>
+          {currencies.length > 1 && (
+            <label className="score-currency-control">
+              <span>Devise analysée</span>
+              <select value={scoreCurrency} onChange={(event) => setScoreCurrency(event.target.value)}>
+                {currencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+
+        {currencies.length === 0 && !loading && (
+          <Card className="empty-state empty-state--compact">
+            <Icon name="wallet" />
+            <h3>Aucune devise à analyser</h3>
+            <p>Synchronisez ou ajoutez des données financières pour calculer cet indicateur.</p>
+          </Card>
+        )}
+        {scoreLoading && !displayedScore && (
+          <Card className="bank-state" aria-live="polite"><span className="auth-spinner" /> Calcul de votre indicateur.</Card>
+        )}
+        {scoreError && (
+          <InlineNotice live tone="warning" icon="alert">
+            {scoreError} {displayedScore && 'Le dernier résultat affiché est conservé.'}
+          </InlineNotice>
+        )}
+        {displayedScore && scoreLoading && (
+          <p className="score-refresh-state" role="status">Actualisation des données en cours.</p>
+        )}
+        {displayedScore && !displayedScore.available && (
+          <Card className="wellness-card">
+            <div className="card-heading"><div><p className="eyebrow">Données insuffisantes</p><h3>Score non disponible</h3></div><Badge tone="neutral">{displayedScore.currency}</Badge></div>
+            <p>Trois mois terminés avec des revenus positifs et au moins 50 % des facteurs disponibles sont nécessaires.</p>
+            <div className="score-factor-list">
+              {displayedScore.factors.filter((factor) => !factor.available).map((factor) => (
+                <div className="score-detail" key={factor.code}>
+                  <span><strong>{factorLabels[factor.code] || factor.code}</strong><small>{factor.explanation}</small></span>
+                  <Badge tone="neutral">Non disponible</Badge>
+                </div>
+              ))}
+            </div>
+            <p className="disclaimer"><Icon name="info" />{displayedScore.disclaimer}</p>
+          </Card>
+        )}
+        {displayedScore?.available && (
+          <Card className="wellness-card">
+            <div className="card-heading">
+              <div><p className="eyebrow">Calculé le {formatDate(`${displayedScore.asOfDate}T00:00:00`, { dateStyle: 'long' })}</p><h3>{displayedScore.bandLabel}</h3></div>
+              <Badge tone="teal">{displayedScore.currency}</Badge>
+            </div>
+            <div className="wellness-card__body">
+              <div className="score-ring" style={{ '--score': `${displayedScore.score}%` }} role="img" aria-label={`Score de bien-être financier ${displayedScore.score} sur 100, niveau ${displayedScore.bandLabel}`}>
+                <div><strong>{Number(displayedScore.score).toLocaleString('fr-TN', { maximumFractionDigits: 1 })}</strong><span>sur 100</span></div>
+              </div>
+              <div className="wellness-card__details">
+                <p>{displayedScore.bandDescription}</p>
+                <p>Données du {formatDate(`${displayedScore.historyStart}T00:00:00`, { dateStyle: 'medium' })} au {formatDate(`${displayedScore.historyEnd}T00:00:00`, { dateStyle: 'medium' })}. Couverture : {displayedScore.availableBaseWeight} %.</p>
+              </div>
+            </div>
+              <div className="score-factor-list" aria-label="Détail des facteurs">
+                {displayedScore.factors.map((factor) => (
+                  <div className="score-detail" key={factor.code}>
+                    <span>
+                      <strong>{factorLabels[factor.code] || factor.code}</strong>
+                      <small>{factor.explanation}</small>
+                    </span>
+                    {factor.available
+                      ? <span className="score-factor-value"><strong>{Number(factor.score).toLocaleString('fr-TN', { maximumFractionDigits: 1 })}/100</strong><small>{factor.score >= 60 ? 'Niveau relatif plus élevé' : 'Niveau relatif plus faible'}</small></span>
+                      : <Badge tone="neutral">Non disponible</Badge>}
+                  </div>
+                ))}
+              </div>
+            <p className="disclaimer"><Icon name="info" />{displayedScore.disclaimer}</p>
+          </Card>
+        )}
+      </section>
 
       {accounts.length > 0 && (
         <section className="section-block" aria-labelledby="accounts-title">
