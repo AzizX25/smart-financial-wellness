@@ -5,14 +5,27 @@ import Icon from './Icon'
 import { DemoBanner } from './Ui'
 
 const navigation = [
-  { to: '/tableau-de-bord', label: 'Accueil', icon: 'home' },
-  { to: '/transactions', label: 'Transactions', icon: 'transactions' },
-  { to: '/categories', label: 'Catégories', icon: 'tag' },
-  { to: '/connexion-bancaire', label: 'Ma banque', icon: 'bank' },
-  { to: '/planification-salaire', label: 'Mon budget', icon: 'plan' },
-  { to: '/objectifs', label: 'Mes objectifs', icon: 'target' },
-  { to: '/previsions', label: 'Prévisions', icon: 'chart' },
-  { to: '/profil', label: 'Profil et réglages', icon: 'user' },
+  {
+    label: 'Au quotidien',
+    items: [
+      { to: '/tableau-de-bord', label: 'Accueil', icon: 'home' },
+      { to: '/transactions', label: 'Transactions', icon: 'transactions' },
+      { to: '/categories', label: 'Catégories', icon: 'tag' },
+      { to: '/connexion-bancaire', label: 'Ma banque', icon: 'bank' },
+    ],
+  },
+  {
+    label: 'Mes projets',
+    items: [
+      { to: '/planification-salaire', label: 'Mon budget', icon: 'plan' },
+      { to: '/objectifs', label: 'Mes objectifs', icon: 'target' },
+      { to: '/previsions', label: 'Prévisions', icon: 'chart' },
+    ],
+  },
+  {
+    label: 'Mon compte',
+    items: [{ to: '/profil', label: 'Profil et réglages', icon: 'user' }],
+  },
 ]
 
 export default function AppShell() {
@@ -97,16 +110,20 @@ export default function AppShell() {
         </div>
 
         <nav className="sidebar__nav" aria-label="Navigation principale">
-          <p className="sidebar__label">Votre espace</p>
-          {navigation.map((item) => (
-            <NavLink
-              key={item.to}
-              className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}
-              to={item.to}
-            >
-              <Icon name={item.icon} size={21} />
-              <span>{item.label}</span>
-            </NavLink>
+          {navigation.map((group) => (
+            <div className="sidebar__group" role="group" aria-label={group.label} key={group.label}>
+              <p className="sidebar__label">{group.label}</p>
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}
+                  to={item.to}
+                >
+                  <Icon name={item.icon} size={21} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 

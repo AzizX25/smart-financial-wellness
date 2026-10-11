@@ -81,6 +81,7 @@
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
+  --space-7: 1.75rem;
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
@@ -615,15 +616,20 @@ p {
 
 .sidebar__nav {
   display: grid;
-  gap: var(--space-2);
-  margin: var(--space-10) 0 auto;
+  gap: var(--space-6);
+  margin: var(--space-8) 0 auto;
+}
+
+.sidebar__group {
+  display: grid;
+  gap: var(--space-1);
 }
 
 .sidebar__label {
   margin: 0 0 var(--space-2);
   padding: 0 var(--space-3);
   color: #fff;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -688,14 +694,14 @@ p {
 
 .sidebar__support strong {
   font-family: var(--font-heading);
-  font-size: 0.77rem;
+  font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.35;
 }
 
 .sidebar__support span {
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -728,7 +734,7 @@ p {
 
 .sidebar__profile div span {
   color: #fff;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
 }
 
 .sidebar__logout {
@@ -859,9 +865,13 @@ p {
 /* Shared content primitives */
 
 .page {
-  width: min(100%, 1480px);
+  width: min(100%, 1440px);
   margin: 0 auto;
-  padding: clamp(2rem, 4vw, 3.5rem);
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+.page > .inline-notice {
+  margin-bottom: var(--space-6);
 }
 
 .page-header {
@@ -869,7 +879,7 @@ p {
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-8);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-10);
 }
 
 .page-header > div:first-child {
@@ -885,7 +895,7 @@ p {
 }
 
 .page-header__description {
-  max-width: 680px;
+  max-width: 60ch;
   margin: 0;
   color: var(--color-text-muted);
   font-size: 1rem;
@@ -897,7 +907,7 @@ p {
 
 .card {
   margin: 0;
-  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -915,6 +925,16 @@ p {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
+  min-width: 0;
+}
+
+.card-heading > div,
+.section-heading > div {
+  min-width: 0;
+}
+
+.card-heading + * {
+  margin-top: var(--space-5);
 }
 
 .card-heading h2,
@@ -923,7 +943,7 @@ p {
 }
 
 .section-block {
-  margin-top: var(--space-10);
+  margin-top: var(--space-12);
 }
 
 .section-heading {
@@ -1126,9 +1146,10 @@ p {
   position: relative;
   display: flex;
   min-width: 0;
+  flex-direction: column;
   align-items: flex-start;
   gap: var(--space-4);
-  padding: var(--space-5);
+  padding: var(--space-6);
   border: 0;
   border-right: 1px solid var(--color-border);
   border-radius: 0;
@@ -1137,6 +1158,10 @@ p {
 
 .metric-card:last-child {
   border-right: 0;
+}
+
+.metric-card > div {
+  min-width: 0;
 }
 
 .metric-card::before {
@@ -1191,23 +1216,24 @@ p {
 .metric-card__label {
   margin: 0 0 var(--space-1);
   color: var(--color-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 500;
 }
 
 .metric-card__value {
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  font-size: clamp(1.15rem, 1.7vw, 1.65rem);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1.25;
 }
 
 .metric-card__note {
-  margin: var(--space-1) 0 0;
-  color: var(--color-text-soft);
-  font-size: 0.71rem;
-  line-height: 1.45;
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 .metrics-grid--planning .metric-card__value {
@@ -1276,12 +1302,14 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-5);
-  padding: var(--space-3) 0;
+  padding: var(--space-4) 0;
   border-top: 1px solid var(--color-border);
 }
 
 .score-detail > span {
   display: grid;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .score-detail strong {
@@ -1290,7 +1318,8 @@ p {
 
 .score-detail small {
   color: var(--color-text-muted);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .score-currency-control {
@@ -1317,6 +1346,26 @@ p {
   text-align: right;
 }
 
+.score-explanations {
+  border-top: 1px solid var(--color-border);
+}
+
+.score-explanations > summary {
+  min-height: 48px;
+  padding: var(--space-3) 0;
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.score-explanations > summary:hover {
+  color: var(--color-info-text);
+}
+
+.score-explanations .score-detail:first-child {
+  border-top: 0;
+}
+
 .score-refresh-state {
   margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
@@ -1328,8 +1377,8 @@ p {
   align-items: flex-start;
   gap: var(--space-2);
   margin: var(--space-4) 0 0;
-  color: var(--color-text-soft);
-  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
   line-height: 1.5;
 }
 
@@ -1744,9 +1793,9 @@ p {
 .transaction-toolbar.card {
   display: grid;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
   margin-bottom: var(--space-5);
-  padding: var(--space-4);
+  padding: var(--space-5);
   grid-template-columns: minmax(240px, 1fr) auto auto;
 }
 
@@ -2350,7 +2399,7 @@ p {
 
 .synchronization-strip span:not(.soft-icon, .badge) {
   color: var(--color-text-muted);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 
 .currency-summary-grid,
@@ -2401,17 +2450,18 @@ p {
 .dashboard-account-card > div > span,
 .dashboard-account-card small {
   color: var(--color-text-muted);
-  font-size: 0.74rem;
+  font-size: 0.82rem;
 }
 
 .dashboard-account-card > strong {
-  color: var(--color-primary);
+  color: var(--color-text);
   font-family: var(--font-heading);
   font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .recent-local-transactions.card {
-  margin-top: var(--space-7);
+  margin-top: var(--space-12);
 }
 
 .empty-state--compact {
@@ -5230,12 +5280,24 @@ p {
   }
 
   .metric-card.card {
+    flex-direction: row;
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
   }
 
   .metric-card:last-child {
     border-bottom: 0;
+  }
+
+  .score-detail {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .score-factor-value {
+    min-width: 0;
+    text-align: left;
   }
 
   .wellness-card__body {

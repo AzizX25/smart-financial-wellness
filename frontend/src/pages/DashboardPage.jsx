@@ -106,7 +106,7 @@ export default function DashboardPage() {
   }, [dataVersion, scoreCurrency])
 
   return (
-    <div className="page">
+    <div className="page dashboard-page">
       <PageHeader
         eyebrow={today}
         title={greetingName ? `Bonjour ${greetingName}` : 'Bonjour'}
@@ -226,6 +226,8 @@ export default function DashboardPage() {
                 <p>Données du {formatDate(`${displayedScore.historyStart}T00:00:00`, { dateStyle: 'medium' })} au {formatDate(`${displayedScore.historyEnd}T00:00:00`, { dateStyle: 'medium' })}. Couverture : {displayedScore.availableBaseWeight} %.</p>
               </div>
             </div>
+            <details className="score-explanations">
+              <summary>Comprendre les facteurs du score</summary>
               <div className="score-factor-list" aria-label="Détail des facteurs">
                 {displayedScore.factors.map((factor) => (
                   <div className="score-detail" key={factor.code}>
@@ -239,6 +241,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+            </details>
             <p className="disclaimer"><Icon name="info" />{displayedScore.disclaimer}</p>
           </Card>
         )}

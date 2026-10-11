@@ -78,6 +78,11 @@ describe('tableau de bord financier dynamique', () => {
 
     expect(await screen.findByRole('img', { name: /score de bien-être financier 76.25 sur 100/i })).toBeInTheDocument()
     expect(calculateCurrentFinancialScore).toHaveBeenCalledWith('TND')
+    const explanationToggle = screen.getByText('Comprendre les facteurs du score')
+    expect(explanationToggle.closest('details')).not.toHaveAttribute('open')
+    fireEvent.click(explanationToggle)
+    expect(explanationToggle.closest('details')).toHaveAttribute('open')
+    expect(screen.getByText("Taux d'épargne")).toBeInTheDocument()
     expect(screen.getByText('Poids des dépenses essentielles')).toBeInTheDocument()
     expect(screen.getByText(/Couverture : 65 %/)).toBeInTheDocument()
     expect(screen.getByText(/ni un score de crédit ni un conseil financier/)).toBeInTheDocument()
