@@ -1601,6 +1601,126 @@ p {
 
 /* Transactions and categories */
 
+.csv-import-panel {
+  margin-bottom: var(--space-7);
+}
+
+.csv-import-panel > summary {
+  min-height: 44px;
+  padding-block: var(--space-2);
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.csv-import-panel[open] > summary {
+  margin-bottom: var(--space-5);
+}
+
+.csv-import-panel > p,
+.csv-import-form > p,
+.csv-import-account > p,
+.csv-import-mapping > p,
+.csv-import-preview > p {
+  max-width: 80ch;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.csv-import-panel .inline-notice,
+.csv-import-preview {
+  margin-block: var(--space-5);
+}
+
+.csv-import-form {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.csv-import-form input[type='file'] {
+  max-width: 100%;
+  padding: var(--space-3);
+}
+
+.csv-import-options,
+.csv-import-account,
+.csv-import-mapping {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+
+.csv-import-account,
+.csv-import-mapping {
+  min-width: 0;
+  margin: var(--space-5) 0 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.csv-import-account legend,
+.csv-import-mapping legend {
+  padding-inline: var(--space-2);
+  font-weight: 600;
+}
+
+.csv-import-account > p,
+.csv-import-account > button,
+.csv-import-mapping > p {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.csv-preview-rows {
+  margin-block: var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.csv-preview-rows li {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.csv-preview-rows li > span {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.csv-preview-rows small {
+  color: var(--color-text-muted);
+}
+
+.csv-preview-rows li > strong {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.csv-import-preview > .checkbox-label {
+  display: flex;
+  margin-block: var(--space-5);
+}
+
+@media (max-width: 600px) {
+  .csv-preview-rows li {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .csv-import-panel .button {
+    width: 100%;
+  }
+}
+
 .category-layout {
   display: grid;
   gap: var(--space-5);

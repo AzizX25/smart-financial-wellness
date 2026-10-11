@@ -97,6 +97,24 @@ public class FinancialAccount {
     protected FinancialAccount() {
     }
 
+    public static FinancialAccount manual(AppUser user, String name, String currency,
+            BigDecimal declaredBalance, Instant now) {
+        FinancialAccount account = new FinancialAccount();
+        account.id = UUID.randomUUID();
+        account.user = user;
+        account.accountOrigin = Origin.MANUAL;
+        account.name = name;
+        account.accountType = "OTHER";
+        account.currency = currency;
+        account.currentBalance = declaredBalance.setScale(4, java.math.RoundingMode.UNNECESSARY);
+        account.status = Status.ACTIVE;
+        account.createdAt = now;
+        account.updatedAt = now;
+        return account;
+    }
+
+    public Origin getAccountOrigin() { return accountOrigin; }
+
     public FinancialAccount(
             AppUser user,
             BankConnection bankConnection,

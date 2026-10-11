@@ -167,6 +167,21 @@ describe('tableau de bord financier dynamique', () => {
     expect(screen.queryByRole('heading', { name: 'Résumé par devise' })).not.toBeInTheDocument()
   })
 
+  it('présente honnêtement un solde déclaré sans inventer une synchronisation bancaire', async () => {
+    useFinancialData.mockReturnValue(state({
+      accounts: [{ ...account, accountOrigin: 'MANUAL', firstSynchronizedAt: null, lastSynchronizedAt: null }],
+      connected: false,
+      historical: false,
+      synchronizationStatus: null,
+    }))
+    render(<MemoryRouter><DashboardPage /></MemoryRouter>)
+    expect(screen.getByText('Soldes déclarés')).toBeInTheDocument()
+    expect(screen.getByText('Solde déclaré par vous, non recalculé par les imports')).toBeInTheDocument()
+    expect(screen.queryByText('Synchronisation bancaire')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Ces données sont historiques/)).not.toBeInTheDocument()
+    await screen.findByRole('img', { name: /score de bien-être financier/i })
+  })
+
   it('sépare les devises sans fabriquer de conversion ou de total global', () => {
     useFinancialData.mockReturnValue(state({
       dashboardSummary: {

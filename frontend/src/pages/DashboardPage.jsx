@@ -110,7 +110,7 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow={today}
         title={greetingName ? `Bonjour ${greetingName}` : 'Bonjour'}
-        description="Retrouvez vos comptes et transactions synchronisés, sans estimation ni valeur fictive."
+        description="Retrouvez vos soldes, vos opérations bancaires et vos relevés importés dans un même espace."
         action={(
           <button className="button button--primary" disabled={!connected || synchronizing} onClick={synchronize} type="button">
             <Icon name="transactions" size={18} />
@@ -125,7 +125,7 @@ export default function DashboardPage() {
       {connected && accounts.length === 0 && !synchronizationStatus?.lastSuccessfulAt && !loading && <InlineNotice tone="info" icon="transactions">La banque est connectée, mais aucune synchronisation n’a encore été effectuée.</InlineNotice>}
       {(error || synchronizationError) && <InlineNotice live tone="warning" icon="alert">{synchronizationError || error} {accounts.length > 0 && 'Les dernières données disponibles restent affichées.'}</InlineNotice>}
 
-      {(accounts.length > 0 || synchronizationStatus) && (
+      {(accounts.some((account) => account.accountOrigin !== 'MANUAL') || synchronizationStatus) && (
         <Card className="synchronization-strip">
           <div><span className="soft-icon"><Icon name="shield" /></span><div><p className="eyebrow">Synchronisation bancaire</p><strong>{syncLabels[synchronizationStatus?.status] || synchronizationStatus?.status || 'Non disponible'}</strong></div></div>
           <div><span>Dernier succès</span><strong>{formatDate(synchronizationStatus?.lastSuccessfulAt)}</strong></div>
@@ -249,13 +249,13 @@ export default function DashboardPage() {
 
       {accounts.length > 0 && (
         <section className="section-block" aria-labelledby="accounts-title">
-          <div className="section-heading"><div><p className="eyebrow">Comptes synchronisés</p><h2 id="accounts-title">Mes soldes</h2></div><Badge tone={connected ? 'teal' : 'neutral'}>{connected ? 'Actualisables' : 'Historiques'}</Badge></div>
+          <div className="section-heading"><div><p className="eyebrow">Vos comptes</p><h2 id="accounts-title">Mes soldes</h2></div><Badge tone={connected ? 'teal' : 'neutral'}>{connected ? 'Actualisables' : historical ? 'Historiques' : 'Soldes déclarés'}</Badge></div>
           <div className="account-card-grid">
             {accounts.map((account) => (
               <Card className="dashboard-account-card" key={account.id}>
                 <div><p className="eyebrow">{accountTypes[account.accountType] || account.accountType}</p><h3>{account.displayName}</h3><span>{account.maskedAccountReference}</span></div>
                 <strong>{formatCurrency(account.currentBalance, account.currency)}</strong>
-                <small>Mis à jour {formatDate(account.lastSynchronizedAt, { dateStyle: 'medium' })}</small>
+                <small>{account.accountOrigin === 'MANUAL' ? 'Solde déclaré par vous, non recalculé par les imports' : `Mis à jour ${formatDate(account.lastSynchronizedAt, { dateStyle: 'medium' })}`}</small>
               </Card>
             ))}
           </div>
@@ -263,9 +263,9 @@ export default function DashboardPage() {
       )}
 
       <Card className="recent-local-transactions">
-        <div className="card-heading"><div><p className="eyebrow">Mouvements synchronisés</p><h2>Transactions récentes</h2></div><Link className="icon-button" to="/transactions" aria-label="Voir toutes les transactions"><Icon name="arrow" /></Link></div>
+        <div className="card-heading"><div><p className="eyebrow">Dernières opérations</p><h2>Transactions récentes</h2></div><Link className="icon-button" to="/transactions" aria-label="Voir toutes les transactions"><Icon name="arrow" /></Link></div>
         {recentTransactions.length === 0 ? (
-          <div className="empty-state empty-state--compact"><Icon name="transactions" /><h3>Aucune transaction</h3><p>Les prochaines opérations synchronisées apparaîtront ici.</p></div>
+            <div className="empty-state empty-state--compact"><Icon name="transactions" /><h3>Aucune transaction</h3><p>Vos opérations bancaires ou importées apparaîtront ici.</p></div>
         ) : (
           <div className="compact-transactions">
             {recentTransactions.map((transaction) => (

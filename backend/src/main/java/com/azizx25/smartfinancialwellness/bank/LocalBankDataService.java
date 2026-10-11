@@ -51,7 +51,7 @@ public class LocalBankDataService {
     @Transactional(readOnly = true)
     public List<LocalAccountResponse> listAccounts(UUID userId) {
         return accountRepository
-                .findByUser_IdAndFirstSynchronizedAtIsNotNullOrderByNameAscIdAsc(userId)
+                .findVisibleAccounts(userId)
                 .stream()
                 .map(this::toAccountResponse)
                 .toList();
@@ -73,7 +73,9 @@ public class LocalBankDataService {
             throw new InvalidBankRequestException("from must not be after to");
         }
         if (accountId != null) {
-            accountRepository.findByIdAndUser_IdAndFirstSynchronizedAtIsNotNull(accountId, userId)
+            accountRepository.findByIdAndUser_Id(accountId, userId)
+                    .filter(account -> account.getAccountOrigin() == FinancialAccount.Origin.MANUAL
+                            || account.getFirstSynchronizedAt() != null)
                     .orElseThrow(BankAccountNotFoundException::new);
         }
         if (categoryId != null) {
@@ -175,7 +177,8 @@ public class LocalBankDataService {
                 account.getProviderAccountStatus(),
                 account.getStatus().name(),
                 account.getFirstSynchronizedAt(),
-                account.getLastSynchronizedAt());
+                account.getLastSynchronizedAt(),
+                account.getAccountOrigin().name());
     }
 
     private LocalTransactionResponse toTransactionResponse(TransactionRecord transaction) {

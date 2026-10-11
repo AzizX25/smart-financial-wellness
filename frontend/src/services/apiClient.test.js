@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMockBank } from './bankApi'
+import { confirmCsvImport, previewCsvImport } from './csvImportApi'
 import {
   assignTransactionCategory,
   createCategory,
@@ -38,6 +39,26 @@ describe('client API principal', () => {
     clearAccessToken()
     setSessionInvalidHandler(() => {})
     vi.restoreAllMocks()
+  })
+
+  it('envoie le multipart CSV avec le bearer et renouvelle la session sans altérer le fichier', async () => {
+    setAccessToken('old-token')
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse({}, 401))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token' }))
+      .mockResolvedValueOnce(jsonResponse({ jobId: 'IMPORT/1' }))
+      .mockResolvedValueOnce(jsonResponse({ status: 'COMPLETED' })))
+    const file = new File(['date;amount\n2026-10-01;-2'], 'statement.csv', { type: 'text/csv' })
+    await previewCsvImport(file, { accountId: 'ACCOUNT-1' })
+    const firstBody = fetch.mock.calls[0][1].body
+    expect(firstBody).toBeInstanceOf(FormData)
+    expect(firstBody.get('file').name).toBe('statement.csv')
+    expect(firstBody.get('request').type).toBe('application/json')
+    expect(fetch.mock.calls[0][1].headers.has('Content-Type')).toBe(false)
+    expect(fetch.mock.calls[2][1].body).toBe(firstBody)
+    expect(fetch.mock.calls[2][1].headers.get('Authorization')).toBe('Bearer new-token')
+    await confirmCsvImport('IMPORT/1', file, { accountId: 'ACCOUNT-1' })
+    expect(fetch.mock.calls[3][0]).toBe('http://localhost:8080/api/imports/csv/IMPORT%2F1/confirm')
   })
 
   it('utilise le backend principal et attache le bearer sans contacter le port 8081', async () => {

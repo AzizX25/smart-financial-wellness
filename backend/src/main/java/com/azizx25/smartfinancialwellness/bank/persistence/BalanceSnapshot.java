@@ -59,6 +59,18 @@ public class BalanceSnapshot {
     protected BalanceSnapshot() {
     }
 
+    public static BalanceSnapshot declaredManually(FinancialAccount account, Instant now) {
+        BalanceSnapshot snapshot = new BalanceSnapshot();
+        snapshot.id = UUID.randomUUID();
+        snapshot.financialAccount = account;
+        snapshot.ledgerBalance = account.getCurrentBalance();
+        snapshot.currency = account.getCurrency();
+        snapshot.sourceType = SourceType.MANUAL;
+        snapshot.observedAt = now;
+        snapshot.createdAt = now;
+        return snapshot;
+    }
+
     public BalanceSnapshot(
             FinancialAccount account,
             SyncJob job,

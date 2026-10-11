@@ -56,8 +56,11 @@ async function performRequest(path, options = {}) {
     method = 'GET',
   } = options
   const headers = new Headers(providedHeaders)
+  const multipart = typeof FormData !== 'undefined' && body instanceof FormData
 
-  if (body !== undefined) {
+  if (multipart) {
+    headers.delete('Content-Type') // The browser supplies the multipart boundary.
+  } else if (body !== undefined) {
     headers.set('Content-Type', 'application/json')
   }
   if (authenticated && accessToken) {
@@ -70,7 +73,7 @@ async function performRequest(path, options = {}) {
       method,
       credentials: 'include',
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'Le service est momentanément inaccessible.')

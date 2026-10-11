@@ -63,11 +63,24 @@ public class TransactionRecord {
     @Column(name = "source_type", nullable = false, length = 20)
     private SourceType sourceType;
 
+    @Column(name = "import_job_id")
+    private UUID importJobId;
+
+    @Column(name = "source_file_id")
+    private UUID sourceFileId;
+
+    @Column(name = "source_row_number")
+    private Integer sourceRowNumber;
+
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 64)
+    private String fingerprint;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sync_job_id")
     private SyncJob syncJob;
 
-    @Column(name = "external_transaction_id", nullable = false, length = 255)
+    @Column(name = "external_transaction_id", length = 255)
     private String externalTransactionId;
 
     @Column(name = "booking_date", nullable = false)
@@ -119,6 +132,31 @@ public class TransactionRecord {
     private int version;
 
     protected TransactionRecord() {
+    }
+
+    public static TransactionRecord imported(AppUser user, FinancialAccount account, Category category,
+            UUID jobId, UUID fileId, int rowNumber, LocalDate date, BigDecimal amount,
+            Direction direction, String description, String normalized, String fingerprint, Instant now) {
+        TransactionRecord transaction = new TransactionRecord();
+        transaction.id = UUID.randomUUID();
+        transaction.user = user;
+        transaction.financialAccount = account;
+        transaction.category = category;
+        transaction.sourceType = SourceType.FILE_IMPORT;
+        transaction.importJobId = jobId;
+        transaction.sourceFileId = fileId;
+        transaction.sourceRowNumber = rowNumber;
+        transaction.fingerprint = fingerprint;
+        transaction.bookingDate = date;
+        transaction.amount = amount;
+        transaction.direction = direction;
+        transaction.currency = account.getCurrency();
+        transaction.rawDescription = description;
+        transaction.normalizedDescription = normalized;
+        transaction.categorySource = "UNCATEGORIZED";
+        transaction.createdAt = now;
+        transaction.updatedAt = now;
+        return transaction;
     }
 
     public TransactionRecord(

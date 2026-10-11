@@ -121,7 +121,7 @@ export function FinancialDataProvider({ children }) {
   }, [reload, synchronizationStatus?.status, synchronizing])
 
   const connected = connection?.status === 'ACTIVE' && !connection.reconnectRequired
-  const historical = !connected && accounts.length > 0
+  const historical = !connected && accounts.some((account) => account.accountOrigin !== 'MANUAL')
   const synchronizationInProgress = synchronizing || synchronizationStatus?.status === 'RUNNING'
   const value = useMemo(() => ({
     accounts,

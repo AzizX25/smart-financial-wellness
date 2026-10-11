@@ -23,7 +23,8 @@ public final class LocalBankDtos {
             String providerStatus,
             String localStatus,
             Instant firstSynchronizedAt,
-            Instant lastSynchronizedAt) {
+            Instant lastSynchronizedAt,
+            String accountOrigin) {
     }
 
     public record LocalTransactionResponse(

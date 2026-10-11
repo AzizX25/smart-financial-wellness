@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Icon from '../components/Icon'
+import CsvImportPanel from '../components/CsvImportPanel'
 import { Badge, Card, formatCurrency, InlineNotice, PageHeader } from '../components/Ui'
 import { useFinancialData } from '../financial/FinancialDataContext'
 import { ApiError } from '../services/apiClient'
@@ -448,8 +449,9 @@ export default function TransactionsPage() {
           </button>
         )}
       />
+      <CsvImportPanel />
       {historical && <InlineNotice tone="warning" icon="info">Historique consultable hors connexion bancaire. Reconnectez la banque pour recevoir de nouvelles transactions.</InlineNotice>}
-      {!connected && accounts.length === 0 && <InlineNotice tone="info" icon="bank">Aucune donnée bancaire synchronisée n’est disponible.</InlineNotice>}
+      {!connected && accounts.length === 0 && <InlineNotice tone="info" icon="bank">Connectez une banque ou importez un relevé CSV pour ajouter vos premières opérations.</InlineNotice>}
       {synchronizationError && <InlineNotice live tone="warning" icon="alert">{synchronizationError} Les transactions précédentes restent affichées.</InlineNotice>}
       {error && <InlineNotice live tone="warning" icon="alert">{error} {result.items.length > 0 && 'La page précédente reste affichée.'}</InlineNotice>}
       {assignmentError && <InlineNotice live tone="warning" icon="alert">{assignmentError}</InlineNotice>}

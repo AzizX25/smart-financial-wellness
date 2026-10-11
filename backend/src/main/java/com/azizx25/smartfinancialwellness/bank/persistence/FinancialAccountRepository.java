@@ -27,6 +27,17 @@ public interface FinancialAccountRepository extends JpaRepository<FinancialAccou
 
     Optional<FinancialAccount> findByIdAndUser_Id(UUID accountId, UUID userId);
 
+    Optional<FinancialAccount> findByUser_IdAndAccountOriginAndNameIgnoreCaseAndCurrency(
+            UUID userId, FinancialAccount.Origin origin, String name, String currency);
+
+    @Query("""
+            select account from FinancialAccount account
+            where account.user.id = :userId
+              and (account.firstSynchronizedAt is not null or account.accountOrigin = 'MANUAL')
+            order by account.name, account.id
+            """)
+    List<FinancialAccount> findVisibleAccounts(@Param("userId") UUID userId);
+
     Optional<FinancialAccount> findByIdAndUser_IdAndFirstSynchronizedAtIsNotNull(
             UUID accountId,
             UUID userId);
@@ -41,7 +52,7 @@ public interface FinancialAccountRepository extends JpaRepository<FinancialAccou
                    count(account) as accountCount
               from FinancialAccount account
              where account.user.id = :userId
-               and account.firstSynchronizedAt is not null
+               and (account.firstSynchronizedAt is not null or account.accountOrigin = 'MANUAL')
              group by account.currency
              order by account.currency
             """)
