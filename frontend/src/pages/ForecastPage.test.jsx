@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateCurrentForecast, getForecast, listForecasts, simulateForecast } from '../services/forecastApi'
 import ForecastPage from './ForecastPage'
@@ -56,12 +56,14 @@ beforeEach(() => {
 })
 
 describe('ForecastPage', () => {
-  it('shows the applied model, its experimental warning, metadata, and history', async () => {
+  it('shows the estimate, its experimental warning and history without internal model identifiers', async () => {
     render(<ForecastPage />)
 
     expect(await screen.findByText(EXPERIMENTAL_WARNING)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Évolution estimée du solde en TND' })).toBeInTheDocument()
     expect(screen.getByText(/Correction expérimentale/)).toBeInTheDocument()
-    expect(screen.getByText(/Modèle : forecast-huber v1/)).toBeInTheDocument()
+    expect(screen.queryByText(/Voir les méthodes utilisées|HISTORICAL_MONTHLY_AVERAGE|forecast-huber|forecast-residual-features/)).not.toBeInTheDocument()
+    expect(screen.getByText('Estimation indicative, sans garantie de résultat.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /août 2026/ })).toBeInTheDocument()
     expect(generateCurrentForecast).toHaveBeenCalledWith('TND', expect.any(String))
     expect(listForecasts).toHaveBeenCalledWith('TND', 0, 12)
@@ -151,5 +153,24 @@ describe('ForecastPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /10 août 2026/ }))
     await waitFor(() => expect(getForecast).toHaveBeenCalledWith(saved.id))
+    await waitFor(() => expect(screen.getByRole('img').textContent).toContain('10 août'))
+  })
+
+  it.each(['history', 'simulation'])('ignores an old %s response after changing currency', async (kind) => {
+    const late = deferred()
+    generateCurrentForecast.mockResolvedValueOnce(forecast()).mockResolvedValueOnce(forecast({ currency: 'EUR', mlStatus: 'UNSUPPORTED_CURRENCY' }))
+    listForecasts.mockResolvedValueOnce({ items: [forecast()] }).mockResolvedValueOnce({ items: [] })
+    getForecast.mockReturnValue(late.promise)
+    simulateForecast.mockReturnValue(late.promise)
+    render(<ForecastPage />)
+    await screen.findByRole('img', { name: 'Évolution estimée du solde en TND' })
+    fireEvent.click(screen.getByRole('button', { name: kind === 'history' ? /18 août 2026/ : 'Simuler' }))
+    fireEvent.change(screen.getByLabelText('Devise'), { target: { value: 'EUR' } })
+    await screen.findByRole('img', { name: 'Évolution estimée du solde en EUR' })
+    await act(async () => late.resolve(kind === 'history' ? forecast() : {
+      forecastId: FORECAST_ID, currency: 'TND', simulatedEndBalance: '9876.0000',
+    }))
+    expect(screen.queryByRole('img', { name: 'Évolution estimée du solde en TND' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Résultat simulé')).not.toBeInTheDocument()
   })
 })

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Card, InlineNotice, MetricCard, PageHeader } from '../components/Ui'
+import { Card, formatScale4Display, InlineNotice, MetricCard, PageHeader } from '../components/Ui'
 import { ApiError } from '../services/apiClient'
 import { getDashboardSummary } from '../services/financialApi'
 import {
@@ -78,15 +78,7 @@ function parseScale4(value) {
 
 function formatScale4(units, currency) {
   if (units === null || units === undefined) return 'À corriger'
-  const negative = units < 0n
-  const absolute = negative ? -units : units
-  const integer = (absolute / 10000n).toLocaleString('fr-FR')
-  const minimumFractionDigits = currency === 'TND' ? 3 : 2
-  let fraction = String(absolute % 10000n).padStart(4, '0')
-  while (fraction.length > minimumFractionDigits && fraction.endsWith('0')) {
-    fraction = fraction.slice(0, -1)
-  }
-  return `${negative ? '−' : ''}${integer},${fraction} ${currency}`
+  return formatScale4Display(units, currency)
 }
 
 function validateAmount(value, optional = false) {
@@ -155,6 +147,7 @@ export default function SalaryPlanningPage() {
   const [month, setMonth] = useState(currentMonth)
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [draft, setDraft] = useState(null)
+  const [expandedIncomeId, setExpandedIncomeId] = useState('')
   const [baseline, setBaseline] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -298,8 +291,10 @@ export default function SalaryPlanningPage() {
     setSuccess('')
   }
 
-  function addIncome() {
-    setDraft((current) => ({ ...current, incomes: [...current.incomes, localIncome()] }))
+  function addIncome(label = '') {
+    const income = localIncome(label)
+    setExpandedIncomeId(income.localId)
+    setDraft((current) => ({ ...current, incomes: [...current.incomes, income] }))
     setSuccess('')
   }
 
@@ -495,15 +490,22 @@ export default function SalaryPlanningPage() {
 
           <Card className="salary-editor-section" as="section" aria-labelledby="income-editor-title">
             <div className="section-heading">
-              <div><p className="eyebrow">Entrées du mois</p><h2 id="income-editor-title">Revenus prévus</h2></div>
-              <button className="button button--secondary" disabled={saving} onClick={addIncome} type="button">Ajouter un revenu</button>
+              <h2 id="income-editor-title">Revenus prévus</h2>
+              <button className="button button--secondary" disabled={saving} onClick={() => addIncome()} type="button">Ajouter un revenu</button>
+            </div>
+            <div className="income-shortcuts" aria-label="Ajouter une source de revenu">
+              {['Salaire', 'Prime', 'Autre revenu'].map((label) => <button className="button button--secondary" disabled={saving} key={label} onClick={() => addIncome(label)} type="button">+ {label}</button>)}
             </div>
             {draft.incomes.length === 0 ? (
-              <div className="salary-empty-state"><p>Aucun revenu prévu pour ce mois.</p><button className="button button--secondary" onClick={addIncome} type="button">Ajouter ma première source</button></div>
+              <div className="salary-empty-state"><p>Aucun revenu prévu pour ce mois.</p><button className="button button--secondary" onClick={() => addIncome()} type="button">Ajouter ma première source</button></div>
             ) : (
               <div className="income-editor-list">
                 {draft.incomes.map((income, index) => (
-                  <div className="income-editor-row" key={income.localId}>
+                  <div className="income-source" key={income.localId}>
+                    <button className="income-source__toggle" aria-label={`Modifier le revenu ${index + 1}`} aria-controls={`${income.localId}-editor`} aria-expanded={expandedIncomeId === income.localId || Boolean(fieldErrors[`${income.localId}-label`] || fieldErrors[`${income.localId}-expectedAmount`])} disabled={saving} onClick={() => setExpandedIncomeId((current) => current === income.localId ? '' : income.localId)} type="button">
+                      <span>{income.label || 'Nouveau revenu'}</span><strong>{formatScale4(parseScale4(income.expectedAmount), currency)}</strong><span>Modifier</span>
+                    </button>
+                    <div className="income-editor-row" id={`${income.localId}-editor`} hidden={expandedIncomeId !== income.localId && !fieldErrors[`${income.localId}-label`] && !fieldErrors[`${income.localId}-expectedAmount`]}>
                     <label className="field">
                       <span>Libellé du revenu {index + 1}</span>
                       <input
@@ -530,6 +532,7 @@ export default function SalaryPlanningPage() {
                       {fieldErrors[`${income.localId}-expectedAmount`] && <small className="field-error" id={`${income.localId}-amount-error`}>{fieldErrors[`${income.localId}-expectedAmount`]}</small>}
                     </label>
                     <button className="button button--danger-quiet" disabled={saving} onClick={() => removeIncome(income.localId)} type="button">Supprimer</button>
+                    </div>
                   </div>
                 ))}
               </div>

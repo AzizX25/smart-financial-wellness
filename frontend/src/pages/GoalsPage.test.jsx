@@ -236,7 +236,7 @@ describe('Goals connectés', () => {
     }))
     expect(await screen.findByText('Votre objectif a bien été créé.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Voyage familial' })).toBeInTheDocument()
-    expect(screen.getByText(/125,000/)).toBeInTheDocument()
+    expect(screen.getByText(/125,0 TND/)).toBeInTheDocument()
   })
 
   it('valide en français puis gère modification, pause, reprise, annulation et archivage', async () => {
@@ -248,7 +248,17 @@ describe('Goals connectés', () => {
     renderPage()
     await screen.findByRole('heading', { name: 'Fonds de sécurité' })
 
+    const actions = screen.getByRole('group', { name: 'Actions pour Fonds de sécurité' })
+    for (const label of ['Voir le détail', 'Modifier', 'Mettre en pause', 'Annuler', 'Archiver']) {
+      const action = within(actions).getByRole('button', { name: label })
+      expect(action).toHaveAttribute('aria-label', label)
+      expect(action.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+      expect(action.querySelector('.goal-action-button__label')).toHaveTextContent(label)
+    }
+    expect(within(actions).getByRole('button', { name: 'Voir le détail' })).toHaveAttribute('aria-expanded', 'false')
+
     fireEvent.click(screen.getByRole('button', { name: 'Modifier' }))
+    expect(screen.getByRole('region', { name: 'Modifier Fonds de sécurité' }).previousElementSibling).toBe(actions.closest('.goal-card'))
     fireEvent.change(screen.getByLabelText('Nom de l’objectif'), { target: { value: ' ' } })
     fireEvent.change(screen.getByLabelText('Montant cible (TND)'), { target: { value: '0' } })
     fireEvent.change(screen.getByLabelText('Montant déjà épargné (TND)'), { target: { value: '1.00001' } })
@@ -292,6 +302,7 @@ describe('Goals connectés', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Voir le détail' }))
     expect(await screen.findByText(/Versement manuel/)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Versements de Fonds de sécurité' }).previousElementSibling).toBe(goalCard)
     const transactionRow = screen.getByText(/Lié à une transaction/).closest('li')
     expect(within(transactionRow).queryByRole('button', { name: 'Supprimer' })).not.toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Supprimer' })).toHaveLength(1)
@@ -303,11 +314,11 @@ describe('Goals connectés', () => {
       amount: 100,
       contributionDate: '2026-08-10',
     }))
-    expect(await within(goalCard).findByText(/400,000/)).toBeInTheDocument()
+    expect(await within(goalCard).findByText(/400,0 TND/)).toBeInTheDocument()
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Supprimer' })[0])
     await waitFor(() => expect(deleteGoalContribution).toHaveBeenCalledWith(GOAL_ID, CONTRIBUTION_ID))
-    expect(within(goalCard).getByText(/300,000/)).toBeInTheDocument()
+    expect(within(goalCard).getByText(/300,0 TND/)).toBeInTheDocument()
   })
 
   it('affiche absence de plan, déficit, capacité nulle et lecture seule historique sans les confondre', async () => {
@@ -388,7 +399,7 @@ describe('Goals connectés', () => {
     }]))
     expect(await screen.findByText('Votre répartition mensuelle a bien été enregistrée.')).toBeInTheDocument()
     expect(screen.getByLabelText('Fonds de sécurité (TND)')).toHaveValue('250')
-    expect(screen.getByText(/Total confirmé/).parentElement).toHaveTextContent(/250,000/)
+    expect(screen.getByText(/Total confirmé/).parentElement).toHaveTextContent(/250,0 TND/)
   })
 
   it('envoie une liste vide pour effacer les allocations éditables', async () => {
@@ -507,6 +518,6 @@ describe('Goals connectés', () => {
 
     expect(await screen.findByText(/date cible est dépassée/)).toBeInTheDocument()
     expect(screen.getByText(/présente un déficit de/)).toBeInTheDocument()
-    expect(screen.getAllByText(/125,000/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/125,0 TND/).length).toBeGreaterThan(0)
   })
 })

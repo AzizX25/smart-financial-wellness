@@ -34,6 +34,7 @@ describe('page Catégories dynamique', () => {
     deleteCategory.mockResolvedValue(null)
     render(<CategoriesPage />)
     await screen.findByRole('button', { name: 'Modifier' })
+    fireEvent.click(screen.getByRole('button', { name: 'Nouvelle catégorie' }))
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Vacances' } })
     fireEvent.click(screen.getByRole('button', { name: 'Créer' }))
     await waitFor(() => expect(createCategory).toHaveBeenCalledWith(expect.objectContaining({ name: 'Vacances' })))
@@ -45,6 +46,37 @@ describe('page Catégories dynamique', () => {
     await waitFor(() => expect(deleteCategory).toHaveBeenCalledWith('OWN'))
   })
 
+  it('affiche les couleurs enregistrées pour les catégories système, personnelles et leur résumé', async () => {
+    render(<CategoriesPage />)
+    for (const category of [system, personal]) {
+      const swatches = await screen.findAllByRole('img', { name: `Couleur de ${category.name} : ${category.color}` })
+      expect(swatches).toHaveLength(2)
+      for (const swatch of swatches) expect(swatch).toHaveStyle({ backgroundColor: category.color })
+      expect(swatches[0]).toHaveClass('category-definition__icon')
+      expect(swatches[1]).toHaveClass('category-color-dot')
+    }
+  })
+
+  it('garde une icône contrastée sur une couleur claire et utilise un repli pour une couleur invalide', async () => {
+    listCategories.mockResolvedValue([{ ...system, color: 'invalid-color' }, { ...personal, color: '#FFFFFF' }])
+    render(<CategoriesPage />)
+    const light = await screen.findAllByRole('img', { name: 'Couleur de Animaux : #FFFFFF' })
+    expect(light[0]).toHaveStyle({ backgroundColor: '#FFFFFF', color: '#030303' })
+    const fallback = screen.getAllByRole('img', { name: 'Couleur de Alimentation et courses : #22396F' })
+    expect(fallback[0]).toHaveStyle({ backgroundColor: '#22396f', color: '#ffffff' })
+  })
+
+  it('reflète une couleur modifiée après le rechargement autoritaire', async () => {
+    listCategories.mockResolvedValueOnce([system, personal]).mockResolvedValue([system, { ...personal, color: '#FFD400' }])
+    updateCategory.mockResolvedValue({ ...personal, color: '#FFD400' })
+    render(<CategoriesPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier' }))
+    fireEvent.change(screen.getByLabelText('Couleur'), { target: { value: '#ffd400' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(await screen.findAllByRole('img', { name: 'Couleur de Animaux : #FFD400' })).toHaveLength(2)
+    expect(updateCategory).toHaveBeenCalledWith('OWN', expect.objectContaining({ color: '#ffd400' }))
+  })
+
   it('exécute la catégorisation déterministe et recharge les données', async () => {
     const reload = vi.fn().mockResolvedValue(true)
     useFinancialData.mockReturnValue({ dataVersion: 1, reload })
@@ -54,6 +86,19 @@ describe('page Catégories dynamique', () => {
     fireEvent.click(screen.getByRole('button', { name: /Appliquer les règles/ }))
     expect(await screen.findByText('2 transactions catégorisées.')).toBeInTheDocument()
     expect(reload).toHaveBeenCalled()
+  })
+
+  it('reveals the editor on demand and filters category groups without changing data', async () => {
+    render(<CategoriesPage />)
+    await screen.findByRole('button', { name: 'Modifier' })
+    expect(screen.getByLabelText('Nom')).not.toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Personnelles' }))
+    expect(screen.queryByRole('heading', { name: 'Catégories système' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Catégories personnelles' })).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier' }))
+    expect(screen.getByLabelText('Nom')).toBeVisible()
+    expect(screen.getByLabelText('Nom')).toHaveValue('Animaux')
+    expect(screen.getByLabelText('Nom').closest('.category-form-card').previousElementSibling).toHaveClass('category-definition--personal')
   })
 
   it('affiche une erreur contrôlée de suppression en cours d’utilisation', async () => {

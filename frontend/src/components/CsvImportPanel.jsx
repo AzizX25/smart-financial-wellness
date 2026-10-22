@@ -21,7 +21,9 @@ function errorMessage(error) {
   return error.message || "Vérifiez le fichier et les colonnes sélectionnées."
 }
 
-export default function CsvImportPanel() {
+export default function CsvImportPanel({ expanded = false }) {
+  const panel = useRef(null)
+  useEffect(() => { if (expanded && panel.current) panel.current.open = true }, [expanded])
   const { accounts = [], reload } = useFinancialData()
   const [target, setTarget] = useState('')
   const [createdAccount, setCreatedAccount] = useState(null)
@@ -154,7 +156,7 @@ export default function CsvImportPanel() {
   }
 
   return (
-    <details className="csv-import-panel card">
+    <details ref={panel} className="csv-import-panel card">
       <summary>Importer un relevé CSV</summary>
       <p>Ajoutez des opérations sans connexion bancaire. Le fichier est envoyé au serveur pour validation, sans conserver le fichier original. Seuls son empreinte, son mapping et les opérations confirmées sont enregistrés.</p>
       {error && <InlineNotice tone="error" live>{error}</InlineNotice>}

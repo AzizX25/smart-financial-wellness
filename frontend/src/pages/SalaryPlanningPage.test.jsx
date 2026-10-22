@@ -115,7 +115,7 @@ describe('Salary Planning connecté', () => {
 
     expect(await screen.findByDisplayValue('Salaire')).toBeInTheDocument()
     expect(screen.getByText('Une recommandation déterministe et vérifiable')).toBeInTheDocument()
-    expect(screen.getByText(/1[\s\u202f]680,000 TND/)).toBeInTheDocument()
+    expect(screen.getByText(/1[\s\u202f]680,0 TND/)).toBeInTheDocument()
     expect(getSalaryPlan).toHaveBeenCalledWith(DEFAULT_MONTH, 'TND')
     expect(getSalaryPlanProposals).not.toHaveBeenCalled()
   })
@@ -127,6 +127,22 @@ describe('Salary Planning connecté', () => {
     expect(await screen.findByText(/Ce plan n’est pas encore enregistré/)).toBeInTheDocument()
     expect(screen.getByText(/pas encore assez d’historique/)).toBeInTheDocument()
     expect(getSalaryPlanProposals).toHaveBeenCalledWith(DEFAULT_MONTH, 'TND')
+  })
+
+  it('uses compact income buttons while preserving four-decimal editable values', async () => {
+    render(<SalaryPlanningPage />)
+    await screen.findByDisplayValue('Salaire')
+    expect(screen.getByLabelText('Libellé du revenu 1')).not.toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: '+ Prime' }))
+    expect(screen.getByLabelText('Libellé du revenu 2')).toBeVisible()
+    expect(screen.getByLabelText('Libellé du revenu 2')).toHaveValue('Prime')
+    fireEvent.change(screen.getByLabelText('Montant du revenu 2 (TND)'), { target: { value: '100.1234' } })
+    expect(screen.getByLabelText('Montant du revenu 2 (TND)')).toHaveValue('100.1234')
+    expect(screen.getByRole('button', { name: 'Modifier le revenu 2' })).toHaveTextContent('100,1 TND')
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le plan complet' }))
+    await waitFor(() => expect(saveSalaryPlan).toHaveBeenCalledWith(DEFAULT_MONTH, 'TND', expect.objectContaining({
+      incomes: [{ label: 'Salaire', expectedAmount: 2500 }, { label: 'Prime', expectedAmount: 100.1234 }],
+    })))
   })
 
   it('ne transforme pas les autres erreurs API en absence de plan', async () => {
@@ -155,6 +171,7 @@ describe('Salary Planning connecté', () => {
     render(<SalaryPlanningPage />)
 
     await screen.findByDisplayValue('Salaire')
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le revenu 1' }))
     fireEvent.click(screen.getByRole('button', { name: 'Utiliser la recommandation' }))
     fireEvent.change(screen.getByLabelText('Libellé du revenu 1'), { target: { value: '  Salaire net  ' } })
     fireEvent.change(screen.getByLabelText('Montant du revenu 1 (TND)'), { target: { value: '2800.0000' } })
@@ -215,7 +232,7 @@ describe('Salary Planning connecté', () => {
 
     expect(await screen.findByText(/Les détails de cette recommandation ne sont pas disponibles/)).toBeInTheDocument()
     expect(screen.getByText(/Votre plan présente un déficit de/)).toBeInTheDocument()
-    expect(screen.getAllByText(/150,000 TND/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/150,0 TND/).length).toBeGreaterThan(0)
   })
 
   it('sépare les dépenses réelles du budget prévu et recharge les données serveur au retour', async () => {

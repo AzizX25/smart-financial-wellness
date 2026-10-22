@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Card, InlineNotice, PageHeader, ProgressBar } from '../components/Ui'
+import Icon from '../components/Icon'
+import { Badge, Card, formatCurrency, formatScale4Display, InlineNotice, PageHeader, ProgressBar } from '../components/Ui'
 import { ApiError } from '../services/apiClient'
 import {
   addGoalContribution,
@@ -74,23 +75,11 @@ function parseScale4(value) {
 
 function formatScale4(units, currency) {
   if (units === null || units === undefined) return 'Montant à corriger'
-  const negative = units < 0n
-  const absolute = negative ? -units : units
-  const integer = (absolute / 10000n).toLocaleString('fr-FR')
-  const minimumFractionDigits = currency === 'TND' ? 3 : 2
-  let fraction = String(absolute % 10000n).padStart(4, '0')
-  while (fraction.length > minimumFractionDigits && fraction.endsWith('0')) fraction = fraction.slice(0, -1)
-  return `${negative ? '-' : ''}${integer},${fraction} ${currency}`
+  return formatScale4Display(units, currency)
 }
 
 function formatMoney(value, currency) {
-  if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: currency === 'TND' ? 3 : 2,
-    maximumFractionDigits: 4,
-  }).format(Number(value))
+  return formatCurrency(value, currency)
 }
 
 function formatMonth(month) {
@@ -172,6 +161,15 @@ function allocationSnapshot(values) {
   return JSON.stringify(Object.entries(values)
     .filter(([, value]) => normalizeDecimal(value) && parseScale4(value) !== 0n)
     .sort(([left], [right]) => left.localeCompare(right)))
+}
+
+function GoalActionButton({ label, icon, tone = 'blue', ...props }) {
+  return (
+    <button className={`button button--secondary goal-action-button goal-action-button--${tone}`} aria-label={label} type="button" {...props}>
+      <Icon name={icon} size={20} />
+      <span className="goal-action-button__label" aria-hidden="true">{label}</span>
+    </button>
+  )
 }
 
 export default function GoalsPage() {
@@ -568,6 +566,119 @@ export default function GoalsPage() {
     }
   }
 
+  const goalEditor = formMode && (
+    <Card className="goal-editor goal-inline-panel inline-panel" id="goal-editor" as="section" aria-labelledby="goal-editor-title">
+      <div className="section-heading">
+        <div><p className="eyebrow">{formMode === 'edit' ? 'Mise à jour' : 'Nouveau projet'}</p><h2 id="goal-editor-title">{formMode === 'edit' ? `Modifier ${editingGoal.name}` : 'Créer un objectif'}</h2></div>
+        <button className="button button--ghost" disabled={goalSaving} onClick={() => setFormMode(null)} type="button">Fermer</button>
+      </div>
+      {goalFormError && <InlineNotice live tone="warning" icon="alert">{goalFormError}</InlineNotice>}
+      <form aria-busy={goalSaving} className="goal-editor__form" onSubmit={submitGoal}>
+        <label className="field">
+          <span>Nom de l’objectif</span>
+          <input aria-invalid={Boolean(goalFormErrors.name)} disabled={goalSaving} maxLength={160} onChange={(event) => updateGoalFormField('name', event.target.value)} value={goalForm.name} />
+          {goalFormErrors.name && <small className="field-error">{goalFormErrors.name}</small>}
+        </label>
+        <label className="field goal-editor__description">
+          <span>Description facultative</span>
+          <textarea aria-invalid={Boolean(goalFormErrors.description)} disabled={goalSaving} maxLength={1000} onChange={(event) => updateGoalFormField('description', event.target.value)} rows="3" value={goalForm.description} />
+          {goalFormErrors.description && <small className="field-error">{goalFormErrors.description}</small>}
+        </label>
+        <label className="field">
+          <span>Type de projet</span>
+          <select disabled={goalSaving} onChange={(event) => updateGoalFormField('type', event.target.value)} value={goalForm.type}>
+            {GOAL_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        <label className="field">
+          <span>Devise</span>
+          <input aria-readonly={formMode === 'edit'} disabled={goalSaving} onChange={(event) => updateGoalFormField('currency', event.target.value)} readOnly={formMode === 'edit'} value={goalForm.currency} />
+        </label>
+        <label className="field">
+          <span>Montant cible ({goalForm.currency})</span>
+          <input aria-invalid={Boolean(goalFormErrors.targetAmount)} disabled={goalSaving} inputMode="decimal" onChange={(event) => updateGoalFormField('targetAmount', event.target.value)} placeholder="0,0000" value={goalForm.targetAmount} />
+          {goalFormErrors.targetAmount && <small className="field-error">{goalFormErrors.targetAmount}</small>}
+        </label>
+        <label className="field">
+          <span>Montant déjà épargné ({goalForm.currency})</span>
+          <input aria-invalid={Boolean(goalFormErrors.initialAmount)} disabled={goalSaving} inputMode="decimal" onChange={(event) => updateGoalFormField('initialAmount', event.target.value)} placeholder="0,0000" value={goalForm.initialAmount} />
+          {goalFormErrors.initialAmount && <small className="field-error">{goalFormErrors.initialAmount}</small>}
+        </label>
+        <label className="field">
+          <span>Date cible facultative</span>
+          <input disabled={goalSaving} onChange={(event) => updateGoalFormField('targetDate', event.target.value)} type="date" value={goalForm.targetDate} />
+        </label>
+        <label className="field">
+          <span>Priorité</span>
+          <select disabled={goalSaving} onChange={(event) => updateGoalFormField('priority', event.target.value)} value={goalForm.priority}>
+            {PRIORITIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        <div className="goal-editor__actions">
+          <button className="button button--secondary" disabled={goalSaving} onClick={() => setFormMode(null)} type="button">Annuler</button>
+          <button className="button button--primary" disabled={goalSaving} type="submit">{goalSaving ? 'Enregistrement…' : formMode === 'edit' ? 'Enregistrer les modifications' : 'Créer mon objectif'}</button>
+        </div>
+      </form>
+    </Card>
+  )
+
+  const goalDetails = selectedGoal && (
+    <Card className="goal-details goal-inline-panel inline-panel" id="goal-details" as="section" aria-labelledby="goal-details-title">
+      <div className="section-heading"><div><p className="eyebrow">Suivi réel</p><h2 id="goal-details-title">Versements de {selectedGoal.name}</h2></div><Badge tone={STATUS_TONES[selectedGoal.status]}>{STATUS_LABELS[selectedGoal.status]}</Badge></div>
+      {contributionError && <InlineNotice live tone="warning" icon="alert">{contributionError}</InlineNotice>}
+      {contributionSuccess && <InlineNotice live tone="success" icon="check">{contributionSuccess}</InlineNotice>}
+      <div className="goal-details__grid">
+        <div>
+          {contributionsLoading ? <p aria-live="polite" className="muted">Chargement des versements…</p>
+            : contributions.length === 0 ? <div className="goals-inline-empty">Aucun versement enregistré pour le moment.</div>
+              : <ul className="contribution-list">{contributions.map((contribution) => (
+                <li key={contribution.id}>
+                  <span><strong>{formatMoney(contribution.amount, selectedGoal.currency)}</strong><small>{formatDate(contribution.contributionDate)} · {contribution.source === 'MANUAL' ? 'Versement manuel' : 'Lié à une transaction'}</small></span>
+                  {contribution.source === 'MANUAL' && <button className="button button--danger-quiet" disabled={contributionSaving} onClick={() => removeContribution(contribution)} type="button">Supprimer</button>}
+                </li>
+              ))}</ul>}
+          {selectedGoal.status === 'ACTIVE' && (
+            <form className="contribution-form" onSubmit={submitContribution}>
+              <label className="field"><span>Nouveau versement ({selectedGoal.currency})</span><input aria-invalid={Boolean(contributionFieldError)} disabled={contributionSaving} inputMode="decimal" onChange={(event) => { setContributionForm({ ...contributionForm, amount: event.target.value }); setContributionFieldError('') }} placeholder="0,0000" value={contributionForm.amount} /></label>
+              <label className="field"><span>Date facultative</span><input disabled={contributionSaving} max={todayIso()} onChange={(event) => { setContributionForm({ ...contributionForm, contributionDate: event.target.value }); setContributionFieldError('') }} type="date" value={contributionForm.contributionDate} /></label>
+              {contributionFieldError && <p className="field-error">{contributionFieldError}</p>}
+              <button className="button button--primary" disabled={contributionSaving} type="submit">{contributionSaving ? 'Ajout…' : 'Ajouter le versement'}</button>
+            </form>
+          )}
+        </div>
+
+        {selectedGoal.status === 'ACTIVE' && (
+          <div className="goal-simulation">
+            <p className="eyebrow">Simulation temporaire</p>
+            <h3>Tester un autre rythme mensuel</h3>
+            <p className="muted">Cette projection ne modifie ni votre objectif, ni vos versements réels.</p>
+            <form onSubmit={submitSimulation}>
+              <label className="field"><span>Contribution mensuelle simulée ({selectedGoal.currency})</span><input aria-invalid={Boolean(simulationError)} disabled={simulationLoading} inputMode="decimal" onChange={(event) => { setSimulationAmount(event.target.value); setSimulationError(''); setSimulation(null) }} placeholder="0,0000" value={simulationAmount} /></label>
+              <button className="button button--secondary" disabled={simulationLoading} type="submit">{simulationLoading ? 'Calcul…' : 'Calculer la projection'}</button>
+            </form>
+            {simulationError && <InlineNotice live tone="warning" icon="alert">{simulationError}</InlineNotice>}
+            {simulation && (
+              <div className={`simulation-result${simulation.reachable ? '' : ' simulation-result--unreachable'}`}>
+                <div>
+                  <p>{simulation.reachable ? 'Date d’atteinte estimée' : 'Objectif non atteignable avec ce rythme'}</p>
+                  <h3>{simulation.reachable ? formatDate(simulation.estimatedAchievementDate) : 'Aucune date estimée'}</h3>
+                  <small>{simulation.reachable ? `${simulation.monthsToTarget} mois environ` : 'Une contribution mensuelle positive est nécessaire.'}</small>
+                </div>
+                <dl>
+                  <div><dt>Déjà épargné</dt><dd>{formatMoney(simulation.currentSaved, simulation.currency)}</dd></div>
+                  <div><dt>Reste à épargner</dt><dd>{formatMoney(simulation.remainingAmount, simulation.currency)}</dd></div>
+                  <div><dt>Contribution testée</dt><dd>{formatMoney(simulation.simulatedMonthlyContribution, simulation.currency)}</dd></div>
+                  {simulation.targetDate && <div><dt>Date cible</dt><dd>{simulation.meetsTargetDate ? 'Projection compatible' : 'Projection au-delà de la cible'}</dd></div>}
+                </dl>
+                <p className="simulation-disclaimer">Estimation déterministe, fournie à titre indicatif et sans garantie.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+
   return (
     <div className="page goals-page">
       <PageHeader
@@ -603,61 +714,7 @@ export default function GoalsPage() {
         </InlineNotice>
       )}
 
-      {formMode && (
-        <Card className="goal-editor" as="section" aria-labelledby="goal-editor-title">
-          <div className="section-heading">
-            <div><p className="eyebrow">{formMode === 'edit' ? 'Mise à jour' : 'Nouveau projet'}</p><h2 id="goal-editor-title">{formMode === 'edit' ? `Modifier ${editingGoal.name}` : 'Créer un objectif'}</h2></div>
-            <button className="button button--ghost" disabled={goalSaving} onClick={() => setFormMode(null)} type="button">Fermer</button>
-          </div>
-          {goalFormError && <InlineNotice live tone="warning" icon="alert">{goalFormError}</InlineNotice>}
-          <form aria-busy={goalSaving} className="goal-editor__form" onSubmit={submitGoal}>
-            <label className="field">
-              <span>Nom de l’objectif</span>
-              <input aria-invalid={Boolean(goalFormErrors.name)} disabled={goalSaving} maxLength={160} onChange={(event) => updateGoalFormField('name', event.target.value)} value={goalForm.name} />
-              {goalFormErrors.name && <small className="field-error">{goalFormErrors.name}</small>}
-            </label>
-            <label className="field goal-editor__description">
-              <span>Description facultative</span>
-              <textarea aria-invalid={Boolean(goalFormErrors.description)} disabled={goalSaving} maxLength={1000} onChange={(event) => updateGoalFormField('description', event.target.value)} rows="3" value={goalForm.description} />
-              {goalFormErrors.description && <small className="field-error">{goalFormErrors.description}</small>}
-            </label>
-            <label className="field">
-              <span>Type de projet</span>
-              <select disabled={goalSaving} onChange={(event) => updateGoalFormField('type', event.target.value)} value={goalForm.type}>
-                {GOAL_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </label>
-            <label className="field">
-              <span>Devise</span>
-              <input aria-readonly={formMode === 'edit'} disabled={goalSaving} onChange={(event) => updateGoalFormField('currency', event.target.value)} readOnly={formMode === 'edit'} value={goalForm.currency} />
-            </label>
-            <label className="field">
-              <span>Montant cible ({goalForm.currency})</span>
-              <input aria-invalid={Boolean(goalFormErrors.targetAmount)} disabled={goalSaving} inputMode="decimal" onChange={(event) => updateGoalFormField('targetAmount', event.target.value)} placeholder="0,0000" value={goalForm.targetAmount} />
-              {goalFormErrors.targetAmount && <small className="field-error">{goalFormErrors.targetAmount}</small>}
-            </label>
-            <label className="field">
-              <span>Montant déjà épargné ({goalForm.currency})</span>
-              <input aria-invalid={Boolean(goalFormErrors.initialAmount)} disabled={goalSaving} inputMode="decimal" onChange={(event) => updateGoalFormField('initialAmount', event.target.value)} placeholder="0,0000" value={goalForm.initialAmount} />
-              {goalFormErrors.initialAmount && <small className="field-error">{goalFormErrors.initialAmount}</small>}
-            </label>
-            <label className="field">
-              <span>Date cible facultative</span>
-              <input disabled={goalSaving} onChange={(event) => updateGoalFormField('targetDate', event.target.value)} type="date" value={goalForm.targetDate} />
-            </label>
-            <label className="field">
-              <span>Priorité</span>
-              <select disabled={goalSaving} onChange={(event) => updateGoalFormField('priority', event.target.value)} value={goalForm.priority}>
-                {PRIORITIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </label>
-            <div className="goal-editor__actions">
-              <button className="button button--secondary" disabled={goalSaving} onClick={() => setFormMode(null)} type="button">Annuler</button>
-              <button className="button button--primary" disabled={goalSaving} type="submit">{goalSaving ? 'Enregistrement…' : formMode === 'edit' ? 'Enregistrer les modifications' : 'Créer mon objectif'}</button>
-            </div>
-          </form>
-        </Card>
-      )}
+      {formMode === 'create' && goalEditor}
 
       <section aria-labelledby="goals-list-title" className="goals-section">
         <div className="section-heading"><div><p className="eyebrow">Projets personnels</p><h2 id="goals-list-title">Vos objectifs en {currency}</h2></div></div>
@@ -672,7 +729,8 @@ export default function GoalsPage() {
         ) : !goalsError ? (
           <div className="goal-grid goal-grid--detailed">
             {goals.map((goal) => (
-              <Card className={`goal-card goal-card--detailed${goal.status === 'ARCHIVED' ? ' is-archived' : ''}`} key={goal.id}>
+              <Fragment key={goal.id}>
+              <Card className={`goal-card goal-card--detailed${goal.status === 'ARCHIVED' ? ' is-archived' : ''}${selectedGoal?.id === goal.id || (formMode === 'edit' && editingGoal?.id === goal.id) ? ' goal-card--expanded' : ''}`}>
                 <div className="goal-card__top">
                   <div className="goal-card__badges"><Badge tone={STATUS_TONES[goal.status]}>{STATUS_LABELS[goal.status]}</Badge><Badge tone="purple">{PRIORITY_LABELS[goal.priority]}</Badge></div>
                   <span className="goal-card__type">{TYPE_LABELS[goal.type]}</span>
@@ -685,76 +743,24 @@ export default function GoalsPage() {
                   <span>Échéance <strong>{formatDate(goal.targetDate)}</strong></span>
                 </div>
                 {goal.overdue && <InlineNotice tone="warning" icon="alert">La date cible est dépassée, mais votre objectif reste modifiable.</InlineNotice>}
-                <div className="goal-card__actions">
-                  <button className="button button--secondary" onClick={() => toggleGoalDetails(goal)} type="button">{expandedGoalId === goal.id ? 'Fermer le détail' : 'Voir le détail'}</button>
-                  {!['CANCELLED', 'ARCHIVED'].includes(goal.status) && <button className="button button--ghost" onClick={() => openEditForm(goal)} type="button">Modifier</button>}
-                  {goal.status === 'ACTIVE' && <button className="button button--ghost" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'PAUSED', `Mettre « ${goal.name} » en pause ?`)} type="button">Mettre en pause</button>}
-                  {goal.status === 'PAUSED' && <button className="button button--ghost" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'ACTIVE', `Reprendre « ${goal.name} » ?`)} type="button">Reprendre</button>}
-                  {['ACTIVE', 'PAUSED'].includes(goal.status) && <button className="button button--danger-quiet" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'CANCELLED', `Annuler définitivement « ${goal.name} » ?`)} type="button">Annuler</button>}
-                  {goal.status !== 'ARCHIVED' && <button className="button button--danger-quiet" disabled={Boolean(goalActionBusy)} onClick={() => handleArchive(goal)} type="button">Archiver</button>}
+                <div className="goal-card__actions" role="group" aria-label={`Actions pour ${goal.name}`}>
+                  <GoalActionButton label={expandedGoalId === goal.id ? 'Fermer le détail' : 'Voir le détail'} icon={expandedGoalId === goal.id ? 'close' : 'eye'} aria-expanded={expandedGoalId === goal.id} aria-controls={expandedGoalId === goal.id ? 'goal-details' : undefined} onClick={() => toggleGoalDetails(goal)} />
+                  {!['CANCELLED', 'ARCHIVED'].includes(goal.status) && <GoalActionButton label="Modifier" icon="edit" aria-expanded={formMode === 'edit' && editingGoal?.id === goal.id} aria-controls={formMode === 'edit' && editingGoal?.id === goal.id ? 'goal-editor' : undefined} onClick={() => openEditForm(goal)} />}
+                  {goal.status === 'ACTIVE' && <GoalActionButton label="Mettre en pause" icon="pause" tone="warning" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'PAUSED', `Mettre « ${goal.name} » en pause ?`)} />}
+                  {goal.status === 'PAUSED' && <GoalActionButton label="Reprendre" icon="play" tone="success" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'ACTIVE', `Reprendre « ${goal.name} » ?`)} />}
+                  {['ACTIVE', 'PAUSED'].includes(goal.status) && <GoalActionButton label="Annuler" icon="close" tone="danger" disabled={Boolean(goalActionBusy)} onClick={() => applyStatus(goal, 'CANCELLED', `Annuler définitivement « ${goal.name} » ?`)} />}
+                  {goal.status !== 'ARCHIVED' && <GoalActionButton label="Archiver" icon="archive" tone="neutral" disabled={Boolean(goalActionBusy)} onClick={() => handleArchive(goal)} />}
                 </div>
               </Card>
+              {formMode === 'edit' && editingGoal?.id === goal.id && goalEditor}
+              {selectedGoal?.id === goal.id && goalDetails}
+              </Fragment>
             ))}
           </div>
         ) : null}
       </section>
 
-      {selectedGoal && (
-        <Card className="goal-details" as="section" aria-labelledby="goal-details-title">
-          <div className="section-heading"><div><p className="eyebrow">Suivi réel</p><h2 id="goal-details-title">Versements de {selectedGoal.name}</h2></div><Badge tone={STATUS_TONES[selectedGoal.status]}>{STATUS_LABELS[selectedGoal.status]}</Badge></div>
-          {contributionError && <InlineNotice live tone="warning" icon="alert">{contributionError}</InlineNotice>}
-          {contributionSuccess && <InlineNotice live tone="success" icon="check">{contributionSuccess}</InlineNotice>}
-          <div className="goal-details__grid">
-            <div>
-              {contributionsLoading ? <p aria-live="polite" className="muted">Chargement des versements…</p>
-                : contributions.length === 0 ? <div className="goals-inline-empty">Aucun versement enregistré pour le moment.</div>
-                  : <ul className="contribution-list">{contributions.map((contribution) => (
-                    <li key={contribution.id}>
-                      <span><strong>{formatMoney(contribution.amount, selectedGoal.currency)}</strong><small>{formatDate(contribution.contributionDate)} · {contribution.source === 'MANUAL' ? 'Versement manuel' : 'Lié à une transaction'}</small></span>
-                      {contribution.source === 'MANUAL' && <button className="button button--danger-quiet" disabled={contributionSaving} onClick={() => removeContribution(contribution)} type="button">Supprimer</button>}
-                    </li>
-                  ))}</ul>}
-              {selectedGoal.status === 'ACTIVE' && (
-                <form className="contribution-form" onSubmit={submitContribution}>
-                  <label className="field"><span>Nouveau versement ({selectedGoal.currency})</span><input aria-invalid={Boolean(contributionFieldError)} disabled={contributionSaving} inputMode="decimal" onChange={(event) => { setContributionForm({ ...contributionForm, amount: event.target.value }); setContributionFieldError('') }} placeholder="0,0000" value={contributionForm.amount} /></label>
-                  <label className="field"><span>Date facultative</span><input disabled={contributionSaving} max={todayIso()} onChange={(event) => { setContributionForm({ ...contributionForm, contributionDate: event.target.value }); setContributionFieldError('') }} type="date" value={contributionForm.contributionDate} /></label>
-                  {contributionFieldError && <p className="field-error">{contributionFieldError}</p>}
-                  <button className="button button--primary" disabled={contributionSaving} type="submit">{contributionSaving ? 'Ajout…' : 'Ajouter le versement'}</button>
-                </form>
-              )}
-            </div>
 
-            {selectedGoal.status === 'ACTIVE' && (
-              <div className="goal-simulation">
-                <p className="eyebrow">Simulation temporaire</p>
-                <h3>Tester un autre rythme mensuel</h3>
-                <p className="muted">Cette projection ne modifie ni votre objectif, ni vos versements réels.</p>
-                <form onSubmit={submitSimulation}>
-                  <label className="field"><span>Contribution mensuelle simulée ({selectedGoal.currency})</span><input aria-invalid={Boolean(simulationError)} disabled={simulationLoading} inputMode="decimal" onChange={(event) => { setSimulationAmount(event.target.value); setSimulationError(''); setSimulation(null) }} placeholder="0,0000" value={simulationAmount} /></label>
-                  <button className="button button--secondary" disabled={simulationLoading} type="submit">{simulationLoading ? 'Calcul…' : 'Calculer la projection'}</button>
-                </form>
-                {simulationError && <InlineNotice live tone="warning" icon="alert">{simulationError}</InlineNotice>}
-                {simulation && (
-                  <div className={`simulation-result${simulation.reachable ? '' : ' simulation-result--unreachable'}`}>
-                    <div>
-                      <p>{simulation.reachable ? 'Date d’atteinte estimée' : 'Objectif non atteignable avec ce rythme'}</p>
-                      <h3>{simulation.reachable ? formatDate(simulation.estimatedAchievementDate) : 'Aucune date estimée'}</h3>
-                      <small>{simulation.reachable ? `${simulation.monthsToTarget} mois environ` : 'Une contribution mensuelle positive est nécessaire.'}</small>
-                    </div>
-                    <dl>
-                      <div><dt>Déjà épargné</dt><dd>{formatMoney(simulation.currentSaved, simulation.currency)}</dd></div>
-                      <div><dt>Reste à épargner</dt><dd>{formatMoney(simulation.remainingAmount, simulation.currency)}</dd></div>
-                      <div><dt>Contribution testée</dt><dd>{formatMoney(simulation.simulatedMonthlyContribution, simulation.currency)}</dd></div>
-                      {simulation.targetDate && <div><dt>Date cible</dt><dd>{simulation.meetsTargetDate ? 'Projection compatible' : 'Projection au-delà de la cible'}</dd></div>}
-                    </dl>
-                    <p className="simulation-disclaimer">Estimation déterministe, fournie à titre indicatif et sans garantie.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
 
       <Card className="goal-allocation" as="section" aria-labelledby="goal-allocation-title">
         <div className="section-heading"><div><p className="eyebrow">Capacité Salary Planning</p><h2 id="goal-allocation-title">Répartition de {formatMonth(month)}</h2></div>{pastMonth && <Badge tone="neutral">Lecture seule</Badge>}</div>

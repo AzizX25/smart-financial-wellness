@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ForecastBalanceChart from '../components/ForecastBalanceChart'
 import { Badge, Card, formatCurrency, InlineNotice, PageHeader } from '../components/Ui'
 import { ApiError } from '../services/apiClient'
 import { generateCurrentForecast, getForecast, listForecasts, simulateForecast } from '../services/forecastApi'
@@ -72,6 +73,7 @@ export default function ForecastPage() {
   const [simulating, setSimulating] = useState(false)
   const requestSequence = useRef(0)
   const detailSequence = useRef(0)
+  const simulationSequence = useRef(0)
 
   useEffect(() => {
     const sequence = ++requestSequence.current
@@ -81,6 +83,10 @@ export default function ForecastPage() {
     setForecast(null)
     setHistory([])
     setSimulation(null)
+    setSimulationError('')
+    setSimulating(false)
+    detailSequence.current += 1
+    simulationSequence.current += 1
     Promise.all([loadCurrentForecast(currency, timezone, reload), listForecasts(currency, 0, 12)])
       .then(([current, page]) => {
         if (sequence !== requestSequence.current) return
@@ -94,11 +100,20 @@ export default function ForecastPage() {
       .finally(() => {
         if (sequence === requestSequence.current) setLoading(false)
       })
+    return () => {
+      requestSequence.current += 1
+      detailSequence.current += 1
+      simulationSequence.current += 1
+    }
   }, [currency, reload])
 
   async function selectHistory(id) {
     const sequence = ++detailSequence.current
     setError('')
+    simulationSequence.current += 1
+    setSimulation(null)
+    setSimulationError('')
+    setSimulating(false)
     try {
       const selected = await getForecast(id)
       if (sequence !== detailSequence.current) return
@@ -120,17 +135,19 @@ export default function ForecastPage() {
     }
     setSimulationError('')
     setSimulating(true)
+    const sequence = ++simulationSequence.current
     try {
-      setSimulation(await simulateForecast(forecast.id, { additionalIncome, additionalExpense }))
+      const result = await simulateForecast(forecast.id, { additionalIncome, additionalExpense })
+      if (sequence === simulationSequence.current) setSimulation(result)
     } catch (requestError) {
-      setSimulationError(requestError instanceof ApiError ? requestError.message : 'La simulation ne peut pas être calculée pour le moment.')
+      if (sequence === simulationSequence.current) setSimulationError(requestError instanceof ApiError ? requestError.message : 'La simulation ne peut pas être calculée pour le moment.')
     } finally {
-      setSimulating(false)
+      if (sequence === simulationSequence.current) setSimulating(false)
     }
   }
 
   return (
-    <div className="page">
+    <div className="page forecast-page">
       <PageHeader eyebrow="Prévision de fin de mois" title="Anticiper en toute simplicité" description="Une estimation claire à partir de vos soldes et de vos habitudes récentes." action={(
         <div className="forecast-toolbar">
           <label htmlFor="forecast-currency">Devise</label>
@@ -149,10 +166,11 @@ export default function ForecastPage() {
           {forecast.mlStatus !== 'APPLIED' && ML_MESSAGES[forecast.mlStatus] && <InlineNotice tone="info" live>{ML_MESSAGES[forecast.mlStatus]}</InlineNotice>}
           <div className="forecast-metrics">
             <Card><p className="eyebrow">Solde au {dateLabel(forecast.cutoffDate)}</p><strong>{formatCurrency(forecast.startingBalance, forecast.currency)}</strong></Card>
-            <Card><p className="eyebrow">Flux restant déterministe</p><strong>{formatCurrency(forecast.deterministicRemainingNetFlow, forecast.currency)}</strong></Card>
-            <Card><p className="eyebrow">Solde déterministe estimé</p><strong>{formatCurrency(forecast.deterministicPredictedEndBalance, forecast.currency)}</strong></Card>
+            <Card><p className="eyebrow">Flux restant estimé</p><strong>{formatCurrency(forecast.deterministicRemainingNetFlow, forecast.currency)}</strong></Card>
+            <Card><p className="eyebrow">Estimation de référence</p><strong>{formatCurrency(forecast.deterministicPredictedEndBalance, forecast.currency)}</strong></Card>
             <Card className="forecast-final"><p className="eyebrow">Solde final estimé</p><strong>{formatCurrency(forecast.finalPredictedEndBalance, forecast.currency)}</strong><small>Fin {monthLabel(forecast.forecastMonth)}</small></Card>
           </div>
+          <ForecastBalanceChart forecast={forecast} simulation={simulation} />
           <div className="forecast-content-grid">
             <Card>
               <div className="card-heading"><div><p className="eyebrow">Explication</p><h2>Comment cette estimation est construite</h2></div><Badge tone={forecast.mlStatus === 'APPLIED' ? 'teal' : 'neutral'}>{forecast.mlStatus === 'APPLIED' ? 'Hybride' : 'Déterministe'}</Badge></div>
@@ -161,7 +179,7 @@ export default function ForecastPage() {
                 <div><dt>Dépenses restantes estimées</dt><dd>{formatCurrency(forecast.deterministicRemainingExpense, forecast.currency)}</dd></div>
                 {forecast.mlStatus === 'APPLIED' && <div><dt>Correction expérimentale</dt><dd>{formatCurrency(forecast.mlPredictedResidual, forecast.currency)}</dd></div>}
               </dl>
-              <details className="forecast-details"><summary>Voir les méthodes utilisées</summary><p>Méthode déterministe : {forecast.deterministicMethod} v{forecast.deterministicMethodVersion}</p>{forecast.modelId && <p>Modèle : {forecast.modelId} v{forecast.modelVersion} — contrat {forecast.featureVersion}</p>}<p>Cette estimation n'est jamais une garantie.</p></details>
+              <p className="muted forecast-disclaimer">Estimation indicative, sans garantie de résultat.</p>
             </Card>
             <Card>
               <p className="eyebrow">Historique récent</p><h2>Prévisions enregistrées</h2>

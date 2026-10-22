@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import Icon from '../components/Icon'
+import RecommendationsSection from '../components/RecommendationsSection'
 import { Badge, Card, formatCurrency, InlineNotice, MetricCard, PageHeader } from '../components/Ui'
 import { useFinancialData } from '../financial/FinancialDataContext'
 import { calculateCurrentFinancialScore } from '../services/financialScoreApi'
@@ -30,6 +31,21 @@ const factorLabels = {
 }
 
 const emptyList = Object.freeze([])
+
+// Presentation follows the server's authoritative score band, never a local recalculation.
+const scoreBandTones = {
+  A_RENFORCER: 'red',
+  FRAGILE: 'orange',
+  EN_PROGRESSION: 'yellow',
+  SOLIDE: 'green',
+}
+
+const scoreInterpretations = {
+  A_RENFORCER: 'Les facteurs évalués indiquent plusieurs points à renforcer. Consultez leur détail pour comprendre ce qui pèse sur votre résultat et avancer progressivement.',
+  FRAGILE: 'Votre indicateur reste fragile : certains repères financiers méritent votre attention. Le détail des facteurs vous aide à identifier les points à consolider.',
+  EN_PROGRESSION: 'Votre indicateur est encourageant, avec des points encore à consolider. Regardez les facteurs les moins élevés pour comprendre où une amélioration est possible.',
+  SOLIDE: 'Les facteurs évalués donnent un indicateur solide. Gardez un suivi régulier : ce résultat décrit la période analysée et peut évoluer avec votre situation.',
+}
 
 function formatDate(value, options = { dateStyle: 'long', timeStyle: 'short' }) {
   if (!value) return 'Jamais'
@@ -135,10 +151,10 @@ export default function DashboardPage() {
 
       {balanceTotals.length === 1 && (
         <section className="metrics-grid metrics-grid--three" aria-label="Résumé financier du mois">
-          <MetricCard icon="wallet" label="Solde total" value={formatCurrency(balanceTotals[0].totalBalance, balanceTotals[0].currency)} note={`${balanceTotals[0].accountCount} compte${balanceTotals[0].accountCount === 1 ? '' : 's'} dans la même devise`} tone="teal" />
+          <MetricCard icon="wallet" label="Solde total" value={formatCurrency(balanceTotals[0].totalBalance, balanceTotals[0].currency)} note={`${balanceTotals[0].accountCount} compte${balanceTotals[0].accountCount === 1 ? '' : 's'} dans la même devise`} tone="navy" />
           <MetricCard icon="transactions" label="Revenus ce mois" value={formatCurrency(singleCurrencyFlow?.income || 0, balanceTotals[0].currency)} note="Crédits hors transferts reconnus" tone="mint" />
           <MetricCard icon="plan" label="Dépenses ce mois" value={formatCurrency(singleCurrencyFlow?.expenses || 0, balanceTotals[0].currency)} note="Débits hors transferts reconnus" tone="peach" />
-          <MetricCard icon="target" label="Flux net ce mois" value={formatCurrency(singleCurrencyFlow?.netCashFlow || 0, balanceTotals[0].currency)} note="Revenus moins dépenses" tone="gold" />
+          <MetricCard icon="target" label="Flux net ce mois" value={formatCurrency(singleCurrencyFlow?.netCashFlow || 0, balanceTotals[0].currency)} note="Revenus moins dépenses" tone={singleCurrencyFlow?.netCashFlow < 0 ? 'peach' : singleCurrencyFlow?.netCashFlow > 0 ? 'mint' : 'blue'} />
         </section>
       )}
 
@@ -164,6 +180,8 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+
+      <RecommendationsSection currency={scoreCurrency} dataVersion={dataVersion} />
 
       <section className="section-block" aria-labelledby="financial-score-title">
         <div className="section-heading">
@@ -218,11 +236,16 @@ export default function DashboardPage() {
               <Badge tone="teal">{displayedScore.currency}</Badge>
             </div>
             <div className="wellness-card__body">
-              <div className="score-ring" style={{ '--score': `${displayedScore.score}%` }} role="img" aria-label={`Score de bien-être financier ${displayedScore.score} sur 100, niveau ${displayedScore.bandLabel}`}>
-                <div><strong>{Number(displayedScore.score).toLocaleString('fr-TN', { maximumFractionDigits: 1 })}</strong><span>sur 100</span></div>
+              <div className={`score-ring score-ring--${scoreBandTones[displayedScore.bandCode] || 'neutral'}`} style={{ '--score': `${displayedScore.score}%` }} role="img" aria-label={`Score de bien-être financier ${displayedScore.score} sur 100, niveau ${displayedScore.bandLabel}`}>
+                <div><strong>{Number(displayedScore.score).toLocaleString('fr-TN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong><span>sur 100</span></div>
               </div>
               <div className="wellness-card__details">
                 <p>{displayedScore.bandDescription}</p>
+                <div className="score-interpretation" role="note" aria-label="Interprétation du score">
+                  <h4>Ce que signifie votre score</h4>
+                  <p>{scoreInterpretations[displayedScore.bandCode] || 'Le niveau de ce score n’est pas reconnu. Consultez le détail des facteurs disponibles pour comprendre le résultat.'}</p>
+                  <p>Cette lecture porte uniquement sur les facteurs évalués. Les facteurs indisponibles ne sont pas comptés comme zéro.</p>
+                </div>
                 <p>Données du {formatDate(`${displayedScore.historyStart}T00:00:00`, { dateStyle: 'medium' })} au {formatDate(`${displayedScore.historyEnd}T00:00:00`, { dateStyle: 'medium' })}. Couverture : {displayedScore.availableBaseWeight} %.</p>
               </div>
             </div>
@@ -236,7 +259,7 @@ export default function DashboardPage() {
                       <small>{factor.explanation}</small>
                     </span>
                     {factor.available
-                      ? <span className="score-factor-value"><strong>{Number(factor.score).toLocaleString('fr-TN', { maximumFractionDigits: 1 })}/100</strong><small>{factor.score >= 60 ? 'Niveau relatif plus élevé' : 'Niveau relatif plus faible'}</small></span>
+                      ? <span className="score-factor-value"><strong>{Number(factor.score).toLocaleString('fr-TN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}/100</strong><small>{factor.score >= 60 ? 'Niveau relatif plus élevé' : 'Niveau relatif plus faible'}</small></span>
                       : <Badge tone="neutral">Non disponible</Badge>}
                   </div>
                 ))}

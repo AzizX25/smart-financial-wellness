@@ -9,6 +9,7 @@ import DashboardPage from './DashboardPage'
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../financial/FinancialDataContext', () => ({ useFinancialData: vi.fn() }))
 vi.mock('../services/financialScoreApi', () => ({ calculateCurrentFinancialScore: vi.fn() }))
+vi.mock('../components/RecommendationsSection', () => ({ default: () => null }))
 
 const score = {
   available: true,
@@ -85,8 +86,27 @@ describe('tableau de bord financier dynamique', () => {
     expect(screen.getByText("Taux d'épargne")).toBeInTheDocument()
     expect(screen.getByText('Poids des dépenses essentielles')).toBeInTheDocument()
     expect(screen.getByText(/Couverture : 65 %/)).toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Interprétation du score' })).toHaveTextContent('Votre indicateur est encourageant')
+    expect(screen.getByRole('note', { name: 'Interprétation du score' })).toHaveTextContent('Les facteurs indisponibles ne sont pas comptés comme zéro')
     expect(screen.getByText(/ni un score de crédit ni un conseil financier/)).toBeInTheDocument()
     expect(screen.queryByText(/recommandation|confiance/i)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    [39.9, 'A_RENFORCER', 'À renforcer', 'red', 'plusieurs points à renforcer'],
+    [40, 'FRAGILE', 'Fragile', 'orange', 'Votre indicateur reste fragile'],
+    [60, 'EN_PROGRESSION', 'En progression', 'yellow', 'Votre indicateur est encourageant'],
+    [80, 'SOLIDE', 'Solide', 'green', 'un indicateur solide'],
+    [80, 'UNKNOWN_BAND', 'Niveau non reconnu', 'neutral', 'Le niveau de ce score n’est pas reconnu'],
+  ])('colore et interprète le score %s selon le niveau serveur %s', async (value, bandCode, bandLabel, tone, interpretation) => {
+    calculateCurrentFinancialScore.mockResolvedValue({ ...score, score: value, bandCode, bandLabel })
+    render(<MemoryRouter><DashboardPage /></MemoryRouter>)
+
+    const ring = await screen.findByRole('img', { name: `Score de bien-être financier ${value} sur 100, niveau ${bandLabel}` })
+    expect(ring).toHaveClass(`score-ring--${tone}`)
+    expect(ring).toHaveStyle({ '--score': `${value}%` })
+    expect(screen.getByRole('heading', { name: bandLabel })).toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Interprétation du score' })).toHaveTextContent(interpretation)
   })
 
   it('distingue les données insuffisantes d’une erreur API', async () => {
@@ -103,6 +123,7 @@ describe('tableau de bord financier dynamique', () => {
     })
     const { unmount } = render(<MemoryRouter><DashboardPage /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Score non disponible' })).toBeInTheDocument()
+    expect(screen.queryByRole('note', { name: 'Interprétation du score' })).not.toBeInTheDocument()
     expect(screen.queryByText(/n'a pas pu être calculé/)).not.toBeInTheDocument()
     unmount()
 
@@ -152,9 +173,9 @@ describe('tableau de bord financier dynamique', () => {
     expect(screen.getByRole('heading', { name: 'Compte courant réel' })).toBeInTheDocument()
     expect(screen.getByText('Salaire réel')).toBeInTheDocument()
     expect(screen.getByText('Dernier succès')).toBeInTheDocument()
-    expect(screen.getAllByText(/1[\s\u202f]?200[,.]000/).length).toBeGreaterThan(0)
-    expect(screen.getByText(/450[,.]000/)).toBeInTheDocument()
-    expect(screen.getByText(/750[,.]000/)).toBeInTheDocument()
+    expect(screen.getAllByText(/1[\s\u202f]?200[,.]0 TND/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/450[,.]0 TND/)).toBeInTheDocument()
+    expect(screen.getByText(/750[,.]0 TND/)).toBeInTheDocument()
     expect(screen.queryByText(/score encourageant/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Conseils personnalisés/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Prévision de fin de mois/i)).not.toBeInTheDocument()
@@ -163,7 +184,7 @@ describe('tableau de bord financier dynamique', () => {
   it('affiche un total unique lorsque tous les soldes partagent une devise', () => {
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
     expect(screen.getByText('Solde total')).toBeInTheDocument()
-    expect(screen.getAllByText(/3[\s\u202f]?000[,.]000/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/3[\s\u202f]?000[,.]0 TND/).length).toBeGreaterThan(0)
     expect(screen.queryByRole('heading', { name: 'Résumé par devise' })).not.toBeInTheDocument()
   })
 

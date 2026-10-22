@@ -36,7 +36,7 @@ const page = {
     { id: 'TX-C', accountId: account.id, bookingDate: '2026-08-04', description: 'Crédit réel', counterpartyName: 'Employeur', direction: 'CREDIT', amount: 100, currency: 'TND', categoryId: 'CAT-SALARY', categoryName: 'Salaire', categoryAssignmentSource: 'DETERMINISTIC_RULE' },
     { id: 'TX-D', accountId: account.id, bookingDate: '2026-08-03', description: 'Débit réel', direction: 'DEBIT', amount: 25, currency: 'TND', categoryId: null, categoryName: null, categoryAssignmentSource: 'UNCATEGORIZED' },
   ],
-  page: 0, size: 20, totalElements: 22, totalPages: 2, first: true, last: false,
+  page: 0, size: 5, totalElements: 22, totalPages: 5, first: true, last: false,
 }
 const emptyReviewPage = {
   items: [], page: 0, size: 20, totalElements: 0, totalPages: 0, first: true, last: true,
@@ -73,13 +73,15 @@ describe('transactions locales catégorisées', () => {
     expect(screen.getByLabelText('Catégorie de Crédit réel')).toHaveValue('CAT-SALARY')
     expect(screen.getByLabelText('Catégorie de Débit réel')).toHaveValue('')
     expect(screen.getByText('22 transactions')).toBeInTheDocument()
-    expect(screen.getByText(/\+.*100[,.]000/)).toHaveClass('amount-credit')
-    expect(screen.getByText(/−.*25[,.]000/)).toHaveClass('amount-debit')
+    expect(screen.getByText(/\+.*100[,.]0 TND/)).toHaveClass('amount-credit')
+    expect(screen.getByText(/−.*25[,.]0 TND/)).toHaveClass('amount-debit')
+    expect(listLocalTransactions).toHaveBeenCalledWith(expect.objectContaining({ page: 0, size: 5 }))
   })
 
   it('envoie les filtres catégorie et non catégorisée au backend', async () => {
     render(<TransactionsPage />)
     await screen.findByRole('heading', { name: 'Crédit réel' })
+    fireEvent.click(screen.getByText('Affiner la recherche'))
     fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'CAT-FOOD' } })
     await waitFor(() => expect(listLocalTransactions).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: 'CAT-FOOD', uncategorized: false })))
     fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'UNCATEGORIZED' } })
@@ -89,16 +91,27 @@ describe('transactions locales catégorisées', () => {
   it('applique et retire un choix manuel sans recharger la page', async () => {
     const financialState = state()
     useFinancialData.mockReturnValue(financialState)
-    assignTransactionCategory.mockResolvedValueOnce({ transactionId: 'TX-D', categoryId: 'CAT-FOOD', categoryName: 'Alimentation et courses', categoryNature: 'EXPENSE', assignmentSource: 'MANUAL' })
-      .mockResolvedValueOnce({ transactionId: 'TX-D', categoryId: null, categoryName: null, categoryNature: null, assignmentSource: 'UNCATEGORIZED' })
+    let savedPage = page
+    listLocalTransactions.mockImplementation(async () => savedPage)
+    assignTransactionCategory.mockImplementation(async (id, categoryId) => {
+      const response = { transactionId: id, categoryId: categoryId || null, categoryName: categoryId ? 'Alimentation et courses' : null,
+        categoryNature: categoryId ? 'EXPENSE' : null, assignmentSource: categoryId ? 'MANUAL' : 'UNCATEGORIZED' }
+      savedPage = { ...page, items: page.items.map(item => item.id === id ? { ...item, ...response, categoryAssignmentSource: response.assignmentSource, categoryApproved: Boolean(categoryId) } : item) }
+      return response
+    })
     render(<TransactionsPage />)
+    await screen.findByRole('heading', { name: 'Débit réel' })
+    fireEvent.click(screen.getByRole('button', { name: 'Toutes les transactions', exact: true }))
     await screen.findByRole('heading', { name: 'Débit réel' })
     const select = screen.getByLabelText('Catégorie de Débit réel')
     fireEvent.change(select, { target: { value: 'CAT-FOOD' } })
+    expect(assignTransactionCategory).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Approuver la catégorie de Débit réel' }))
     await waitFor(() => expect(select).toHaveValue('CAT-FOOD'))
     expect(financialState.reload).toHaveBeenCalledWith({ quiet: true })
     expect(screen.getByText('Choix manuel')).toBeInTheDocument()
     fireEvent.change(select, { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer la catégorie de Débit réel' }))
     await waitFor(() => expect(select).toHaveValue(''))
   })
 
@@ -107,8 +120,10 @@ describe('transactions locales catégorisées', () => {
     render(<TransactionsPage />)
     await screen.findByRole('heading', { name: 'Crédit réel' })
     fireEvent.change(screen.getByLabelText('Catégorie de Crédit réel'), { target: { value: 'CAT-TRANSFER' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Approuver la catégorie de Crédit réel' }))
     expect(await screen.findByText(/n’a pas pu être modifiée/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Catégorie de Crédit réel')).toHaveValue('CAT-SALARY')
+    expect(screen.getByLabelText('Catégorie de Crédit réel')).toHaveValue('CAT-TRANSFER')
+    expect(screen.getByText('Choix non enregistré : confirmez avec le bouton.')).toBeInTheDocument()
   })
 
   it('charge la page suivante', async () => {
@@ -116,13 +131,45 @@ describe('transactions locales catégorisées', () => {
     render(<TransactionsPage />)
     await screen.findByRole('heading', { name: 'Crédit réel' })
     fireEvent.click(screen.getByRole('button', { name: 'Suivante' }))
-    await waitFor(() => expect(listLocalTransactions).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 })))
+    await waitFor(() => expect(listLocalTransactions).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, size: 5 })))
+  })
+
+  it('shows five server-paginated operations and replaces them with the next five', async () => {
+    const items = Array.from({ length: 5 }, (_, index) => ({
+      ...page.items[1], id: `TX-${index}`, description: `Opération ${index + 1}`,
+    }))
+    const nextItems = items.map((item, index) => ({ ...item, id: `NEXT-${index}`, description: `Opération ${index + 6}` }))
+    listLocalTransactions.mockResolvedValueOnce({ ...page, items })
+      .mockResolvedValue({ ...page, items: nextItems, page: 1, first: false })
+    render(<TransactionsPage />)
+    await screen.findByRole('heading', { name: 'Opération 5' })
+    expect(document.querySelectorAll('#transactions-history .transaction-row')).toHaveLength(5)
+    fireEvent.click(screen.getByRole('button', { name: 'Suivante' }))
+    await screen.findByRole('heading', { name: 'Opération 10' })
+    expect(screen.queryByRole('heading', { name: 'Opération 1' })).not.toBeInTheDocument()
+    expect(document.querySelectorAll('#transactions-history .transaction-row')).toHaveLength(5)
+    expect(listLocalTransactions).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, size: 5 }))
   })
 
   it('affiche un état vide contrôlé', async () => {
     listLocalTransactions.mockResolvedValue({ ...page, items: [], totalElements: 0, totalPages: 0, last: true })
     render(<TransactionsPage />)
     expect(await screen.findByRole('heading', { name: 'Aucune transaction' })).toBeInTheDocument()
+  })
+
+  it('keeps import and receipt tools behind explicit buttons without replacing history data', async () => {
+    render(<TransactionsPage />)
+    await screen.findByRole('heading', { name: 'Crédit réel' })
+    expect(document.getElementById('transactions-history')).toBeVisible()
+    expect(document.getElementById('transactions-import')).not.toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Importer un CSV' }))
+    expect(document.getElementById('transactions-import')).toBeVisible()
+    expect(document.querySelector('#transactions-import details')).toHaveAttribute('open')
+    expect(document.getElementById('transactions-history')).not.toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Lire un ticket' }))
+    expect(document.querySelector('#transactions-receipt details')).toHaveAttribute('open')
+    fireEvent.click(screen.getByRole('button', { name: 'Historique' }))
+    expect(screen.getByRole('heading', { name: 'Crédit réel' })).toBeVisible()
   })
 
   it('conserve les données catégorisées après déconnexion et erreur', async () => {

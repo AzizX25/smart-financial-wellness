@@ -129,7 +129,7 @@ export default function AppShell() {
 
         <div className="sidebar__support">
           <Icon name="shield" size={24} />
-          <div><strong>Vos données restent privées</strong><span>Accès bancaire en lecture seule</span></div>
+          <div><strong>Vous gardez le contrôle</strong><span>Accès bancaire en lecture seule</span></div>
         </div>
 
         <div className="sidebar__profile">

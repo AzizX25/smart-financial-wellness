@@ -22,6 +22,7 @@ export function listLocalTransactions({
   direction,
   categoryId,
   uncategorized,
+  approved,
   from,
   page = 0,
   search,
@@ -33,6 +34,7 @@ export function listLocalTransactions({
   if (direction) query.set('direction', direction)
   if (categoryId) query.set('categoryId', categoryId)
   if (uncategorized) query.set('uncategorized', 'true')
+  if (typeof approved === 'boolean') query.set('approved', String(approved))
   if (from) query.set('from', from)
   if (to) query.set('to', to)
   if (search?.trim()) query.set('search', search.trim())

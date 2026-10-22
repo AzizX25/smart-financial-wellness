@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import BankConnectionSection from '../components/BankConnectionSection'
 import Icon from '../components/Icon'
+import ProfileEditor from '../components/ProfileEditor'
 import { Badge, Card, InlineNotice, PageHeader } from '../components/Ui'
 import { consentSettings } from '../data/demoData'
 import { ApiError } from '../services/apiClient'
@@ -27,14 +28,17 @@ function initials(profile) {
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [profileError, setProfileError] = useState('')
   const [feedback, setFeedback] = useState('')
+  const [editing, setEditing] = useState(false)
+  const mounted = useRef(false)
 
   useEffect(() => {
     let active = true
+    mounted.current = true
     getProfile()
       .then((response) => {
         if (active) {
@@ -56,8 +60,18 @@ export default function SettingsPage() {
       })
     return () => {
       active = false
+      mounted.current = false
     }
   }, [])
+
+  function saved(response) {
+    setProfile(response)
+    setEditing(false)
+    setFeedback('Votre profil et vos préférences ont été enregistrés.')
+    refreshUser().catch(() => {
+      if (mounted.current) setFeedback('Profil enregistré. Le nom de votre session sera actualisé à la prochaine connexion.')
+    })
+  }
 
   const identity = profile || user || {}
   const interfacePreferences = profile?.interfacePreferences
@@ -69,11 +83,14 @@ export default function SettingsPage() {
       <PageHeader
         eyebrow="Votre espace personnel"
         title="Profil et réglages"
-        description="Consultez vos informations personnelles et gérez la connexion à la banque simulée."
+        description="Gérez votre profil, vos préférences et la connexion à la banque simulée."
+        action={<button className="button button--primary" type="button" disabled={loading || !profile?.interfacePreferences || !profile?.financialPreferences || editing} onClick={() => { setFeedback(''); setEditing(true) }}>Modifier mon profil</button>}
       />
 
       {feedback && <InlineNotice live tone="success">{feedback}</InlineNotice>}
       {profileError && <InlineNotice live tone="warning" icon="alert">{profileError}</InlineNotice>}
+
+      {editing && <ProfileEditor profile={profile} onSaved={saved} onCancel={() => setEditing(false)} />}
 
       <div className="settings-grid">
         <Card className="profile-card">

@@ -1,33 +1,33 @@
 import Icon from './Icon'
 
 export function formatTnd(value) {
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-    minimumFractionDigits: 3,
-  }).format(value)
+  return formatCurrency(value, 'TND')
+}
+
+// Display rounding only: inputs, API payloads and scale-4 calculations stay exact.
+export function formatScale4Display(units, currency = 'TND') {
+  if (typeof units !== 'bigint') return '—'
+  const absolute = units < 0n ? -units : units
+  let tenths = absolute / 1000n
+  const remainder = absolute % 1000n
+  if (remainder > 500n || (remainder === 500n && tenths % 2n !== 0n)) tenths += 1n
+  const integer = (tenths / 10n).toLocaleString('fr-FR')
+  return `${units < 0n && tenths > 0n ? '−' : ''}${integer},${tenths % 10n} ${currency}`
 }
 
 export function formatCurrency(value, currency = 'TND') {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return '-'
-  }
-  try {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: currency === 'TND' ? 3 : 2,
-    }).format(Number(value))
-  } catch {
-    return `${value} ${currency || ''}`.trim()
-  }
+  if (value === null || value === undefined) return '—'
+  const match = String(value).match(/^(-?)(\d+)(?:\.(\d{1,4}))?$/)
+  if (!match) return '—'
+  const units = BigInt(match[2]) * 10000n + BigInt((match[3] || '').padEnd(4, '0'))
+  return formatScale4Display(match[1] ? -units : units, currency)
 }
 
 export function DemoBanner({ compact = false }) {
   return (
     <div className={`demo-banner${compact ? ' demo-banner--compact' : ''}`} role="status">
       <span className="demo-banner__dot" aria-hidden="true" />
-      Prototype de démonstration — données simulées
+      Démonstration — banque simulée, imports utilisateur
     </div>
   )
 }
