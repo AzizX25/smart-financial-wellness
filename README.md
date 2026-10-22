@@ -340,18 +340,28 @@ Prepare `.env.demo` without overwriting an existing one:
 if (-not (Test-Path .env.demo)) { Copy-Item .env.demo.example .env.demo }
 ```
 
-Privately fill `DEMO_PLATFORM_PASSWORD`, `DEMO_BANK_PASSWORD` and
-`DEMO_MOCK_BANK_ADMIN_PASSWORD` for the existing local bank administrator.
+Privately choose `DEMO_PLATFORM_PASSWORD`, `DEMO_BANK_PASSWORD` and
+`DEMO_MOCK_BANK_ADMIN_PASSWORD` for this installation.
 No passwords are supplied here. Set the URLs to your actual ports. Keep
 `DEMO_RUN_MERCHANT_AI=false` for the core scenario.
 
-The platform and bank passwords must be 12–72 UTF-8 bytes. Choose them on first
+All three passwords must be 12–72 UTF-8 bytes. Choose them on first
 creation and keep them for later runs: changing this file does not reset an
-existing account. `DEMO_MOCK_BANK_ADMIN_PASSWORD` must match the **already
-provisioned** `admin.demo` administrator. Obtain that development credential
-privately from the project maintainer; entering an arbitrary new password does
-not create or update the administrator. Without it, use normal registration and
-manual/CSV entry instead. The sample scripts cannot bootstrap that credential.
+existing account. The template selects a separate `local.demo.admin` administrator.
+With the `demo` profile and `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`, mock-bank
+startup creates it with a BCrypt hash of the locally chosen password. No shared
+administrator password is needed. Missing/invalid configuration stops startup
+without changing an account. An existing administrator must be ACTIVE and match
+the supplied password; a mismatch is refused, never silently reset.
+
+Existing `.env.demo` files are not overwritten. To opt in on an older installation,
+add `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`, choose an unused local administrator
+username in `DEMO_MOCK_BANK_ADMIN_USERNAME`, and set its private password. Existing
+users and the legacy migration-created `admin.demo` account are left untouched.
+Default, `prod` and `production` profiles cannot run this startup provisioner.
+There is no unauthenticated setup endpoint. It can be disabled after provisioning
+by setting `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=false`; the saved administrator
+continues using normal admin authentication.
 
 ```powershell
 docker compose --env-file .env --env-file .env.demo up -d --build
@@ -551,7 +561,8 @@ an untouched temporal test set and validate before promotion. See the
 | A new account has no score, forecast or recommendations | Add/synchronize eligible history in the selected currency. Insufficient data is a real state, not a failed installation. |
 | AI has no suggestions | Check eligibility, model readiness, flags and strict validation. Abstention is expected for unsupported/ambiguous merchants; do not automatically assign a category. |
 | Local AI/receipt extraction is unavailable or slow | Check `ollama list`, host `/api/tags`, container-to-host connectivity, model names and flags. Inspect `ollama ps` for CPU/GPU use; free memory and try one request at a time. Keep human review and bounded timeouts. |
-| Demo setup returns 401 or 409 | A 401 can mean the configured existing administrator/customer password is wrong. A 409 indicates a fixture conflict; stop and inspect the safe error, rather than resetting data or bypassing ownership checks. |
+| Mock bank refuses local-admin setup | Fill the private admin password, check the demo profile/opt-in and use the same credentials for an existing administrator. An existing account is never reset from environment settings. |
+| Demo setup returns 401 or 409 | A 401 can mean administrator/customer credentials do not match the stored account. A 409 indicates a fixture conflict; stop and inspect the safe error, rather than resetting data or bypassing ownership checks. |
 
 Inspect only the relevant service logs locally:
 

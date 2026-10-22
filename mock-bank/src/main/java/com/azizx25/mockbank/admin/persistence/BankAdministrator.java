@@ -30,6 +30,16 @@ public class BankAdministrator {
     protected BankAdministrator() {
     }
 
+    public static BankAdministrator createLocal(String username, String passwordHash, OffsetDateTime createdAt) {
+        BankAdministrator administrator = new BankAdministrator();
+        administrator.id = UUID.randomUUID();
+        administrator.username = username;
+        administrator.passwordHash = passwordHash;
+        administrator.status = "ACTIVE";
+        administrator.createdAt = createdAt;
+        return administrator;
+    }
+
     public UUID getId() {
         return id;
     }

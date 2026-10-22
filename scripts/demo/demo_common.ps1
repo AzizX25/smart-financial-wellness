@@ -83,7 +83,7 @@ function Get-DemoConfiguration {
     MailpitUrl = (Get-DemoSetting -Name 'DEMO_MAILPIT_URL' -Default 'http://localhost:8025').TrimEnd('/')
     PlatformPassword = Get-DemoSetting -Name 'DEMO_PLATFORM_PASSWORD'
     BankPassword = Get-DemoSetting -Name 'DEMO_BANK_PASSWORD'
-    AdminUsername = Get-DemoSetting -Name 'DEMO_MOCK_BANK_ADMIN_USERNAME' -Default 'admin.demo'
+    AdminUsername = Get-DemoSetting -Name 'DEMO_MOCK_BANK_ADMIN_USERNAME' -Default 'local.demo.admin'
     AdminPassword = Get-DemoSetting -Name 'DEMO_MOCK_BANK_ADMIN_PASSWORD'
     RunMerchantAi = (Get-DemoSetting -Name 'DEMO_RUN_MERCHANT_AI' -Default 'false').ToLowerInvariant() -eq 'true'
   }

@@ -22,13 +22,25 @@ From the repository root, in PowerShell:
 if (-not (Test-Path .env.demo)) { Copy-Item .env.demo.example .env.demo }
 ```
 
-Edit `.env.demo` privately. Set `DEMO_PLATFORM_PASSWORD` and `DEMO_BANK_PASSWORD`
-to locally chosen values of 12–72 UTF-8 bytes. Set
-`DEMO_MOCK_BANK_ADMIN_PASSWORD` to the **existing** `admin.demo` administrator's
-password, obtained privately from the project maintainer. This file cannot set or
-reset the provisioned administrator password. Do not commit or print its contents.
-Use the same passwords for an existing scenario; failed login is not permission
-to overwrite an account.
+Edit `.env.demo` privately. Choose `DEMO_PLATFORM_PASSWORD`, `DEMO_BANK_PASSWORD`
+and `DEMO_MOCK_BANK_ADMIN_PASSWORD`, each with 12–72 UTF-8 bytes. The template uses
+`DEMO_MOCK_BANK_ADMIN_USERNAME=local.demo.admin` and explicitly opts into local
+administrator setup. On the first mock-bank start, a separate administrator is
+created with a BCrypt hash; no shared password is needed. Do not commit or print
+the private file.
+
+Keep the same credentials on subsequent runs. An existing administrator must be
+ACTIVE and match the supplied password: the setup never changes its password or
+reactivates it. A mismatch or invalid configuration stops startup safely. This is
+not a password-reset facility. Existing customers, accounts and the legacy
+migration-created administrator remain unchanged.
+
+If `.env.demo` already exists, copying the template does not change it. To opt in,
+add `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`, choose an unused local administrator
+username and set the matching private password. The startup provisioner requires
+the `demo` profile and this flag; it is absent in the default, `prod` and
+`production` profiles, even when the flag is true. No HTTP setup endpoint is added.
+After setup, the flag can be disabled without removing the saved administrator.
 
 Keep `DEMO_RUN_MERCHANT_AI=false`. The template's profile and fixture opt-in are
 required together; do not enable demo mutations in a public deployment. Check
@@ -99,5 +111,5 @@ or synchronized application history. No complete platform-account deletion
 workflow is provided. Use a dedicated disposable installation for destructive
 experiments; do not remove a shared database volume or change an ordinary user.
 
-No local password or API key is included in this guide. Without the existing bank
-administrator credential, use normal registration and manual/CSV entry instead.
+No local password or API key is included in this guide. Normal registration and
+manual/CSV entry are also available without preparing the sample scenario.

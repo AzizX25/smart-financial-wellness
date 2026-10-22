@@ -1,10 +1,13 @@
 # Local installation validation - 22 October 2026
 
-This record describes one local validation of the combined application source.
+This record describes local validation of the combined application source and a
+subsequent first-run administrator setup check.
 It is not a security certification, production-readiness claim or a guarantee of
 AI accuracy. The root README is the installation and usage guide.
 
 ## Automated validation
+
+The initial combined-worktree run, before the administrator-setup follow-up:
 
 | Module | Command (from that module) | Result |
 | --- | --- | --- |
@@ -66,15 +69,45 @@ contexts exclude private environment files. Candidate text files were checked
 for high-confidence key/private-key patterns without printing matching values;
 this heuristic is not a complete secret audit.
 
-The sample-data workflow still requires the existing mock-bank administrator
-credential, supplied privately. Editing its password in `.env.demo` does not
-provision or reset the administrator. Ordinary users can register and use
-manual/CSV entry without that optional sample scenario.
+The initial sample-data workflow needed an existing administrator credential.
+The follow-up below removes that handover dependency through explicit local
+first-run provisioning, without providing a password-reset facility. Ordinary
+users can also register and use manual/CSV entry without sample preparation.
 
 Real Ollama models, GPU performance, web-search credentials, receipt quality and
 a complete browser walkthrough were not revalidated in this check. They remain
-optional and hardware/configuration-dependent. The entire existing Amine sample
-scenario was not seeded again: the runtime check used a separate synthetic user.
+optional and hardware/configuration-dependent. The first core runtime check used
+a separate synthetic user; the subsequent sample check is described below.
 
 The local setup is intended for evaluation, not public banking deployment. Keep
 synthetic development identities, local email capture and database ports private.
+
+## First-run local administrator follow-up
+
+The new startup provisioner runs only with the `demo` profile and explicit
+`MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`. Default, `prod` and `production`
+profiles cannot register it. An installer supplies a private password for a
+separate local administrator; only its BCrypt hash is stored. Existing accounts
+are never overwritten or reactivated, and no HTTP bootstrap endpoint is added.
+
+Focused tests passed: 12 tests, zero failures/errors/skipped. Full mock-bank
+verification then passed 82 tests, zero failures/errors/skipped. Coverage includes
+normal admin login, hash-only storage, unchanged repeated starts, incorrect and
+inactive existing credentials, UTF-8 byte limits, concurrent provisioning and
+profile/flag restrictions. Demo script checks, default/demo Compose mappings and
+`git diff --check` also passed. No dependencies or Flyway migrations changed.
+
+Only the mock-bank image was rebuilt in the isolated installation. Fresh random
+test passwords were supplied through the launch process, not private files or
+source code. A separate `local.demo.admin` was provisioned beside the unchanged
+legacy administrator. Amine's synthetic sample scenario was prepared twice and
+then verified through the normal application APIs, without an existing shared
+administrator password, real Ollama or web calls.
+
+All 15 verifier checks passed: two TND accounts, 166 stable transaction references,
+eight completed months, reconciled ledger balances, internal-transfer pairing,
+synchronization, locale, Salary Plans, goals/contributions/allocations, Forecast
+prerequisites, categorization cases and ownership. Counts were unchanged by the
+second preparation. These counts describe the 22 October 2026 as-of date, not a
+permanent fixture size. Existing application volumes and private environment
+files were not modified by this isolated check.
