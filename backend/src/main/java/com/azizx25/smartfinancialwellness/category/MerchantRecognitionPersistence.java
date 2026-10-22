@@ -71,7 +71,7 @@ public class MerchantRecognitionPersistence {
                         transaction.getCurrency(), reviewService.merchantKey(transaction),
                         reviewService.exclusionReason(transaction, transfers.contains(transaction.getId())),
                         predictionRepository.existsByTransaction_IdAndReviewStatus(
-                                transaction.getId(), ReviewStatus.PENDING)))
+                                transaction.getId(), ReviewStatus.PENDING), transaction.getVersion()))
                 .toList();
     }
 
@@ -97,6 +97,7 @@ public class MerchantRecognitionPersistence {
             UUID userId, Map<String, Candidate> requested, String reasonCode) {
         requested.values().stream()
                 .sorted(java.util.Comparator.comparing(Candidate::transactionId))
+                .filter(candidate -> unchanged(userId, candidate))
                 .forEach(candidate -> persistNeedsReview(
                         userId, candidate.transactionId(), reasonCode, List.of()));
     }
@@ -111,6 +112,7 @@ public class MerchantRecognitionPersistence {
                 .toList();
         for (Prediction prediction : ordered) {
             Candidate candidate = requested.get(prediction.requestKey());
+            if (!unchanged(userId, candidate)) continue;
             if ("UNRECOGNIZED".equals(prediction.status())) {
                 persistNeedsReview(
                         userId, candidate.transactionId(), prediction.fallbackReason(),
@@ -124,10 +126,11 @@ public class MerchantRecognitionPersistence {
 
     @Transactional
     public boolean persistMemoryPending(
-            UUID userId, UUID transactionId, MemoryMatch memory) {
+            UUID userId, Candidate candidate, MemoryMatch memory) {
+        UUID transactionId = candidate.transactionId();
         TransactionRecord transaction = transactionRepository.findOwnedByIdForUpdate(transactionId, userId)
                 .orElse(null);
-        if (transaction == null
+        if (transaction == null || transaction.getVersion() != candidate.version()
                 || !transactionRepository.isMerchantRecognitionEligible(
                         transactionId, userId, TransactionRecord.UNCATEGORIZED_CATEGORY_ID)
                 || predictionRepository.existsByTransaction_IdAndReviewStatus(transactionId, ReviewStatus.PENDING)) {
@@ -261,7 +264,14 @@ public class MerchantRecognitionPersistence {
             String currency,
             String merchantKey,
             String exclusionReason,
-            boolean pendingSuggestion) {
+            boolean pendingSuggestion,
+            int version) {
+    }
+
+    private boolean unchanged(UUID userId, Candidate candidate) {
+        return transactionRepository.findOwnedByIdForUpdate(candidate.transactionId(), userId)
+                .filter(transaction -> transaction.getVersion() == candidate.version())
+                .isPresent();
     }
 
     private TransactionRecord ownedUncategorized(UUID userId, UUID transactionId) {

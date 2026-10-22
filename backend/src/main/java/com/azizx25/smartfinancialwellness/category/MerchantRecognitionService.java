@@ -75,7 +75,7 @@ public class MerchantRecognitionService {
                     userId, candidate.merchantKey(),
                     TransactionRecord.Direction.valueOf(candidate.direction()), candidate.currency());
             if (memory != null && persistence.persistMemoryPending(
-                    userId, candidate.transactionId(), memory)) {
+                    userId, candidate, memory)) {
                 suggested++;
                 continue;
             }

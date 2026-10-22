@@ -123,6 +123,7 @@ class MerchantRecognitionIntegrationTests {
         assertThat(suggestion.get("canonicalMerchant").asText()).isEqualTo("Carrefour");
         assertThat(suggestion.get("categoryCode").asText()).isEqualTo("FOOD");
         assertThat(categorySource(transactionId)).isEqualTo("UNCATEGORIZED");
+        assertApprovalGroup(owner, transactionId, false);
 
         mockMvc.perform(post("/api/transactions/{transactionId}/merchant-suggestions/{predictionId}/accept",
                         transactionId, predictionId)
@@ -138,6 +139,7 @@ class MerchantRecognitionIntegrationTests {
                 .andExpect(jsonPath("$.categoryName").value("Alimentation et courses"));
 
         assertThat(categorySource(transactionId)).isEqualTo("ML");
+        assertApprovalGroup(owner, transactionId, true);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT review_status FROM " + SCHEMA + "category_prediction WHERE id = ?",
                 String.class, predictionId)).isEqualTo("ACCEPTED");
@@ -281,6 +283,7 @@ class MerchantRecognitionIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assignmentSource").value("LLM"));
         assertThat(categorySource(transactionId)).isEqualTo("LLM");
+        assertApprovalGroup(owner, transactionId, true);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM " + SCHEMA + "transaction_category_history "
                         + "WHERE transaction_id = ? AND new_source = 'LLM'",
@@ -392,6 +395,7 @@ class MerchantRecognitionIntegrationTests {
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner.token())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assignmentSource").value("USER_MEMORY"));
+        assertApprovalGroup(owner, repeated, true);
 
         mockMvc.perform(patch("/api/transactions/{transactionId}/category", original)
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner.token()))
@@ -455,6 +459,21 @@ class MerchantRecognitionIntegrationTests {
                         + "'merchant-recognition-features-v1', 'PENDING')",
                 predictionId, transactionId, categoryId);
         return predictionId;
+    }
+
+    private void assertApprovalGroup(AppRegistration user, UUID id, boolean approved) throws Exception {
+        JsonNode matching = objectMapper.readTree(mockMvc.perform(get("/api/transactions")
+                .header(HttpHeaders.AUTHORIZATION, bearer(user.token())).param("approved", Boolean.toString(approved)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        List<String> matchingIds = new java.util.ArrayList<>();
+        matching.get("items").forEach(item -> matchingIds.add(item.get("id").asText()));
+        assertThat(matchingIds).contains(id.toString());
+        JsonNode opposite = objectMapper.readTree(mockMvc.perform(get("/api/transactions")
+                .header(HttpHeaders.AUTHORIZATION, bearer(user.token())).param("approved", Boolean.toString(!approved)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        List<String> oppositeIds = new java.util.ArrayList<>();
+        opposite.get("items").forEach(item -> oppositeIds.add(item.get("id").asText()));
+        assertThat(oppositeIds).doesNotContain(id.toString());
     }
 
     private void runRecognition(AppRegistration user) throws Exception {

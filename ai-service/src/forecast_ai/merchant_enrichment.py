@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 from dataclasses import dataclass
+from threading import Lock
 from typing import Annotated, Literal, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
@@ -40,6 +41,9 @@ class MerchantEnrichmentSettings:
     local_read_timeout_seconds: float = 12.0
     search_read_timeout_seconds: float = 8.0
     context_size: int = 4096
+    embedding_cpu_only: bool = False
+    embedding_context_size: int = 1024
+    batch_timeout_seconds: float = 80.0
 
     @classmethod
     def from_env(cls) -> MerchantEnrichmentSettings:
@@ -54,6 +58,9 @@ class MerchantEnrichmentSettings:
             local_read_timeout_seconds=_bounded_float("OLLAMA_READ_TIMEOUT_SECONDS", 12.0, 1.0, 30.0),
             search_read_timeout_seconds=_bounded_float("OLLAMA_SEARCH_TIMEOUT_SECONDS", 8.0, 1.0, 20.0),
             context_size=_bounded_int("OLLAMA_CONTEXT_SIZE", 4096, 2048, 8192),
+            embedding_cpu_only=_boolean_env("OLLAMA_EMBEDDING_CPU_ONLY", False),
+            embedding_context_size=_bounded_int("OLLAMA_EMBEDDING_CONTEXT_SIZE", 1024, 512, 4096),
+            batch_timeout_seconds=_bounded_float("MERCHANT_BATCH_TIMEOUT_SECONDS", 80.0, 1.0, 80.0),
         )
 
 
@@ -176,6 +183,10 @@ class MerchantEnricher:
         self.embedding_provider = embedding_provider
         self.search_provider = search_provider
         self.reasoning_provider = reasoning_provider
+        # One bounded cache of public catalog vectors only. Never cache user queries.
+        self._catalog_lock = Lock()
+        self._catalog_key = None
+        self._catalog_vectors: tuple[tuple[float, ...], ...] = ()
 
     @property
     def available(self) -> bool:
@@ -227,15 +238,30 @@ class MerchantEnricher:
             self, merchant_text: str, catalog: Sequence[CatalogEntry]) -> tuple[CatalogCandidate, ...]:
         if not catalog:
             raise ValueError("merchant catalog is empty")
-        embeddings = self.embedding_provider.embed(
-            [merchant_text, *(entry.embedding_text for entry in catalog)]
-        )
-        if len(embeddings) != len(catalog) + 1:
-            raise ValueError("unexpected embedding count")
-        query = embeddings[0]
+        key = (tuple(catalog), self.settings.embedding_model, self.settings.embedding_context_size,
+               self.settings.embedding_cpu_only)
+        with self._catalog_lock:
+            if key != self._catalog_key:
+                embeddings = self.embedding_provider.embed(
+                    [merchant_text, *(entry.embedding_text for entry in catalog)]
+                )
+                if len(embeddings) != len(catalog) + 1:
+                    raise ValueError("unexpected embedding count")
+                vectors = tuple(tuple(vector) for vector in embeddings[1:])
+                for vector in vectors:
+                    _cosine(vector, vector)  # Reject invalid vectors before caching.
+                self._catalog_vectors = vectors
+                self._catalog_key = key
+                query = embeddings[0]
+            else:
+                embeddings = self.embedding_provider.embed([merchant_text])
+                if len(embeddings) != 1:
+                    raise ValueError("unexpected embedding count")
+                query = embeddings[0]
+            catalog_vectors = self._catalog_vectors
         scored = [
             CatalogCandidate(entry.canonical_merchant, entry.category_code, _cosine(query, vector))
-            for entry, vector in zip(catalog, embeddings[1:], strict=True)
+            for entry, vector in zip(catalog, catalog_vectors, strict=True)
         ]
         scored.sort(key=lambda item: (-item.similarity, item.canonical_merchant, item.category_code))
         return tuple(scored[:MAX_CATALOG_CANDIDATES])

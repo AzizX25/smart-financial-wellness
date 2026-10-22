@@ -31,6 +31,7 @@ public interface ForecastFinancialDataRepository extends Repository<FinancialAcc
                    transaction.direction AS "direction"
               FROM smart_financial_wellness.transaction_record transaction
              WHERE transaction.user_id = :userId
+               AND transaction.deleted_at IS NULL
                AND transaction.financial_account_id IN (:accountIds)
                AND transaction.currency = :currency
                AND transaction.booking_date >= :fromDate

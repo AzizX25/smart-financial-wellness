@@ -36,12 +36,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.NONE)
 @Import({
         PostgresTestConfiguration.class,
         BankConnectionIntegrationTests.BankProviderTestConfiguration.class
@@ -78,6 +80,58 @@ class BankSynchronizationIntegrationTests {
     @BeforeEach
     void resetProvider() {
         provider.reset();
+    }
+
+    @Test
+    void localBankCorrectionsAndLegacyTombstonesSurviveSynchronizationWithoutChangingProviderBalances() throws Exception {
+        AppRegistration user = registerAndActivate();
+        connect(user);
+        mockMvc.perform(post("/api/bank/synchronizations").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
+                .andExpect(status().isOk());
+        UUID id = jdbcTemplate.queryForObject("SELECT id FROM " + SCHEMA + "transaction_record WHERE user_id=?", UUID.class, user.userId());
+        Integer version = jdbcTemplate.queryForObject("SELECT version FROM " + SCHEMA + "transaction_record WHERE id=?", Integer.class, id);
+        String food = "00000000-0000-0000-0000-000000000005";
+        JsonNode changed = objectMapper.readTree(mockMvc.perform(put("/api/transactions/{id}", id)
+                .header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":" + version + ",\"bookingDate\":\"2026-07-26\",\"description\":\"Local correction\",\"amount\":\"42.1234\",\"direction\":\"DEBIT\",\"categoryId\":\"" + food + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.sourceType").value("BANK_SYNC"))
+                .andReturn().getResponse().getContentAsString());
+        assertThat(changed.get("amount").asText()).isEqualTo("42.1234");
+        assertThat(jdbcTemplate.queryForObject("SELECT source_details->>'amount' FROM " + SCHEMA + "transaction_record WHERE id=?", String.class, id))
+                .isEqualTo("86.4500");
+        mockMvc.perform(patch("/api/transactions/{id}/category", id).header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken()))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"" + food + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.assignmentSource").value("MANUAL"));
+        provider.replacePrimaryTransaction(new ExternalBankTransaction("MOCK-TXN-001", LocalDate.of(2026, 7, 26),
+                LocalDate.of(2026, 7, 26), new BigDecimal("90.0000"), "DEBIT", "TND",
+                "Provider correction", "Monoprix", "POSTED"));
+        mockMvc.perform(post("/api/bank/synchronizations").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.transactionsCreated").value(0));
+        assertThat(jdbcTemplate.queryForObject("SELECT amount FROM " + SCHEMA + "transaction_record WHERE id=?", BigDecimal.class, id))
+                .isEqualByComparingTo("42.1234");
+        assertThat(jdbcTemplate.queryForObject("SELECT raw_description FROM " + SCHEMA + "transaction_record WHERE id=?", String.class, id)).isEqualTo("Local correction");
+        assertThat(jdbcTemplate.queryForObject("SELECT source_details->>'amount' FROM " + SCHEMA + "transaction_record WHERE id=?", String.class, id)).isEqualTo("90.0000");
+        mockMvc.perform(get("/api/transactions").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].localOverride").value(true));
+        assertThat(jdbcTemplate.queryForObject("SELECT category_source FROM " + SCHEMA + "transaction_record WHERE id=?", String.class, id)).isEqualTo("USER");
+        mockMvc.perform(get("/api/transactions").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())).param("approved", "true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].categoryApproved").value(true));
+        mockMvc.perform(get("/api/transactions").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())).param("approved", "false"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        assertThat(jdbcTemplate.queryForObject("SELECT current_balance FROM " + SCHEMA + "financial_account WHERE id=(SELECT financial_account_id FROM "
+                + SCHEMA + "transaction_record WHERE id=?)", BigDecimal.class, id)).isEqualByComparingTo("3626.2500");
+        version = jdbcTemplate.queryForObject("SELECT version FROM " + SCHEMA + "transaction_record WHERE id=?", Integer.class, id);
+        mockMvc.perform(delete("/api/transactions/{id}", id).param("version", version.toString())
+                .header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken()))).andExpect(status().isMethodNotAllowed());
+        assertThat(jdbcTemplate.queryForObject("SELECT deleted_at IS NULL FROM " + SCHEMA + "transaction_record WHERE id=?", Boolean.class, id)).isTrue();
+        // Only this disposable fixture emulates a tombstone created by the retired API.
+        jdbcTemplate.update("UPDATE " + SCHEMA + "transaction_record SET deleted_at=GREATEST(CURRENT_TIMESTAMP,created_at) WHERE id=?", id);
+        mockMvc.perform(post("/api/bank/synchronizations").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.transactionsCreated").value(0));
+        mockMvc.perform(get("/api/transactions").header(HttpHeaders.AUTHORIZATION, bearer(user.accessToken())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + SCHEMA + "transaction_record WHERE user_id=? AND deleted_at IS NOT NULL", Integer.class, user.userId())).isEqualTo(1);
     }
 
     @Test

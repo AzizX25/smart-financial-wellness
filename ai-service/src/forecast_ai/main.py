@@ -28,12 +28,17 @@ from forecast_ai.merchant_enrichment import (
 )
 from forecast_ai.merchant_runtime import MerchantRuntime
 from forecast_ai.ollama_providers import create_ollama_providers
+from forecast_ai.assistance import (
+    ExplanationRequest, ExplanationResponse, LocalAssistance, ReceiptRequest, ReceiptResponse,
+)
+from forecast_ai.inference_control import remaining_timeout, request_budget
 
 LOGGER = logging.getLogger("forecast_ai")
 DEFAULT_MODEL_DIRECTORY = Path(__file__).parents[2] / "models/forecast"
 
 
-def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRuntime | None = None) -> FastAPI:
+def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRuntime | None = None,
+               assistance: LocalAssistance | None = None) -> FastAPI:
     model_runtime = runtime or ModelRuntime(
         os.getenv("FORECAST_MODEL_DIRECTORY", str(DEFAULT_MODEL_DIRECTORY))
     )
@@ -61,6 +66,7 @@ def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRu
     app = FastAPI(title="Smart Financial Wellness AI Service", version="0.1.0", lifespan=lifespan)
     app.state.model_runtime = model_runtime
     app.state.merchant_runtime = merchant_model_runtime
+    local_assistance = assistance or LocalAssistance.from_env()
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exception: RequestValidationError) -> JSONResponse:
@@ -153,10 +159,31 @@ def create_app(runtime: ModelRuntime | None = None, merchant_runtime: MerchantRu
         if not merchant_model_runtime.available:
             raise ModelUnavailableError("merchant model is unavailable")
         predictions = []
-        for item in request.items:
-            predictions.append(await asyncio.to_thread(merchant_model_runtime.predict, item))
+        with request_budget(enrichment_settings.batch_timeout_seconds):
+            for index, item in enumerate(request.items):
+                try:
+                    prediction = await asyncio.wait_for(
+                        asyncio.to_thread(merchant_model_runtime.predict, item),
+                        timeout=remaining_timeout(enrichment_settings.batch_timeout_seconds),
+                    )
+                    predictions.append(prediction)
+                except TimeoutError:
+                    predictions.extend(merchant_model_runtime.unavailable_prediction(pending.request_key)
+                                       for pending in request.items[index:])
+                    break
         LOGGER.info("merchant_prediction outcome=success item_count=%s", len(predictions))
         return MerchantBatchResponse(items=predictions)
+
+    @app.post("/api/v1/recommendations/explain", response_model=ExplanationResponse)
+    async def explain_recommendation(request: ExplanationRequest) -> ExplanationResponse:
+        return await asyncio.to_thread(local_assistance.explain, request)
+
+    @app.post("/api/v1/receipts/extract", response_model=ReceiptResponse)
+    async def extract_receipt(request: ReceiptRequest):
+        try:
+            return await asyncio.to_thread(local_assistance.receipt, request)
+        except ValueError:
+            return JSONResponse(status_code=422, content={"code": "INVALID_IMAGE", "message": "Receipt image is invalid"})
 
     @app.exception_handler(ModelUnavailableError)
     async def unavailable(_: Request, __: ModelUnavailableError) -> JSONResponse:

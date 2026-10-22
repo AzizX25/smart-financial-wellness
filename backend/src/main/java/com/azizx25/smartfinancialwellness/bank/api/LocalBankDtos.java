@@ -44,7 +44,12 @@ public final class LocalBankDtos {
             String categoryAssignmentSource,
             Instant categorizedAt,
             Instant firstImportedAt,
-            Instant lastSynchronizedAt) {
+            Instant lastSynchronizedAt,
+            String sourceType,
+            int version,
+            String amountExact,
+            boolean localOverride,
+            boolean categoryApproved) {
     }
 
     public record LocalTransactionPageResponse(

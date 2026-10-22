@@ -23,6 +23,7 @@ public interface FinancialScoreInputRepository extends Repository<TransactionRec
               FROM smart_financial_wellness.transaction_record transaction
               JOIN smart_financial_wellness.category category ON category.id = transaction.category_id
              WHERE transaction.user_id = :userId
+               AND transaction.deleted_at IS NULL
                AND transaction.currency = :currency
                AND transaction.booking_date >= :fromDate
                AND transaction.booking_date < :toDateExclusive

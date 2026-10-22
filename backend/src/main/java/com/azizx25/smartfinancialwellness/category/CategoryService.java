@@ -204,6 +204,23 @@ public class CategoryService {
         return new CategorySummaryResponse(month.toString(), summaries);
     }
 
+    @Transactional
+    public void prepareForManualEdit(UUID userId, UUID transactionId) {
+        TransactionRecord transaction = transactionRepository.findOwnedByIdForUpdate(transactionId, userId)
+                .orElseThrow(CategoryException::transactionNotFound);
+        Category previous = transaction.getCategory();
+        String previousSource = transaction.getCategorySource();
+        rejectPendingSuggestion(transactionId);
+        reviewService.forgetForTransaction(transaction);
+        transaction.removeCategory(categoryRepository.getReferenceById(TransactionRecord.UNCATEGORIZED_CATEGORY_ID));
+        if (!"UNCATEGORIZED".equals(previousSource)) {
+            historyRepository.save(new TransactionCategoryHistory(transaction, visibleCategoryId(previous), null,
+                    previousSource, "UNCATEGORIZED", null, transaction.getUser(), clock.instant()));
+        }
+        // Do not create an intermediate open review. V20's deferred consistency trigger
+        // must see only the final resolved/open review produced by the following assignment.
+    }
+
     private Category ownedCategory(UUID userId, UUID categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(CategoryException::notFound);
         if (category.getUserId() == null) throw CategoryException.readOnly();

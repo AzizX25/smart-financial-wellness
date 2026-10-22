@@ -89,6 +89,9 @@ public class FinancialScoreService {
     @Transactional
     public ScoreResponse calculateCurrent(UUID userId, String currency) {
         requireCurrency(currency);
+        // Score and recommendation refreshes may run concurrently on the Dashboard.
+        // Serialize publication per owner without changing formulas or existing snapshots.
+        userRepository.lockById(userId).orElseThrow(FinancialScoreException::notFound);
         ZoneId zone = userTimeZone(userId);
         LocalDate asOfDate = LocalDate.now(clock.withZone(zone));
         LocalDate historyEnd = YearMonth.from(asOfDate).minusMonths(1).atEndOfMonth();

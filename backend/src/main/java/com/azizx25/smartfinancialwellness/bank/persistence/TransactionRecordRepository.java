@@ -16,9 +16,38 @@ import org.springframework.data.repository.query.Param;
 
 public interface TransactionRecordRepository extends JpaRepository<TransactionRecord, UUID> {
 
+    // Include tombstones so a retried create never resurrects a removed entry.
+    @Query(value = "SELECT id FROM smart_financial_wellness.transaction_record "
+            + "WHERE user_id = :userId AND source_type = 'MANUAL' AND client_idempotency_key = :key",
+            nativeQuery = true)
+    java.util.Optional<UUID> findManualIdempotencyId(@Param("userId") UUID userId, @Param("key") String key);
+
+    @Query(value = """
+            SELECT EXISTS (SELECT 1 FROM smart_financial_wellness.goal_contribution WHERE transaction_id = :id)
+                OR EXISTS (SELECT 1 FROM smart_financial_wellness.internal_transfer
+                           WHERE outgoing_transaction_id = :id OR incoming_transaction_id = :id)
+            """, nativeQuery = true)
+    boolean hasProtectedLinks(@Param("id") UUID id);
+
     List<TransactionRecord> findByFinancialAccount_IdAndExternalTransactionIdIn(
             UUID accountId,
             Collection<String> providerTransactionIds);
+
+    // Lock retained source identities, including tombstones, before replaying a provider batch.
+    @Query(value = """
+            SELECT external_transaction_id AS externalId, deleted_at IS NOT NULL AS removed
+              FROM smart_financial_wellness.transaction_record
+             WHERE financial_account_id = :accountId AND source_type = 'BANK_SYNC'
+               AND external_transaction_id IN (:ids)
+             ORDER BY id FOR UPDATE
+            """, nativeQuery = true)
+    List<BankReplayIdentity> lockBankReplayIdentities(@Param("accountId") UUID accountId,
+            @Param("ids") Collection<String> ids);
+
+    interface BankReplayIdentity {
+        String getExternalId();
+        boolean getRemoved();
+    }
 
     @Query("""
             select transaction from TransactionRecord transaction
@@ -29,6 +58,9 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
               and transaction.direction = coalesce(:direction, transaction.direction)
               and transaction.category.id = coalesce(:categoryId, transaction.category.id)
               and (:uncategorizedOnly = false or transaction.category.id = :uncategorizedCategoryId)
+              and (:approved is null
+                   or (:approved = true and transaction.categorySource in ('USER', 'ML', 'LLM', 'USER_MEMORY'))
+                   or (:approved = false and transaction.categorySource not in ('USER', 'ML', 'LLM', 'USER_MEMORY')))
               and locate(
                     lower(:search),
                     lower(concat(
@@ -45,6 +77,7 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
             @Param("categoryId") UUID categoryId,
             @Param("uncategorizedOnly") boolean uncategorizedOnly,
             @Param("uncategorizedCategoryId") UUID uncategorizedCategoryId,
+            @Param("approved") Boolean approved,
             @Param("search") String search,
             Pageable pageable);
 
@@ -101,6 +134,7 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
             SELECT transaction.*
               FROM smart_financial_wellness.transaction_record transaction
              WHERE transaction.user_id = :userId
+               AND transaction.deleted_at IS NULL
                AND transaction.category_id = :uncategorizedCategoryId
                AND transaction.category_source = 'UNCATEGORIZED'
                AND transaction.direction = 'DEBIT'
@@ -124,6 +158,7 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
                 SELECT 1
                   FROM smart_financial_wellness.transaction_record transaction
                  WHERE transaction.id = :transactionId
+                   AND transaction.deleted_at IS NULL
                    AND transaction.user_id = :userId
                    AND transaction.category_id = :uncategorizedCategoryId
                    AND transaction.category_source = 'UNCATEGORIZED'
@@ -154,6 +189,7 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
                        FILTER (WHERE transaction.direction = 'DEBIT'), 0) AS expenses
               FROM smart_financial_wellness.transaction_record transaction
              WHERE transaction.user_id = :userId
+               AND transaction.deleted_at IS NULL
                AND transaction.booking_date >= :fromDate
                AND transaction.booking_date < :toDateExclusive
                AND NOT EXISTS (
@@ -180,6 +216,7 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
               JOIN smart_financial_wellness.category category
                 ON category.id = transaction.category_id
              WHERE transaction.user_id = :userId
+               AND transaction.deleted_at IS NULL
                AND transaction.booking_date >= :fromDate
                AND transaction.booking_date < :toDateExclusive
                AND transaction.direction = 'DEBIT'

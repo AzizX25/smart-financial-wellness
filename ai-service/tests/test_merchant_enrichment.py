@@ -422,7 +422,7 @@ def test_reasoning_request_is_strict_bounded_and_treats_search_as_untrusted() ->
     payload = provider.build_request(context)
     assert payload["stream"] is False
     assert payload["think"] is False
-    assert payload["options"] == {"temperature": 0, "num_ctx": 4096}
+    assert payload["options"] == {"temperature": 0, "num_ctx": 4096, "num_predict": 512}
     branches = payload["format"]["oneOf"]
     assert len(branches) == 2
     assert all(branch["additionalProperties"] is False for branch in branches)

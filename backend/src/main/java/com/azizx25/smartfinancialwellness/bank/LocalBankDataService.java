@@ -66,6 +66,7 @@ public class LocalBankDataService {
             TransactionRecord.Direction direction,
             UUID categoryId,
             boolean uncategorizedOnly,
+            Boolean approved,
             String search,
             int page,
             int size) {
@@ -92,6 +93,7 @@ public class LocalBankDataService {
                 categoryId,
                 uncategorizedOnly,
                 TransactionRecord.UNCATEGORIZED_CATEGORY_ID,
+                approved,
                 normalizeSearch(search),
                 PageRequest.of(
                         page,
@@ -208,7 +210,12 @@ public class LocalBankDataService {
                 },
                 transaction.getCategorizedAt(),
                 transaction.getFirstImportedAt(),
-                transaction.getLastSynchronizedAt());
+                transaction.getLastSynchronizedAt(),
+                transaction.getSourceType().name(),
+                transaction.getVersion(),
+                transaction.getAmount().toPlainString(),
+                transaction.isLocalOverride(),
+                transaction.isCategoryApproved());
     }
 
     private static final class MutableCategorySpending {

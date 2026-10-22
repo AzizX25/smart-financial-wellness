@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Trusted inference boundary for the experimental Forecast residual model"
 requires-python = ">=3.11,<3.14"
 dependencies = [
+    "Pillow>=12.3,<13",
     "fastapi>=0.116,<1",
     "joblib==1.5.3",
     "numpy==2.5.2",

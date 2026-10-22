@@ -21,7 +21,7 @@ class CategorizationReviewMigrationTests {
     private static final UUID SHOPPING = UUID.fromString("00000000-0000-0000-0000-000000000013");
 
     @Test
-    void upgradesV19ToV21AndEnforcesReviewMemoryAndExistingEvidenceIntegrity() {
+    void upgradesV19ToV24AndEnforcesReviewMemoryAndExistingEvidenceIntegrity() {
         try (PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine")
                 .withDatabaseName("categorization_review_upgrade_test")
                 .withUsername("test_user")
@@ -37,12 +37,12 @@ class CategorizationReviewMigrationTests {
                     Integer.class);
 
             Flyway latest = flyway(postgres, null);
-            assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
+            assertThat(latest.migrate().migrationsExecuted).isEqualTo(5);
             latest.validate();
             assertThat(jdbc.queryForObject(
                     "SELECT version FROM smart_financial_wellness.flyway_schema_history "
                             + "WHERE success AND version IS NOT NULL ORDER BY installed_rank DESC LIMIT 1",
-                    String.class)).isEqualTo("21");
+                    String.class)).isEqualTo("24");
             assertThat(jdbc.queryForObject(
                     "SELECT checksum FROM smart_financial_wellness.flyway_schema_history WHERE version = '19'",
                     Integer.class)).isEqualTo(v19Checksum);

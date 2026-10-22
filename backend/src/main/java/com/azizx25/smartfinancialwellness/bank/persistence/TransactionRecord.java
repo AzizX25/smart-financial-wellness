@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import com.azizx25.smartfinancialwellness.category.persistence.Category;
 import com.azizx25.smartfinancialwellness.user.persistence.AppUser;
@@ -18,10 +20,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "transaction_record", schema = "smart_financial_wellness")
+@SQLRestriction("deleted_at IS NULL")
 public class TransactionRecord {
 
     public static final UUID UNCATEGORIZED_CATEGORY_ID =
@@ -75,6 +79,19 @@ public class TransactionRecord {
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(length = 64)
     private String fingerprint;
+
+    @Column(name = "client_idempotency_key", length = 160)
+    private String clientIdempotencyKey;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "local_override", nullable = false)
+    private boolean localOverride;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "source_details", columnDefinition = "jsonb")
+    private Map<String, String> sourceDetails;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sync_job_id")
@@ -132,6 +149,77 @@ public class TransactionRecord {
     private int version;
 
     protected TransactionRecord() {
+    }
+
+    public static TransactionRecord manual(AppUser user, FinancialAccount account, Category initialCategory,
+            String idempotencyKey, LocalDate date, BigDecimal amount, Direction direction,
+            String description, String normalized, Instant now) {
+        TransactionRecord transaction = new TransactionRecord();
+        transaction.id = UUID.randomUUID();
+        transaction.user = user;
+        transaction.financialAccount = account;
+        transaction.category = initialCategory;
+        transaction.sourceType = SourceType.MANUAL;
+        transaction.clientIdempotencyKey = idempotencyKey;
+        transaction.currency = account.getCurrency();
+        transaction.categorySource = "UNCATEGORIZED";
+        transaction.createdAt = now;
+        transaction.updateManual(date, amount, direction, description, normalized, now);
+        return transaction;
+    }
+
+    public void updateManual(LocalDate date, BigDecimal amount, Direction direction,
+            String description, String normalized, Instant now) {
+        if (sourceType != SourceType.MANUAL) throw new IllegalStateException("Manual transaction required");
+        this.bookingDate = date;
+        this.amount = amount;
+        this.direction = direction;
+        this.rawDescription = description;
+        this.normalizedDescription = normalized;
+        this.recognizedMerchant = null;
+        this.updatedAt = now;
+    }
+
+    public void updateLocally(LocalDate date, BigDecimal amount, Direction direction,
+            String description, String normalized, Instant now) {
+        if (sourceType == SourceType.MANUAL) {
+            updateManual(date, amount, direction, description, normalized, now);
+            return;
+        }
+        if (sourceDetails == null) {
+            sourceDetails = details(bookingDate, valueDate, this.amount, this.direction,
+                    currency, rawDescription, recognizedMerchant, providerStatus);
+        }
+        localOverride = true;
+        bookingDate = date;
+        this.amount = amount;
+        this.direction = direction;
+        rawDescription = description;
+        normalizedDescription = normalized;
+        recognizedMerchant = null;
+        updatedAt = now;
+    }
+
+    private static Map<String, String> details(LocalDate date, LocalDate valueDate, BigDecimal amount,
+            Direction direction, String currency, String description, String merchant, String status) {
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("bookingDate", date.toString());
+        if (valueDate != null) result.put("valueDate", valueDate.toString());
+        result.put("amount", amount.toPlainString());
+        result.put("direction", direction.name());
+        result.put("currency", currency);
+        result.put("description", description);
+        if (merchant != null) result.put("merchant", merchant);
+        if (status != null) result.put("status", status);
+        return result;
+    }
+
+    public int getVersion() { return version; }
+    public boolean isLocalOverride() { return localOverride; }
+    public boolean isCategoryApproved() {
+        // SQL integrity requires accepted predictions for ML/LLM/USER_MEMORY assignments.
+        return "USER".equals(categorySource) || "ML".equals(categorySource)
+                || "LLM".equals(categorySource) || "USER_MEMORY".equals(categorySource);
     }
 
     public static TransactionRecord imported(AppUser user, FinancialAccount account, Category category,
@@ -324,6 +412,11 @@ public class TransactionRecord {
             String status,
             Instant now) {
         syncJob = job;
+        sourceDetails = details(transactionBookingDate, transactionValueDate, transactionAmount,
+                transactionDirection, transactionCurrency, description, counterpartyName, status);
+        providerStatus = status;
+        lastSynchronizedAt = now;
+        if (localOverride) return;
         bookingDate = transactionBookingDate;
         valueDate = transactionValueDate;
         amount = transactionAmount;

@@ -248,7 +248,7 @@ public class CategorizationReviewService {
         }
     }
 
-    private void forgetForTransaction(TransactionRecord transaction) {
+    public void forgetForTransaction(TransactionRecord transaction) {
         String key = merchantKey(transaction);
         if (key.isBlank()) return;
         memoryRepository.findByUser_IdAndNormalizedMerchantKeyAndDirectionAndCurrency(

@@ -145,6 +145,9 @@ class MerchantRuntime:
             candidate_category_codes=candidate_codes or [],
         )
 
+    def unavailable_prediction(self, request_key: str) -> MerchantPrediction:
+        return self._unrecognized(request_key, "ENRICHMENT_UNAVAILABLE")
+
 
 def _normalize(value: str) -> str:
     decomposed = unicodedata.normalize("NFKD", value)

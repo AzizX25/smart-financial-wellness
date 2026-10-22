@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
-import socket
+from http.client import HTTPException
 from typing import Mapping, Sequence
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+from forecast_ai.inference_control import InferenceBusyError, local_inference_slot, remaining_timeout
 
 from forecast_ai.merchant_enrichment import (
     ENRICHMENT_PROVIDER_ID,
@@ -40,18 +42,19 @@ class OllamaEmbeddingProvider:
         self.settings = settings
 
     def embed(self, texts: Sequence[str]) -> list[list[float]]:
-        response = _post_json(
-            f"{self.settings.ollama_base_url}/api/embed",
-            {
-                "model": self.settings.embedding_model,
-                "input": list(texts),
-                "truncate": True,
-                "options": {"num_ctx": self.settings.context_size},
-            },
-            {},
-            self.settings.local_read_timeout_seconds,
-            retries=1,
-        )
+        options = {"num_ctx": self.settings.embedding_context_size}
+        if self.settings.embedding_cpu_only:
+            options["num_gpu"] = 0
+        try:
+            with local_inference_slot():
+                response = _post_json(
+                    f"{self.settings.ollama_base_url}/api/embed",
+                    {"model": self.settings.embedding_model, "input": list(texts),
+                     "truncate": True, "options": options},
+                    {}, self.settings.local_read_timeout_seconds, retries=0,
+                )
+        except (InferenceBusyError, TimeoutError) as exception:
+            raise EnrichmentProviderUnavailable("embedding provider unavailable") from exception
         embeddings = response.get("embeddings")
         if not isinstance(embeddings, list):
             raise EnrichmentProviderUnavailable("embedding response unavailable")
@@ -91,13 +94,14 @@ class OllamaReasoningProvider:
         self.settings = settings
 
     def reason(self, context: ReasoningContext) -> Mapping[str, object]:
-        response = _post_json(
-            f"{self.settings.ollama_base_url}/api/chat",
-            self.build_request(context),
-            {},
-            self.settings.local_read_timeout_seconds,
-            retries=1,
-        )
+        try:
+            with local_inference_slot():
+                response = _post_json(
+                    f"{self.settings.ollama_base_url}/api/chat", self.build_request(context),
+                    {}, self.settings.local_read_timeout_seconds, retries=0,
+                )
+        except (InferenceBusyError, TimeoutError) as exception:
+            raise EnrichmentProviderUnavailable("reasoning provider unavailable") from exception
         message = response.get("message")
         content = message.get("content") if isinstance(message, dict) else None
         if not isinstance(content, str):
@@ -154,7 +158,7 @@ class OllamaReasoningProvider:
             "stream": False,
             "think": False,
             "format": WebReasoningDecision.model_json_schema(by_alias=True),
-            "options": {"temperature": 0, "num_ctx": self.settings.context_size},
+            "options": {"temperature": 0, "num_ctx": self.settings.context_size, "num_predict": 512},
         }
 
 
@@ -179,12 +183,16 @@ def _post_json(
     for attempt in range(retries + 1):
         try:
             request = Request(url, data=encoded, headers=request_headers, method="POST")
-            with urlopen(request, timeout=timeout_seconds) as response:
-                decoded = json.loads(response.read().decode("utf-8"))
+            with urlopen(request, timeout=remaining_timeout(timeout_seconds)) as response:
+                raw = response.read(4 * 1024 * 1024 + 1)
+                if len(raw) > 4 * 1024 * 1024:
+                    raise ValueError("provider response exceeds allowed size")
+                remaining_timeout(timeout_seconds)
+                decoded = json.loads(raw.decode("utf-8"))
             if not isinstance(decoded, dict):
                 raise EnrichmentProviderUnavailable("provider response unavailable")
             return decoded
-        except (HTTPError, URLError, TimeoutError, socket.timeout, json.JSONDecodeError) as exception:
+        except (HTTPError, URLError, OSError, HTTPException, json.JSONDecodeError) as exception:
             if attempt >= retries:
                 raise EnrichmentProviderUnavailable("provider request unavailable") from exception
     raise EnrichmentProviderUnavailable("provider request unavailable")

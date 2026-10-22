@@ -162,7 +162,12 @@ class BankSynchronizationStore {
             }
 
             Map<String, TransactionRecord> existing = new HashMap<>();
+            java.util.Set<String> removed = new java.util.HashSet<>();
             if (!snapshot.transactions().isEmpty()) {
+                transactionRepository.lockBankReplayIdentities(account.getId(), snapshot.transactions().stream()
+                                .map(ExternalBankTransaction::externalTransactionId).toList())
+                        .stream().filter(TransactionRecordRepository.BankReplayIdentity::getRemoved)
+                        .forEach(identity -> removed.add(identity.getExternalId()));
                 transactionRepository.findByFinancialAccount_IdAndExternalTransactionIdIn(
                                 account.getId(),
                                 snapshot.transactions().stream()
@@ -173,6 +178,7 @@ class BankSynchronizationStore {
             }
 
             for (ExternalBankTransaction providerTransaction : snapshot.transactions()) {
+                if (removed.contains(providerTransaction.externalTransactionId())) continue;
                 TransactionRecord transaction = existing.get(providerTransaction.externalTransactionId());
                 TransactionRecord.Direction direction = TransactionRecord.Direction.valueOf(
                         providerTransaction.direction());

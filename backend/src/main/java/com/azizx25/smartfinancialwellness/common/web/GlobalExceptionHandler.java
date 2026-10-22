@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -154,6 +155,16 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST,
                         "Invalid value for request parameter '" + exception.getName() + "'",
                         request.getRequestURI()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<ApiError> handleUnsupportedMethod(
+            HttpRequestMethodNotSupportedException exception, HttpServletRequest request) {
+        var response = ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
+        String[] supported = exception.getSupportedMethods();
+        if (supported != null) response.header(HttpHeaders.ALLOW, String.join(", ", supported));
+        return response.body(ApiError.of(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
+                "Cette action n’est pas disponible pour cette ressource.", request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
