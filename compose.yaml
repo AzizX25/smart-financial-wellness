@@ -1,0 +1,154 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-smart_financial_wellness}
+      POSTGRES_USER: ${DB_USERNAME:-smart_financial_wellness}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-bank:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-smart_financial_wellness}
+      DB_USERNAME: ${DB_USERNAME:-smart_financial_wellness}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?AUTH_JWT_SECRET must be set}
+      MOCK_BANK_BASE_URL: http://mock-bank:8081
+      MOCK_BANK_CONNECT_TIMEOUT: ${MOCK_BANK_CONNECT_TIMEOUT:-2s}
+      MOCK_BANK_READ_TIMEOUT: ${MOCK_BANK_READ_TIMEOUT:-5s}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_AUTH: "false"
+      SMTP_STARTTLS_ENABLE: "false"
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+      AI_SERVICE_CONNECT_TIMEOUT: ${AI_SERVICE_CONNECT_TIMEOUT:-2s}
+      AI_SERVICE_READ_TIMEOUT: ${AI_SERVICE_READ_TIMEOUT:-5s}
+      AI_MERCHANT_CONNECT_TIMEOUT: ${AI_MERCHANT_CONNECT_TIMEOUT:-2s}
+      AI_MERCHANT_READ_TIMEOUT: ${AI_MERCHANT_READ_TIMEOUT:-90s}
+      AI_ASSISTANCE_CONNECT_TIMEOUT: ${AI_ASSISTANCE_CONNECT_TIMEOUT:-2s}
+      AI_ASSISTANCE_READ_TIMEOUT: ${AI_ASSISTANCE_READ_TIMEOUT:-35s}
+      RECOMMENDATION_EXPLAINER_ENABLED: ${RECOMMENDATION_EXPLAINER_ENABLED:-false}
+      RECEIPT_VISION_ENABLED: ${RECEIPT_VISION_ENABLED:-false}
+      AI_FORECAST_EXPECTED_MODEL_ID: ${AI_FORECAST_EXPECTED_MODEL_ID:-forecast-huber-synthetic-tnd}
+      AI_FORECAST_EXPECTED_MODEL_VERSION: ${AI_FORECAST_EXPECTED_MODEL_VERSION:-1.0.0}
+      AI_FORECAST_EXPECTED_FEATURE_VERSION: ${AI_FORECAST_EXPECTED_FEATURE_VERSION:-forecast-residual-features-v1}
+      AI_MERCHANT_EXPECTED_ENRICHMENT_MODEL_ID: ${OLLAMA_REASONING_MODEL:-qwen3:4b}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  ai-service:
+    build:
+      context: ./ai-service
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    environment:
+      MERCHANT_ENRICHMENT_ENABLED: ${MERCHANT_ENRICHMENT_ENABLED:-false}
+      RECOMMENDATION_EXPLAINER_ENABLED: ${RECOMMENDATION_EXPLAINER_ENABLED:-false}
+      RECEIPT_VISION_ENABLED: ${RECEIPT_VISION_ENABLED:-false}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-qwen2.5vl:3b}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_REASONING_MODEL: ${OLLAMA_REASONING_MODEL:-qwen3:4b}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+      OLLAMA_EMBEDDING_CPU_ONLY: ${OLLAMA_EMBEDDING_CPU_ONLY:-false}
+      OLLAMA_EMBEDDING_CONTEXT_SIZE: ${OLLAMA_EMBEDDING_CONTEXT_SIZE:-1024}
+      MERCHANT_BATCH_TIMEOUT_SECONDS: ${MERCHANT_BATCH_TIMEOUT_SECONDS:-80}
+      OLLAMA_ASSISTANCE_TIMEOUT_SECONDS: ${OLLAMA_ASSISTANCE_TIMEOUT_SECONDS:-30}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      OLLAMA_WEB_SEARCH_URL: ${OLLAMA_WEB_SEARCH_URL:-https://ollama.com/api/web_search}
+      OLLAMA_READ_TIMEOUT_SECONDS: ${OLLAMA_READ_TIMEOUT_SECONDS:-12}
+      OLLAMA_SEARCH_TIMEOUT_SECONDS: ${OLLAMA_SEARCH_TIMEOUT_SECONDS:-8}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${FRONTEND_API_URL:-http://localhost:8080}
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+  mock-bank-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${MOCK_BANK_DB_NAME:-mock_bank}
+      POSTGRES_USER: ${MOCK_BANK_DB_USERNAME:-mock_bank}
+      POSTGRES_PASSWORD: ${MOCK_BANK_DB_PASSWORD:?MOCK_BANK_DB_PASSWORD must be set}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - mock-bank-data:/var/lib/postgresql/data
+
+  mock-bank:
+    build:
+      context: ./mock-bank
+    depends_on:
+      mock-bank-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://mock-bank-db:5432/${MOCK_BANK_DB_NAME:-mock_bank}
+      DB_USERNAME: ${MOCK_BANK_DB_USERNAME:-mock_bank}
+      DB_PASSWORD: ${MOCK_BANK_DB_PASSWORD:?MOCK_BANK_DB_PASSWORD must be set}
+      MOCK_BANK_JWT_SECRET: ${MOCK_BANK_JWT_SECRET:?MOCK_BANK_JWT_SECRET must be set}
+      MOCK_BANK_JWT_ISSUER: ${MOCK_BANK_JWT_ISSUER:-smart-financial-wellness-mock-bank}
+      MOCK_BANK_JWT_AUDIENCE: ${MOCK_BANK_JWT_AUDIENCE:-smart-financial-wellness-backend}
+      MOCK_BANK_ACCESS_TOKEN_TTL: ${MOCK_BANK_ACCESS_TOKEN_TTL:-10m}
+      MOCK_BANK_ADMIN_ACCESS_TOKEN_TTL: ${MOCK_BANK_ADMIN_ACCESS_TOKEN_TTL:-15m}
+      MOCK_BANK_ADMIN_UI_ORIGIN: ${MOCK_BANK_ADMIN_UI_ORIGIN:-http://localhost:5174}
+      SPRING_PROFILES_ACTIVE: ${MOCK_BANK_SPRING_PROFILES_ACTIVE:-default}
+      SUPERVISOR_DEMO_ENABLED: ${SUPERVISOR_DEMO_ENABLED:-false}
+      MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED: ${MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED:-false}
+      MOCK_BANK_ADMIN_BOOTSTRAP_USERNAME: ${DEMO_MOCK_BANK_ADMIN_USERNAME:-local.demo.admin}
+      MOCK_BANK_ADMIN_BOOTSTRAP_PASSWORD: ${DEMO_MOCK_BANK_ADMIN_PASSWORD:-}
+    ports:
+      - "${MOCK_BANK_PORT:-8081}:8081"
+
+  mock-bank-ui:
+    build:
+      context: ./mock-bank-ui
+      args:
+        VITE_MOCK_BANK_API_URL: ${MOCK_BANK_ADMIN_API_URL:-http://localhost:8081}
+    depends_on:
+      mock-bank:
+        condition: service_started
+    ports:
+      - "${MOCK_BANK_UI_PORT:-5174}:80"
+
+volumes:
+  postgres-data:
+  mock-bank-data:

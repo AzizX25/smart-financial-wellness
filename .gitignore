@@ -58,6 +58,7 @@ logs/
 .env
 .env.*
 !.env.example
+!.env.demo.example
 *.pem
 *.key
 *.p12
@@ -67,6 +68,7 @@ credentials/
 application-local.properties
 application-local.yml
 application-local.yaml
+sfwa-postgresql-flyway-migrations.zip
 
 # Docker local overrides
 docker-compose.override.yml
@@ -83,6 +85,8 @@ compose.override.yaml
 *.pkl
 *.pickle
 *.joblib
+!ai-service/models/forecast/*.joblib
+!ai-service/models/merchant/*.joblib
 *.onnx
 *.pt
 *.pth
@@ -102,3 +106,14 @@ temp/
 *.swp
 *.swo
 *~
+
+# Local academic drafts and rendered artifacts, not application release files.
+/Report/
+/Report_*/
+/Report*.zip
+/Final_Report_*/
+/Final_Report_*.zip
+/final report.zip
+/journal_stage_4_en.pdf
+/main.pdf
+/output/

@@ -1,0 +1,2327 @@
+{
+  "title": "Smart Financial Wellness Advisor — modèle C4",
+  "date": "2026-10-12",
+  "scope": "Architecture du worktree actuel, y compris les composants implémentés non encore commités.",
+  "diagrams": [
+    {
+      "id": "01-context",
+      "title": "C1 · Contexte du système",
+      "scope": "Smart Financial Wellness Advisor et ses utilisateurs / systèmes externes.",
+      "width": 1370,
+      "height": 1050,
+      "nodes": [
+        {
+          "id": "user",
+          "title": "Utilisateur",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Consulte et organise ses finances par devise.",
+          "x": 70,
+          "y": 110,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "sfwa",
+          "title": "Smart Financial Wellness",
+          "kind": "system",
+          "type": "Système logiciel",
+          "technology": "React · Spring Boot · FastAPI",
+          "description": "Budgets, objectifs, prévisions, score et pistes explicables.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/App.jsx",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java"
+          ]
+        },
+        {
+          "id": "bank",
+          "title": "Banque simulée",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "mock-bank + console admin",
+          "description": "Fournit des données synthétiques ; API de lecture et gestion admin.",
+          "x": 970,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java",
+            "mock-bank-ui/src/App.jsx"
+          ]
+        },
+        {
+          "id": "admin",
+          "title": "Administrateur démo",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Gère uniquement les clients et opérations synthétiques.",
+          "x": 970,
+          "y": 110,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "research",
+          "title": "Développeur / stagiaire",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Prépare et évalue les modèles sur des données synthétiques.",
+          "x": 520,
+          "y": 110,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/scripts"
+          ]
+        },
+        {
+          "id": "mail",
+          "title": "Messagerie locale",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "Mailpit · SMTP",
+          "description": "Reçoit les emails de vérification et de réinitialisation.",
+          "x": 70,
+          "y": 680,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java"
+          ]
+        },
+        {
+          "id": "ollama",
+          "title": "Inférence locale",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "Ollama sur le poste",
+          "description": "Embeddings, raisonnement et vision selon la configuration.",
+          "x": 520,
+          "y": 680,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py",
+            "ai-service/src/forecast_ai/assistance.py"
+          ]
+        },
+        {
+          "id": "web",
+          "title": "Recherche web Ollama",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTPS · fournisseur externe",
+          "description": "Recherche de marchands publics, uniquement si enrichissement activé.",
+          "x": 970,
+          "y": 680,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "user",
+          "to": "sfwa",
+          "label": "Utilise les fonctionnalités authentifiées",
+          "dashed": false
+        },
+        {
+          "from": "research",
+          "to": "sfwa",
+          "label": "Publie des artefacts validés hors ligne",
+          "dashed": true
+        },
+        {
+          "from": "admin",
+          "to": "bank",
+          "label": "Utilise la console d'administration",
+          "dashed": false
+        },
+        {
+          "from": "sfwa",
+          "to": "bank",
+          "label": "Authentification bancaire et lectures REST",
+          "dashed": false
+        },
+        {
+          "from": "sfwa",
+          "to": "mail",
+          "label": "Emails après commit / SMTP",
+          "dashed": false
+        },
+        {
+          "from": "sfwa",
+          "to": "ollama",
+          "label": "Inférence locale optionnelle / HTTP",
+          "dashed": true
+        },
+        {
+          "from": "sfwa",
+          "to": "web",
+          "label": "Recherche publique optionnelle de marchands / HTTPS",
+          "dashed": true
+        }
+      ],
+      "boundaries": [],
+      "notes": [
+        "La banque est synthétique : aucune connexion à une banque réelle n'est démontrée.",
+        "La recherche web est réservée à l'enrichissement marchand. Les explications et tickets restent locaux.",
+        "Le score et les recommandations sont déterministes ; l'IA ne choisit ni leur valeur ni leur priorité."
+      ]
+    },
+    {
+      "id": "02-containers",
+      "title": "C2 · Conteneurs et frontières",
+      "scope": "Applications et données ; le déploiement Docker est détaillé séparément.",
+      "width": 1640,
+      "height": 1580,
+      "nodes": [
+        {
+          "id": "admin",
+          "title": "Administrateur démo",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Opère la banque simulée.",
+          "x": 50,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "user",
+          "title": "Utilisateur",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Navigue dans l'application principale.",
+          "x": 470,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "dev",
+          "title": "Développeur / stagiaire",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Lance les scripts et notebooks hors ligne.",
+          "x": 870,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "bankui",
+          "title": "Console mock-bank",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "React · Vite · JavaScript",
+          "description": "Gestion de données synthétiques ; client admin séparé.",
+          "x": 50,
+          "y": 350,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank-ui/src/App.jsx"
+          ]
+        },
+        {
+          "id": "bank",
+          "title": "API mock-bank",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Java 21 · Spring Boot 4.1",
+          "description": "JWT fournisseur/admin, comptes, soldes et transactions.",
+          "x": 50,
+          "y": 640,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java"
+          ]
+        },
+        {
+          "id": "bankdb",
+          "title": "Base mock-bank",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "PostgreSQL 17 · schéma mock_bank",
+          "description": "Clients, ledger synthétique et historique Flyway indépendant.",
+          "x": 50,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/resources/db/migration"
+          ]
+        },
+        {
+          "id": "frontend",
+          "title": "Application principale",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "React · Vite · JavaScript",
+          "description": "Authentification, finances, budgets, objectifs et insights.",
+          "x": 470,
+          "y": 350,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "id": "backend",
+          "title": "API principale",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Java 21 · Spring Boot 4.1",
+          "description": "Autorisation, règles métier, données locales et orchestrations.",
+          "x": 470,
+          "y": 640,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java",
+            "backend/pom.xml"
+          ]
+        },
+        {
+          "id": "db",
+          "title": "Base applicative",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "PostgreSQL 17",
+          "description": "Schéma smart_financial_wellness ; Flyway V1 à V22.",
+          "x": 470,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/resources/db/migration",
+            "backend/src/main/resources/application.properties"
+          ]
+        },
+        {
+          "id": "mail",
+          "title": "Emails de développement",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "Mailpit · SMTP",
+          "description": "Capture locale des emails d'actions de compte.",
+          "x": 1270,
+          "y": 1220,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "ai",
+          "title": "Service d'inférence",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Python · FastAPI · scikit-learn",
+          "description": "Prévision résiduelle, reconnaissance et assistance optionnelle.",
+          "x": 870,
+          "y": 640,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/main.py"
+          ]
+        },
+        {
+          "id": "artifacts",
+          "title": "Modèles et métadonnées",
+          "kind": "artifact",
+          "type": "Artefacts versionnés",
+          "technology": "joblib · JSON · empreintes",
+          "description": "Huber TND figé et catalogue / modèle marchand versionnés.",
+          "x": 870,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/models"
+          ]
+        },
+        {
+          "id": "pipeline",
+          "title": "Pipeline ML hors ligne",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Python · scripts · notebooks",
+          "description": "Génération, préparation, entraînement, évaluation et export.",
+          "x": 870,
+          "y": 1220,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src",
+            "ml-pipeline/scripts"
+          ]
+        },
+        {
+          "id": "ollama",
+          "title": "Ollama local",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTP · hôte :11434",
+          "description": "Modèles configurables de raisonnement, embedding et vision.",
+          "x": 1270,
+          "y": 640,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py",
+            "ai-service/src/forecast_ai/assistance.py"
+          ]
+        },
+        {
+          "id": "web",
+          "title": "Ollama Web Search",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTPS · ollama.com",
+          "description": "Evidence publique bornée pour les marchands.",
+          "x": 1270,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "admin",
+          "to": "bankui",
+          "label": "Utilise la console / navigateur",
+          "dashed": false
+        },
+        {
+          "from": "bankui",
+          "to": "bank",
+          "label": "REST / JSON + JWT administrateur",
+          "dashed": false
+        },
+        {
+          "from": "user",
+          "to": "frontend",
+          "label": "Utilise la SPA / navigateur",
+          "dashed": false
+        },
+        {
+          "from": "frontend",
+          "to": "backend",
+          "label": "REST / JSON + JWT et cookie refresh",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "db",
+          "label": "JPA / JDBC / Flyway",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "bank",
+          "label": "Ports internes / REST + JWT fournisseur",
+          "dashed": false
+        },
+        {
+          "from": "bank",
+          "to": "bankdb",
+          "label": "JPA / Flyway ; données propres",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "mail",
+          "label": "SMTP après commit",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "ai",
+          "label": "HTTP interne / contrats JSON stricts",
+          "dashed": false
+        },
+        {
+          "from": "ai",
+          "to": "artifacts",
+          "label": "Charge et vérifie les modèles au démarrage",
+          "dashed": false
+        },
+        {
+          "from": "dev",
+          "to": "pipeline",
+          "label": "Exécute scripts et notebooks",
+          "dashed": false
+        },
+        {
+          "from": "pipeline",
+          "to": "artifacts",
+          "label": "Export contrôlé puis inclusion dans l'image",
+          "dashed": true
+        },
+        {
+          "from": "ai",
+          "to": "ollama",
+          "label": "Inférence locale bornée / HTTP",
+          "dashed": true
+        },
+        {
+          "from": "ai",
+          "to": "web",
+          "label": "Recherche marchande bornée / HTTPS",
+          "dashed": true
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "Système bancaire simulé",
+          "x": 20,
+          "y": 290,
+          "width": 370,
+          "height": 980
+        },
+        {
+          "title": "Smart Financial Wellness Advisor",
+          "x": 420,
+          "y": 290,
+          "width": 820,
+          "height": 1190
+        }
+      ],
+      "notes": [
+        "Le frontend principal ne contacte que l'API principale. La console mock-bank est un autre client et contacte sa propre API.",
+        "Aucun accès croisé aux deux bases. Le service IA ne dispose pas d'accès PostgreSQL.",
+        "Le pipeline n'est ni un service Compose ni un entraînement en ligne ; les artefacts sont copiés dans l'image ai-service."
+      ]
+    },
+    {
+      "id": "03-backend-data",
+      "title": "C3 · Backend : accès et données",
+      "scope": "Composants logiques du backend principal ; chaque domaine regroupe contrôleurs, services et repositories.",
+      "width": 1760,
+      "height": 1630,
+      "nodes": [
+        {
+          "id": "front",
+          "title": "SPA principale",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "REST / JSON",
+          "description": "Les appels sont centrés sur l'utilisateur authentifié.",
+          "x": 520,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/services/apiClient.js"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Sécurité et API commune",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "Spring Security · JWT · validation",
+          "description": "Principal et statuts relus en base ; erreurs JSON et CORS.",
+          "x": 520,
+          "y": 360,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/config/SecurityConfiguration.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/security/StatusAwareAuthorizationFilter.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/common/web"
+          ]
+        },
+        {
+          "id": "auth",
+          "title": "Authentification locale",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "auth/ · email/",
+          "description": "BCrypt, vérification email, refresh rotatif et réinitialisation.",
+          "x": 70,
+          "y": 620,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AuthService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AccountActionService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/auth/RefreshTokenService.java"
+          ]
+        },
+        {
+          "id": "profile",
+          "title": "Utilisateur et préférences",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "profile/ · user/",
+          "description": "Profil principal-scoped ; devise, langue et timezone.",
+          "x": 520,
+          "y": 620,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/profile/api/ProfileController.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/user/persistence"
+          ]
+        },
+        {
+          "id": "bank",
+          "title": "Connexion et synchronisation",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "bank/ · adaptateur RestClient",
+          "description": "Lecture fournisseur puis upsert local atomique et idempotent.",
+          "x": 970,
+          "y": 620,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/BankSynchronizationService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java"
+          ]
+        },
+        {
+          "id": "imports",
+          "title": "Import CSV",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "imports/",
+          "description": "Prévisualisation, mapping confirmé et import idempotent.",
+          "x": 70,
+          "y": 880,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/imports/CsvImportService.java"
+          ]
+        },
+        {
+          "id": "category",
+          "title": "Catégories et revue",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "category/",
+          "description": "Règles, corrections manuelles, mémoire privée et suggestions PENDING.",
+          "x": 520,
+          "y": 880,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategoryService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategorizationReviewService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/category/MerchantRecognitionService.java"
+          ]
+        },
+        {
+          "id": "reads",
+          "title": "Comptes / transactions / budget",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "bank/ · lectures SQL",
+          "description": "Agrégations locales par propriétaire, mois et devise.",
+          "x": 970,
+          "y": 880,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/LocalBankDataService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/api/LocalBankDataController.java"
+          ]
+        },
+        {
+          "id": "audit",
+          "title": "Audit technique",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "audit/",
+          "description": "Trace des opérations sensibles ; journal append-only.",
+          "x": 520,
+          "y": 1140,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java"
+          ]
+        },
+        {
+          "id": "mail",
+          "title": "Mailpit",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "SMTP",
+          "description": "Capture des emails envoyés après commit.",
+          "x": 70,
+          "y": 1400,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java"
+          ]
+        },
+        {
+          "id": "db",
+          "title": "PostgreSQL applicatif",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "JPA / JDBC · Flyway",
+          "description": "Comptes, transactions, catégories, identités et journal.",
+          "x": 520,
+          "y": 1400,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/resources/db/migration"
+          ]
+        },
+        {
+          "id": "bankapi",
+          "title": "API mock-bank",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "REST / JWT fournisseur",
+          "description": "Client synthétique issu de la connexion stockée.",
+          "x": 1390,
+          "y": 620,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java"
+          ]
+        },
+        {
+          "id": "ai",
+          "title": "FastAPI marchand",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTP / JSON strict",
+          "description": "Reçoit clé opaque et libellé assaini ; aucun montant ni UUID SQL.",
+          "x": 970,
+          "y": 1400,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "front",
+          "to": "security",
+          "label": "Entrée HTTP authentifiée / principal",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "db",
+          "label": "Relit identité et statut / JPA",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "auth",
+          "label": "Routes d'authentification locales",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "profile",
+          "label": "Accès profil autorisé",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "bank",
+          "label": "Accès métier ACTIVE",
+          "dashed": false
+        },
+        {
+          "from": "bank",
+          "to": "bankapi",
+          "label": "Authentifie / lit via les ports internes",
+          "dashed": false
+        },
+        {
+          "from": "bank",
+          "to": "db",
+          "label": "Écrit le résultat validé après appels HTTP",
+          "dashed": false
+        },
+        {
+          "from": "imports",
+          "to": "db",
+          "label": "Crée transactions FILE_IMPORT après confirmation",
+          "dashed": false
+        },
+        {
+          "from": "category",
+          "to": "db",
+          "label": "Lit category_id actuel ; écrit revue et mémoire",
+          "dashed": false
+        },
+        {
+          "from": "category",
+          "to": "ai",
+          "label": "Reconnaissance optionnelle hors transaction SQL",
+          "dashed": true
+        },
+        {
+          "from": "reads",
+          "to": "db",
+          "label": "Lit l'historique local et les dépenses réelles",
+          "dashed": false
+        },
+        {
+          "from": "auth",
+          "to": "mail",
+          "label": "Email après validation du commit / SMTP",
+          "dashed": false
+        },
+        {
+          "from": "auth",
+          "to": "audit",
+          "label": "Trace actions d'authentification",
+          "dashed": false
+        },
+        {
+          "from": "audit",
+          "to": "db",
+          "label": "Ajoute des événements",
+          "dashed": false
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "Backend principal / frontières logiques",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 1030
+        }
+      ],
+      "notes": [
+        "Les domaines imports, category et bank/lectures passent eux aussi par la même chaîne de sécurité ; toutes les flèches du fan-out ne sont pas répétées.",
+        "Les catégories manuelles et déterministes restent prioritaires. Une reconnaissance crée une suggestion, jamais une affectation ML automatique.",
+        "Tous les domaines utilisent leur propre accès aux repositories applicatifs ; les principales écritures sont montrées. Les appels IA/fournisseur restent hors transactions SQL."
+      ]
+    },
+    {
+      "id": "04-backend-insights",
+      "title": "C3 · Backend : planification et insights",
+      "scope": "Règles financières exécutables ; aucun de ces composants n'est un microservice indépendant.",
+      "width": 1370,
+      "height": 1630,
+      "nodes": [
+        {
+          "id": "front",
+          "title": "Frontend authentifié",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "API REST",
+          "description": "Budgets, objectifs, prévisions, score et prochaines étapes.",
+          "x": 520,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/services"
+          ]
+        },
+        {
+          "id": "salary",
+          "title": "Salary Planning",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "salary/",
+          "description": "Plan mois/devise, revenus, allocations et capacité d'épargne.",
+          "x": 70,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/salary/SalaryPlanService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/salary/HistoricalSalaryRecommendationService.java"
+          ]
+        },
+        {
+          "id": "goals",
+          "title": "Goals",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "goal/",
+          "description": "Progression par contributions, allocations et simulations temporaires.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalAllocationService.java"
+          ]
+        },
+        {
+          "id": "forecast",
+          "title": "Forecast",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "forecast/",
+          "description": "Solde observé + flux restant déterministe + résidu ML éligible.",
+          "x": 970,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/ForecastService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/DeterministicForecastCalculator.java"
+          ]
+        },
+        {
+          "id": "score",
+          "title": "Financial Wellness Score",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "score/",
+          "description": "Score déterministe, facteurs disponibles et snapshots immuables.",
+          "x": 70,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialScoreService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialWellnessScoreCalculator.java"
+          ]
+        },
+        {
+          "id": "recs",
+          "title": "Recommendations",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "recommendation/",
+          "description": "Règles versionnées, justifications et feedback idempotent.",
+          "x": 520,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationRules.java"
+          ]
+        },
+        {
+          "id": "assist",
+          "title": "Assistance locale",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "assistance/",
+          "description": "Explication limitée et ticket validé ; aucun changement financier.",
+          "x": 970,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceService.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java"
+          ]
+        },
+        {
+          "id": "db",
+          "title": "PostgreSQL applicatif",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "JPA / JDBC · Flyway V1–V22",
+          "description": "Plans, goals, transactions, snapshots, facteurs et recommandations.",
+          "x": 520,
+          "y": 1400,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/resources/db/migration"
+          ]
+        },
+        {
+          "id": "ai",
+          "title": "FastAPI",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTP interne",
+          "description": "Résidu Forecast, explication et extraction de ticket.",
+          "x": 970,
+          "y": 1400,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/main.py"
+          ]
+        },
+        {
+          "id": "audit",
+          "title": "Audit append-only",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "audit/",
+          "description": "Événements métiers sans mots de passe ni tokens.",
+          "x": 70,
+          "y": 1040,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "front",
+          "to": "salary",
+          "label": "REST : plans mensuels",
+          "dashed": false
+        },
+        {
+          "from": "front",
+          "to": "goals",
+          "label": "REST : objectifs et répartition",
+          "dashed": false
+        },
+        {
+          "from": "front",
+          "to": "forecast",
+          "label": "REST : génération et simulations",
+          "dashed": false
+        },
+        {
+          "from": "front",
+          "to": "score",
+          "label": "REST : score de bien-être",
+          "dashed": false
+        },
+        {
+          "from": "front",
+          "to": "recs",
+          "label": "REST : génération et feedback",
+          "dashed": false
+        },
+        {
+          "from": "front",
+          "to": "assist",
+          "label": "REST : explication et ticket",
+          "dashed": false
+        },
+        {
+          "from": "salary",
+          "to": "db",
+          "label": "Lit historique ; stocke montants et métadonnées",
+          "dashed": false
+        },
+        {
+          "from": "goals",
+          "to": "db",
+          "label": "Lit MonthlyPlan ; écrit contributions / allocations",
+          "dashed": false
+        },
+        {
+          "from": "forecast",
+          "to": "db",
+          "label": "Lit snapshots et historique ; stocke la prévision",
+          "dashed": false
+        },
+        {
+          "from": "forecast",
+          "to": "ai",
+          "label": "Résidu agrégé TND / repli déterministe",
+          "dashed": true
+        },
+        {
+          "from": "recs",
+          "to": "score",
+          "label": "Obtient l'évaluation autoritaire et ses facteurs",
+          "dashed": false
+        },
+        {
+          "from": "score",
+          "to": "db",
+          "label": "Lit faits ; publie snapshot immutable",
+          "dashed": false
+        },
+        {
+          "from": "recs",
+          "to": "db",
+          "label": "Stocke justifications et feedback",
+          "dashed": false
+        },
+        {
+          "from": "assist",
+          "to": "recs",
+          "label": "Lit une recommandation appartenant à l'utilisateur",
+          "dashed": false
+        },
+        {
+          "from": "assist",
+          "to": "ai",
+          "label": "Explication ou image éphémère / HTTP",
+          "dashed": true
+        },
+        {
+          "from": "score",
+          "to": "audit",
+          "label": "Trace génération de score",
+          "dashed": false
+        },
+        {
+          "from": "recs",
+          "to": "audit",
+          "label": "Trace génération et feedback",
+          "dashed": false
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "Backend principal / domaines métier",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 1010
+        }
+      ],
+      "notes": [
+        "Le lien Salary Planning → Goals est la donnée MonthlyPlan/goal_allocation en base, pas un appel inventé entre services.",
+        "Le score et les règles de recommandation n'utilisent aucun LLM. Les facteurs indisponibles sont exclus ; aucun facteur n'est inventé.",
+        "L'IA explique seulement une règle contrôlée ; ses échecs conservent le texte déterministe. Le ticket passe par une revue humaine et un export CSV séparé."
+      ]
+    },
+    {
+      "id": "05-frontend",
+      "title": "C3 · Frontend principal",
+      "scope": "Composants React et client API partagés ; toute communication réseau passe par le backend.",
+      "width": 1370,
+      "height": 1380,
+      "nodes": [
+        {
+          "id": "user",
+          "title": "Utilisateur",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Navigue, synchronise, corrige et confirme.",
+          "x": 520,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "routes",
+          "title": "Routes et AppShell",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "React Router · AppShell",
+          "description": "Navigation, accès protégé, sidebar et mises en page responsive.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/App.jsx",
+            "frontend/src/components/AppShell.jsx"
+          ]
+        },
+        {
+          "id": "auth",
+          "title": "Session et onboarding",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "AuthContext · ProtectedRoute",
+          "description": "Login, vérification email et reprise de session.",
+          "x": 70,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/auth/AuthContext.jsx",
+            "frontend/src/auth/ProtectedRoute.jsx"
+          ]
+        },
+        {
+          "id": "pages",
+          "title": "Pages financières",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "pages/",
+          "description": "Dashboard, transactions, catégories, banque, budgets, goals et forecast.",
+          "x": 520,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/pages"
+          ]
+        },
+        {
+          "id": "widgets",
+          "title": "Composants de présentation",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "Ui · design-system.css",
+          "description": "Montants affichés, score, badges et graphique Forecast indicatif.",
+          "x": 970,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/components/Ui.jsx",
+            "frontend/src/components/ForecastBalanceChart.jsx",
+            "frontend/src/design-system.css"
+          ]
+        },
+        {
+          "id": "finance",
+          "title": "Données et invalidation",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "FinancialDataContext",
+          "description": "Charge les données locales ; recharge après les mutations.",
+          "x": 70,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/financial/FinancialDataContext.jsx"
+          ]
+        },
+        {
+          "id": "receipt",
+          "title": "Import et revue de ticket",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "CsvImportPanel · ReceiptPanel",
+          "description": "Revue humaine puis CSV ; aucune transaction créée par extraction.",
+          "x": 970,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/components/CsvImportPanel.jsx",
+            "frontend/src/components/ReceiptPanel.jsx",
+            "frontend/src/services/receiptCsv.js"
+          ]
+        },
+        {
+          "id": "api",
+          "title": "Client HTTP authentifié",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "services/ · apiClient.js",
+          "description": "JWT en mémoire, refresh partagé, erreurs et paramètres encodés.",
+          "x": 520,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/services/apiClient.js",
+            "frontend/src/services/authApi.js",
+            "frontend/src/services/forecastApi.js"
+          ]
+        },
+        {
+          "id": "backend",
+          "title": "API principale",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTP / REST / JSON",
+          "description": "Source de vérité : ownership, totaux, scores et projections.",
+          "x": 520,
+          "y": 1200,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "user",
+          "to": "routes",
+          "label": "Navigation et actions explicites",
+          "dashed": false
+        },
+        {
+          "from": "routes",
+          "to": "auth",
+          "label": "Vérifie la session",
+          "dashed": false
+        },
+        {
+          "from": "routes",
+          "to": "pages",
+          "label": "Affiche les pages autorisées",
+          "dashed": false
+        },
+        {
+          "from": "pages",
+          "to": "widgets",
+          "label": "Réutilise les primitives et représentations",
+          "dashed": false
+        },
+        {
+          "from": "pages",
+          "to": "finance",
+          "label": "Consomme et invalide les données",
+          "dashed": false
+        },
+        {
+          "from": "auth",
+          "to": "api",
+          "label": "Authentification et refresh",
+          "dashed": false
+        },
+        {
+          "from": "pages",
+          "to": "api",
+          "label": "Services API par fonctionnalité",
+          "dashed": false
+        },
+        {
+          "from": "receipt",
+          "to": "api",
+          "label": "Prévisualisation CSV et extraction de ticket",
+          "dashed": false
+        },
+        {
+          "from": "receipt",
+          "to": "pages",
+          "label": "CSV vérifié à importer séparément",
+          "dashed": false
+        },
+        {
+          "from": "finance",
+          "to": "api",
+          "label": "Comptes, agrégations et transactions",
+          "dashed": false
+        },
+        {
+          "from": "api",
+          "to": "backend",
+          "label": "REST + JWT / cookie HttpOnly",
+          "dashed": false
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "SPA frontend / composants logiques",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 840
+        }
+      ],
+      "notes": [
+        "Pas d'appel navigateur vers :8081, FastAPI, Ollama ou une base de données.",
+        "Le graphique Forecast relie le solde daté à la prévision de fin de mois ; il n'invente pas des prédictions quotidiennes.",
+        "La console mock-bank-ui est une autre SPA, avec une session et une API d'administration séparées."
+      ]
+    },
+    {
+      "id": "06-ai-service",
+      "title": "C3 · Service d'inférence",
+      "scope": "Runtimes figés et fournisseurs bornés ; pas d'entraînement ni d'accès aux bases applicatives.",
+      "width": 1370,
+      "height": 1740,
+      "nodes": [
+        {
+          "id": "backend",
+          "title": "Backend principal",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTP / JSON strict",
+          "description": "Envoie uniquement le contrat minimal propre à chaque fonctionnalité.",
+          "x": 520,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java",
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java"
+          ]
+        },
+        {
+          "id": "api",
+          "title": "FastAPI et contrats",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "main.py · Pydantic",
+          "description": "Validation stricte, limites, erreurs sûres et health.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/main.py",
+            "ai-service/src/forecast_ai/contracts.py",
+            "ai-service/src/forecast_ai/merchant_contracts.py"
+          ]
+        },
+        {
+          "id": "forecast",
+          "title": "Résidu Forecast",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "ModelRuntime · scikit-learn",
+          "description": "Huber figé TND ; features agrégées ; sortie décimale.",
+          "x": 70,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/runtime.py",
+            "ai-service/src/forecast_ai/contracts.py"
+          ]
+        },
+        {
+          "id": "merchant",
+          "title": "Reconnaissance marchande",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "MerchantRuntime",
+          "description": "Alias/catalogue, modèle local puis enrichissement optionnel.",
+          "x": 520,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/merchant_runtime.py"
+          ]
+        },
+        {
+          "id": "assist",
+          "title": "Explication et vision",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "LocalAssistance · Pillow",
+          "description": "Règle contrôlée ou image assainie ; sorties strictes.",
+          "x": 970,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/assistance.py"
+          ]
+        },
+        {
+          "id": "artifacts",
+          "title": "Artefacts locaux",
+          "kind": "artifact",
+          "type": "Artefacts versionnés",
+          "technology": "models/forecast · models/merchant",
+          "description": "Modèles, métadonnées et versions vérifiés.",
+          "x": 70,
+          "y": 1210,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/models"
+          ]
+        },
+        {
+          "id": "enrich",
+          "title": "Enrichissement et admission",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "MerchantEnricher · inference_control",
+          "description": "Budget borné, cache catalogue public et un slot local partagé.",
+          "x": 520,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/merchant_enrichment.py",
+            "ai-service/src/forecast_ai/inference_control.py"
+          ]
+        },
+        {
+          "id": "ollama",
+          "title": "Ollama du poste",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "/api/embed · /api/chat",
+          "description": "Embedding, raisonnement et vision configurables.",
+          "x": 970,
+          "y": 1210,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py"
+          ]
+        },
+        {
+          "id": "web",
+          "title": "Ollama Web Search",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTPS / API fournisseur",
+          "description": "Résultats publics bornés ; URLs de preuve contrôlées.",
+          "x": 520,
+          "y": 1470,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "backend",
+          "to": "api",
+          "label": "Appelle les routes d'inférence internes",
+          "dashed": false
+        },
+        {
+          "from": "api",
+          "to": "forecast",
+          "label": "/forecast/predict-residual",
+          "dashed": false
+        },
+        {
+          "from": "api",
+          "to": "merchant",
+          "label": "/merchant-recognition/predict",
+          "dashed": false
+        },
+        {
+          "from": "api",
+          "to": "assist",
+          "label": "/recommendations/explain ; /receipts/extract",
+          "dashed": false
+        },
+        {
+          "from": "forecast",
+          "to": "artifacts",
+          "label": "Charge le Huber et vérifie son empreinte",
+          "dashed": false
+        },
+        {
+          "from": "merchant",
+          "to": "artifacts",
+          "label": "Charge catalogue et modèle marchand",
+          "dashed": false
+        },
+        {
+          "from": "merchant",
+          "to": "enrich",
+          "label": "Recours optionnel après modèle local",
+          "dashed": true
+        },
+        {
+          "from": "enrich",
+          "to": "ollama",
+          "label": "Embedding et raisonnement local bornés",
+          "dashed": true
+        },
+        {
+          "from": "enrich",
+          "to": "web",
+          "label": "Recherche marchande si activée",
+          "dashed": true
+        },
+        {
+          "from": "assist",
+          "to": "ollama",
+          "label": "Explication ou vision si activée",
+          "dashed": true
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "Processus FastAPI / Python",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 850
+        }
+      ],
+      "notes": [
+        "Aucun PostgreSQL ni stockage de tickets. Les appels externes appartiennent uniquement à l'enrichissement marchand.",
+        "Contrats et provenance sont validés avant toute suggestion ; le backend reste responsable de la persistance PENDING.",
+        "Le slot d'inférence couvre embeddings, raisonnement et assistance. Forecast et health restent indépendants."
+      ]
+    },
+    {
+      "id": "07-mock-bank",
+      "title": "C3 · Banque simulée",
+      "scope": "Services bancaires synthétiques et administration ; aucune règle de bien-être financier.",
+      "width": 1370,
+      "height": 1380,
+      "nodes": [
+        {
+          "id": "backend",
+          "title": "Backend principal",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "JWT fournisseur / REST",
+          "description": "Consomme seulement l'authentification et les lectures.",
+          "x": 70,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java"
+          ]
+        },
+        {
+          "id": "adminui",
+          "title": "Console administrateur",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "React · mock-bank-ui",
+          "description": "Gère les clients, comptes et opérations synthétiques.",
+          "x": 970,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank-ui/src/App.jsx"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Sécurité JWT et ownership",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "Spring Security",
+          "description": "JWT client/admin distincts ; CORS admin limité.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/config/MockBankSecurityConfiguration.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/security/MockBankJwtService.java"
+          ]
+        },
+        {
+          "id": "auth",
+          "title": "Authentification fournisseur",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "MockBankAuthenticationService",
+          "description": "Identifiants synthétiques BCrypt et JWT de courte durée.",
+          "x": 70,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/auth/MockBankAuthenticationService.java"
+          ]
+        },
+        {
+          "id": "queries",
+          "title": "Comptes / soldes / opérations",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "Account/Balance/TransactionQueryService",
+          "description": "Lectures publiques bornées et vérification du client propriétaire.",
+          "x": 520,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/account/AccountQueryService.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/account/BalanceQueryService.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/transaction/TransactionQueryService.java"
+          ]
+        },
+        {
+          "id": "admin",
+          "title": "Administration synthétique",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "AdminManagementService",
+          "description": "Création / état des clients, comptes et transactions du ledger.",
+          "x": 970,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminManagementService.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminAuthenticationService.java"
+          ]
+        },
+        {
+          "id": "demo",
+          "title": "Fixture superviseur",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "Profil demo + flag explicite",
+          "description": "Seeder idempotent et reset uniquement de l'identité démo.",
+          "x": 970,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/demo/api/SupervisorDemoFixtureController.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/demo/SupervisorDemoFixtureService.java"
+          ]
+        },
+        {
+          "id": "lookup",
+          "title": "Lookup et repositories",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "CustomerLookupService · JPA",
+          "description": "Existence, propriété et accès à la base du simulateur.",
+          "x": 520,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/java/com/azizx25/mockbank/customer/CustomerLookupService.java",
+            "mock-bank/src/main/java/com/azizx25/mockbank/account/persistence",
+            "mock-bank/src/main/java/com/azizx25/mockbank/transaction/persistence"
+          ]
+        },
+        {
+          "id": "db",
+          "title": "PostgreSQL mock_bank",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "Flyway V1–V4",
+          "description": "Données bancaires exclusivement synthétiques.",
+          "x": 520,
+          "y": 1200,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/src/main/resources/db/migration"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "backend",
+          "to": "security",
+          "label": "Login client puis lectures JWT",
+          "dashed": false
+        },
+        {
+          "from": "adminui",
+          "to": "security",
+          "label": "REST / JWT admin ; CORS :5174",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "auth",
+          "label": "Authentifie le client synthétique",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "queries",
+          "label": "Autorise les lectures client-scoped",
+          "dashed": false
+        },
+        {
+          "from": "security",
+          "to": "admin",
+          "label": "Autorise les opérations administrateur",
+          "dashed": false
+        },
+        {
+          "from": "queries",
+          "to": "lookup",
+          "label": "Vérifie le compte et son propriétaire",
+          "dashed": false
+        },
+        {
+          "from": "auth",
+          "to": "lookup",
+          "label": "Charge le client et son hash BCrypt",
+          "dashed": false
+        },
+        {
+          "from": "admin",
+          "to": "lookup",
+          "label": "Lit / modifie le ledger synthétique",
+          "dashed": false
+        },
+        {
+          "from": "demo",
+          "to": "lookup",
+          "label": "Réconcilie uniquement les fixtures démo",
+          "dashed": false
+        },
+        {
+          "from": "lookup",
+          "to": "db",
+          "label": "JPA ; transactions et migrations propres",
+          "dashed": false
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "API mock-bank / Java 21",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 840
+        }
+      ],
+      "notes": [
+        "Pas de flux OAuth Authorization Code / PKCE exécutable ; les tables de conception ne sont pas une API implémentée.",
+        "Un compte d'un autre client retourne 404 Account not found ; les entités JPA ne sont pas exposées.",
+        "La fixture nécessite le profil demo, un flag activé et une authentification administrateur."
+      ]
+    },
+    {
+      "id": "08-ml-pipeline",
+      "title": "C3 · Pipeline ML hors ligne",
+      "scope": "Flux de scripts / notebooks ; pas de service réseau ni de modification automatique des modèles en production.",
+      "width": 1370,
+      "height": 1380,
+      "nodes": [
+        {
+          "id": "dev",
+          "title": "Développeur / stagiaire",
+          "kind": "person",
+          "type": "Personne",
+          "technology": "",
+          "description": "Lance des expériences reproductibles et valide les résultats.",
+          "x": 520,
+          "y": 100,
+          "width": 310,
+          "height": 170,
+          "sources": []
+        },
+        {
+          "id": "generator",
+          "title": "Génération et validation",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "synthetic_data · validation",
+          "description": "Données synthétiques versionnées ; dates et devises contrôlées.",
+          "x": 70,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src/forecast_ml/synthetic_data.py",
+            "ml-pipeline/src/forecast_ml/validation.py"
+          ]
+        },
+        {
+          "id": "dataset",
+          "title": "Dataset et features",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "dataset_builder · feature_matrix",
+          "description": "Features connues au cutoff ; cible résiduelle sans fuite.",
+          "x": 520,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src/forecast_ml/dataset_builder.py",
+            "ml-pipeline/src/forecast_ml/feature_matrix.py"
+          ]
+        },
+        {
+          "id": "catalog",
+          "title": "Catalogue marchand",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "merchant_ml/catalog.py",
+          "description": "Taxonomie système et exemples marchands contrôlés.",
+          "x": 970,
+          "y": 380,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src/merchant_ml/catalog.py"
+          ]
+        },
+        {
+          "id": "training",
+          "title": "Expériences et évaluation",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "modeling · temporal_split · notebooks",
+          "description": "Comparaison des modèles, splits temporels et test préservé.",
+          "x": 520,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src/forecast_ml/modeling.py",
+            "ml-pipeline/src/forecast_ml/evaluation.py",
+            "ml-pipeline/notebooks"
+          ]
+        },
+        {
+          "id": "merchant",
+          "title": "Entraînement marchand",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "merchant_ml/artifact.py",
+          "description": "Prépare le modèle / catalogue local de reconnaissance.",
+          "x": 970,
+          "y": 660,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/src/merchant_ml/artifact.py"
+          ]
+        },
+        {
+          "id": "data",
+          "title": "Données et rapports locaux",
+          "kind": "artifact",
+          "type": "Artefacts versionnés",
+          "technology": "data/ · artifacts/",
+          "description": "Datasets et résultats générés ; hors Git lorsqu'ignorés.",
+          "x": 70,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/.gitignore"
+          ]
+        },
+        {
+          "id": "export",
+          "title": "Export contrôlé des modèles",
+          "kind": "component",
+          "type": "Composant",
+          "technology": "scripts/export_*_model.py",
+          "description": "Publie l'artefact choisi avec versions et provenance.",
+          "x": 520,
+          "y": 940,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/scripts/export_frozen_model.py",
+            "ml-pipeline/scripts/export_merchant_model.py"
+          ]
+        },
+        {
+          "id": "models",
+          "title": "Artefacts d'inférence figés",
+          "kind": "artifact",
+          "type": "Artefacts versionnés",
+          "technology": "ai-service/models",
+          "description": "Huber TND v1 et modèle marchand ; empaquetés au build.",
+          "x": 520,
+          "y": 1200,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/models"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "dev",
+          "to": "generator",
+          "label": "Exécute génération avec seed",
+          "dashed": false
+        },
+        {
+          "from": "generator",
+          "to": "dataset",
+          "label": "Transactions synthétiques validées",
+          "dashed": false
+        },
+        {
+          "from": "dataset",
+          "to": "training",
+          "label": "Exemples agrégés / features versionnées",
+          "dashed": false
+        },
+        {
+          "from": "dataset",
+          "to": "data",
+          "label": "Écrit dataset local",
+          "dashed": false
+        },
+        {
+          "from": "training",
+          "to": "data",
+          "label": "Écrit métriques et provenance",
+          "dashed": false
+        },
+        {
+          "from": "training",
+          "to": "export",
+          "label": "Sélection validée et export explicite",
+          "dashed": false
+        },
+        {
+          "from": "catalog",
+          "to": "merchant",
+          "label": "Exemples et taxonomie versionnés",
+          "dashed": false
+        },
+        {
+          "from": "merchant",
+          "to": "export",
+          "label": "Artefact marchand validé",
+          "dashed": false
+        },
+        {
+          "from": "export",
+          "to": "models",
+          "label": "Export avec empreintes / inclusion build",
+          "dashed": true
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "ml-pipeline / espace de travail hors ligne",
+          "x": 30,
+          "y": 300,
+          "width": 1300,
+          "height": 840
+        }
+      ],
+      "notes": [
+        "Le Huber Forecast est un prototype entraîné sur du synthétique TND ; il prédit le résidu du flux restant, pas directement un solde.",
+        "Pas d'accès automatique à PostgreSQL ; données préparées hors ligne et séparation entraînement / inférence.",
+        "L'export n'est pas un déploiement continu. Aucun réentraînement n'est lancé par une requête utilisateur."
+      ]
+    },
+    {
+      "id": "09-deployment",
+      "title": "Déploiement · Environnement local",
+      "scope": "Instances Compose actuelles et services sur le poste ; ports hôte configurables.",
+      "width": 1710,
+      "height": 1820,
+      "nodes": [
+        {
+          "id": "userbrowser",
+          "title": "Navigateur principal",
+          "kind": "container",
+          "type": "Instance client",
+          "technology": "SPA React côté navigateur",
+          "description": "Charge les assets puis appelle le backend publié.",
+          "x": 470,
+          "y": 110,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/src/services/apiClient.js"
+          ]
+        },
+        {
+          "id": "adminbrowser",
+          "title": "Navigateur administrateur",
+          "kind": "container",
+          "type": "Instance client",
+          "technology": "SPA mock-bank-ui",
+          "description": "Utilise uniquement la console et l'API bancaires.",
+          "x": 870,
+          "y": 110,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank-ui/src/api/adminApi.js"
+          ]
+        },
+        {
+          "id": "nginx",
+          "title": "frontend",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Nginx :80 → hôte :5173",
+          "description": "Sert les fichiers Vite ; URL API injectée au build.",
+          "x": 470,
+          "y": 370,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "frontend/Dockerfile",
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "adminnginx",
+          "title": "mock-bank-ui",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Nginx :80 → hôte :5174",
+          "description": "Sert la console synthétique séparée.",
+          "x": 870,
+          "y": 370,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank-ui/Dockerfile",
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "backend",
+          "title": "backend",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Spring Boot :8080",
+          "description": "BACKEND_PORT côté hôte ; courant observé :8082.",
+          "x": 470,
+          "y": 650,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "backend/Dockerfile",
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "mock",
+          "title": "mock-bank",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Spring Boot :8081",
+          "description": "API bancaire et admin ; données synthétiques.",
+          "x": 870,
+          "y": 650,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "mock-bank/Dockerfile",
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "pg",
+          "title": "postgres",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "PostgreSQL 17 :5432",
+          "description": "Volume postgres-data ; migrations applicatives.",
+          "x": 470,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "mockpg",
+          "title": "mock-bank-db",
+          "kind": "database",
+          "type": "Conteneur de données",
+          "technology": "PostgreSQL 17 :5432 interne",
+          "description": "Volume mock-bank-data indépendant.",
+          "x": 870,
+          "y": 930,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "ai",
+          "title": "ai-service",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "FastAPI / Uvicorn :8000 interne",
+          "description": "Artefacts inclus ; aucun port hôte publié.",
+          "x": 470,
+          "y": 1210,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/Dockerfile",
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "mail",
+          "title": "mailpit",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "SMTP :1025 · console :8025",
+          "description": "Messagerie locale de développement.",
+          "x": 870,
+          "y": 1210,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "pipeline",
+          "title": "Pipeline hors ligne",
+          "kind": "container",
+          "type": "Conteneur",
+          "technology": "Python sur le poste",
+          "description": "Scripts / notebooks ; hors Compose.",
+          "x": 470,
+          "y": 1530,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ml-pipeline/scripts"
+          ]
+        },
+        {
+          "id": "ollama",
+          "title": "Ollama sur le poste",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "host.docker.internal:11434",
+          "description": "Service local configurable ; modèles installés séparément.",
+          "x": 870,
+          "y": 1530,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "compose.yaml"
+          ]
+        },
+        {
+          "id": "web",
+          "title": "Recherche web Ollama",
+          "kind": "external",
+          "type": "Système externe",
+          "technology": "HTTPS / Internet",
+          "description": "Appel optionnel depuis ai-service uniquement.",
+          "x": 1290,
+          "y": 1210,
+          "width": 310,
+          "height": 170,
+          "sources": [
+            "ai-service/src/forecast_ai/ollama_providers.py"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "userbrowser",
+          "to": "nginx",
+          "label": "HTTP : assets React",
+          "dashed": false
+        },
+        {
+          "from": "adminbrowser",
+          "to": "adminnginx",
+          "label": "HTTP : assets console",
+          "dashed": false
+        },
+        {
+          "from": "userbrowser",
+          "to": "backend",
+          "label": "REST / JWT via port hôte configuré",
+          "dashed": false
+        },
+        {
+          "from": "adminbrowser",
+          "to": "mock",
+          "label": "REST / JWT admin via :8081",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "pg",
+          "label": "JDBC interne postgres:5432",
+          "dashed": false
+        },
+        {
+          "from": "mock",
+          "to": "mockpg",
+          "label": "JDBC interne mock-bank-db:5432",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "mock",
+          "label": "HTTP interne mock-bank:8081",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "ai",
+          "label": "HTTP interne ai-service:8000",
+          "dashed": false
+        },
+        {
+          "from": "backend",
+          "to": "mail",
+          "label": "SMTP interne mailpit:1025",
+          "dashed": false
+        },
+        {
+          "from": "ai",
+          "to": "ollama",
+          "label": "HTTP via host-gateway",
+          "dashed": true
+        },
+        {
+          "from": "ai",
+          "to": "web",
+          "label": "HTTPS pour enrichissement marchand",
+          "dashed": true
+        },
+        {
+          "from": "pipeline",
+          "to": "ai",
+          "label": "Artefacts exportés puis copiés au build",
+          "dashed": true
+        }
+      ],
+      "boundaries": [
+        {
+          "title": "Poste de développement",
+          "x": 20,
+          "y": 50,
+          "width": 1250,
+          "height": 1730
+        },
+        {
+          "title": "Docker Compose / réseau interne",
+          "x": 420,
+          "y": 300,
+          "width": 820,
+          "height": 1150
+        }
+      ],
+      "notes": [
+        "Les connexions navigateur vers le backend utilisent une URL publique ; les noms de service Compose sont réservés aux appels entre conteneurs.",
+        "Les ports sont les valeurs de Compose, configurables par environnement. :8082 est le port backend observé pendant cette session.",
+        "Les deux volumes PostgreSQL sont distincts. Les healthchecks et depends_on n'impliquent pas une disponibilité garantie des fonctionnalités IA."
+      ]
+    }
+  ]
+}

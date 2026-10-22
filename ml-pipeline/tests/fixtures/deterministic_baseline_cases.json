@@ -1,0 +1,85 @@
+[
+  {
+    "name": "no_usable_history",
+    "target_month": "2026-08",
+    "cutoff_day": 15,
+    "transactions": [],
+    "expected": {
+      "income": "0.0000",
+      "expense": "0.0000",
+      "net": "0.0000",
+      "usable_months": 0,
+      "fallback": "NO_USABLE_HISTORY"
+    }
+  },
+  {
+    "name": "one_usable_month",
+    "target_month": "2026-08",
+    "cutoff_day": 15,
+    "transactions": [
+      {"booking_date": "2026-07-16", "amount": "3.0000", "direction": "CREDIT"}
+    ],
+    "expected": {
+      "income": "3.0000",
+      "expense": "0.0000",
+      "net": "3.0000",
+      "usable_months": 1,
+      "fallback": "LIMITED_HISTORY"
+    }
+  },
+  {
+    "name": "six_month_credit_debit_average",
+    "target_month": "2026-08",
+    "cutoff_day": 15,
+    "transactions": [
+      {"booking_date": "2026-02-01", "amount": "999.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-03-16", "amount": "60.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-03-20", "amount": "30.0000", "direction": "DEBIT"},
+      {"booking_date": "2026-04-20", "amount": "90.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-04-21", "amount": "15.0000", "direction": "DEBIT"},
+      {"booking_date": "2026-05-01", "amount": "999.0000", "direction": "DEBIT"},
+      {"booking_date": "2026-06-30", "amount": "30.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-06-30", "amount": "45.0000", "direction": "DEBIT"},
+      {"booking_date": "2026-07-31", "amount": "120.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-07-31", "amount": "60.0000", "direction": "DEBIT"}
+    ],
+    "expected": {
+      "income": "50.0000",
+      "expense": "25.0000",
+      "net": "25.0000",
+      "usable_months": 6,
+      "fallback": "NONE"
+    }
+  },
+  {
+    "name": "short_month_cutoff_clamping",
+    "target_month": "2026-08",
+    "cutoff_day": 31,
+    "transactions": [
+      {"booking_date": "2026-02-01", "amount": "100.0000", "direction": "CREDIT"}
+    ],
+    "expected": {
+      "income": "0.0000",
+      "expense": "0.0000",
+      "net": "0.0000",
+      "usable_months": 1,
+      "fallback": "LIMITED_HISTORY"
+    }
+  },
+  {
+    "name": "half_even_rounding_negative_net",
+    "target_month": "2026-08",
+    "cutoff_day": 15,
+    "transactions": [
+      {"booking_date": "2026-06-16", "amount": "1.0000", "direction": "CREDIT"},
+      {"booking_date": "2026-07-16", "amount": "2.0001", "direction": "DEBIT"}
+    ],
+    "expected": {
+      "income": "0.5000",
+      "expense": "1.0000",
+      "net": "-0.5000",
+      "usable_months": 2,
+      "fallback": "LIMITED_HISTORY"
+    }
+  }
+]

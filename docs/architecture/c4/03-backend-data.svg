@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 2251" width="1760" height="2251" role="img" aria-labelledby="03-backend-data-title 03-backend-data-desc">
+<title id="03-backend-data-title">C3 · Backend : accès et données</title>
+<desc id="03-backend-data-desc">Composants logiques du backend principal ; chaque domaine regroupe contrôleurs, services et repositories. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="03-backend-data-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1760" height="2251" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Backend : accès et données</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="1030" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Backend principal / frontières logiques</text>
+<g data-edge="1"><title>Entrée HTTP authentifiée / principal</title><path d="M675 270 L675 298 L680 300 L680 330 L675 332 L675 360" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="2"><title>Relit identité et statut / JPA</title><path d="M675 530 L675 558 L680 560 L680 600 L850 600 L850 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="3"><title>Routes d&#x27;authentification locales</title><path d="M520 445 L492 445 L490 440 L410 440 L410 700 L408 705 L380 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="4"><title>Accès profil autorisé</title><path d="M675 530 L675 558 L680 560 L680 590 L675 592 L675 620" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="5"><title>Accès métier ACTIVE</title><path d="M830 445 L858 445 L860 440 L860 700 L940 700 L942 705 L970 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="6"><title>Authentifie / lit via les ports internes</title><path d="M1280 705 L1308 705 L1310 700 L1360 700 L1362 705 L1390 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="7"><title>Écrit le résultat validé après appels HTTP</title><path d="M1125 790 L1125 818 L1120 820 L860 820 L860 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="8"><title>Crée transactions FILE_IMPORT après confirmation</title><path d="M225 1050 L225 1078 L220 1080 L220 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="9"><title>Lit category_id actuel ; écrit revue et mémoire</title><path d="M675 1050 L675 1078 L680 1080 L680 1120 L500 1120 L500 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="10"><title>Reconnaissance optionnelle hors transaction SQL</title><path d="M675 1050 L675 1078 L680 1080 L1120 1080 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>Lit l&#x27;historique local et les dépenses réelles</title><path d="M1125 1050 L1125 1078 L1120 1080 L1110 1080 L1110 1350 L680 1350 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="12"><title>Email après validation du commit / SMTP</title><path d="M225 790 L225 818 L220 820 L220 860 L50 860 L50 1370 L220 1370 L225 1372 L225 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="13"><title>Trace actions d&#x27;authentification</title><path d="M225 790 L225 818 L220 820 L500 820 L500 1110 L680 1110 L675 1112 L675 1140" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="14"><title>Ajoute des événements</title><path d="M675 1310 L675 1338 L680 1340 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-node="front"><title>SPA principale: Les appels sont centrés sur l&#x27;utilisateur authentifié. | frontend/src/services/apiClient.js</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">SPA principale</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">REST / JSON</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Les appels sont centrés sur</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">l&#x27;utilisateur authentifié.</text>
+</g>
+<g data-node="security"><title>Sécurité et API commune: Principal et statuts relus en base ; erreurs JSON et CORS. | backend/src/main/java/com/azizx25/smartfinancialwellness/config/SecurityConfiguration.java; backend/src/main/java/com/azizx25/smartfinancialwellness/security/StatusAwareAuthorizationFilter.java; backend/src/main/java/com/azizx25/smartfinancialwellness/common/web</title>
+<rect x="520" y="360" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="389" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Sécurité et API commune</text>
+<text x="536" y="412" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="431" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Spring Security · JWT · validation</text>
+<text x="536" y="455" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Principal et statuts relus en base ;</text>
+<text x="536" y="472" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">erreurs JSON et CORS.</text>
+</g>
+<g data-node="auth"><title>Authentification locale: BCrypt, vérification email, refresh rotatif et réinitialisation. | backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AuthService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AccountActionService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/auth/RefreshTokenService.java</title>
+<rect x="70" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Authentification locale</text>
+<text x="86" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">auth/ · email/</text>
+<text x="86" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">BCrypt, vérification email, refresh</text>
+<text x="86" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">rotatif et réinitialisation.</text>
+</g>
+<g data-node="profile"><title>Utilisateur et préférences: Profil principal-scoped ; devise, langue et timezone. | backend/src/main/java/com/azizx25/smartfinancialwellness/profile/api/ProfileController.java; backend/src/main/java/com/azizx25/smartfinancialwellness/user/persistence</title>
+<rect x="520" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Utilisateur et préférences</text>
+<text x="536" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">profile/ · user/</text>
+<text x="536" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Profil principal-scoped ; devise,</text>
+<text x="536" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">langue et timezone.</text>
+</g>
+<g data-node="bank"><title>Connexion et synchronisation: Lecture fournisseur puis upsert local atomique et idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/BankSynchronizationService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java</title>
+<rect x="970" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Connexion et synchronisation</text>
+<text x="986" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">bank/ · adaptateur RestClient</text>
+<text x="986" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Lecture fournisseur puis upsert local</text>
+<text x="986" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">atomique et idempotent.</text>
+</g>
+<g data-node="imports"><title>Import CSV: Prévisualisation, mapping confirmé et import idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/imports/CsvImportService.java</title>
+<rect x="70" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Import CSV</text>
+<text x="86" y="932" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="951" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">imports/</text>
+<text x="86" y="975" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Prévisualisation, mapping confirmé et</text>
+<text x="86" y="992" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">import idempotent.</text>
+</g>
+<g data-node="category"><title>Catégories et revue: Règles, corrections manuelles, mémoire privée et suggestions PENDING. | backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategoryService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategorizationReviewService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/MerchantRecognitionService.java</title>
+<rect x="520" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Catégories et revue</text>
+<text x="536" y="932" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="951" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">category/</text>
+<text x="536" y="975" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règles, corrections manuelles, mémoire</text>
+<text x="536" y="992" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">privée et suggestions PENDING.</text>
+</g>
+<g data-node="reads"><title>Comptes / transactions / budget: Agrégations locales par propriétaire, mois et devise. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/LocalBankDataService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/api/LocalBankDataController.java</title>
+<rect x="970" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Comptes / transactions /</text>
+<text x="986" y="931" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">budget</text>
+<text x="986" y="954" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="973" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">bank/ · lectures SQL</text>
+<text x="986" y="997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Agrégations locales par propriétaire,</text>
+<text x="986" y="1014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">mois et devise.</text>
+</g>
+<g data-node="audit"><title>Audit technique: Trace des opérations sensibles ; journal append-only. | backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</title>
+<rect x="520" y="1140" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="1169" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Audit technique</text>
+<text x="536" y="1192" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1211" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">audit/</text>
+<text x="536" y="1235" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Trace des opérations sensibles ;</text>
+<text x="536" y="1252" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">journal append-only.</text>
+</g>
+<g data-node="mail"><title>Mailpit: Capture des emails envoyés après commit. | backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java</title>
+<rect x="70" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="86" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Mailpit</text>
+<text x="86" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="86" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">SMTP</text>
+<text x="86" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Capture des emails envoyés après</text>
+<text x="86" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">commit.</text>
+</g>
+<g data-node="db"><title>PostgreSQL applicatif: Comptes, transactions, catégories, identités et journal. | backend/src/main/resources/db/migration</title>
+<rect x="520" y="1400" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1416 Q675.0 1440 830 1416" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1429" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL applicatif</text>
+<text x="536" y="1452" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1471" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">JPA / JDBC · Flyway</text>
+<text x="536" y="1495" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Comptes, transactions, catégories,</text>
+<text x="536" y="1512" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">identités et journal.</text>
+</g>
+<g data-node="bankapi"><title>API mock-bank: Client synthétique issu de la connexion stockée. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java</title>
+<rect x="1390" y="620" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1406" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">API mock-bank</text>
+<text x="1406" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1406" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">REST / JWT fournisseur</text>
+<text x="1406" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Client synthétique issu de la connexion</text>
+<text x="1406" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">stockée.</text>
+</g>
+<g data-node="ai"><title>FastAPI marchand: Reçoit clé opaque et libellé assaini ; aucun montant ni UUID SQL. | backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</title>
+<rect x="970" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI marchand</text>
+<text x="986" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP / JSON strict</text>
+<text x="986" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Reçoit clé opaque et libellé assaini ;</text>
+<text x="986" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">aucun montant ni UUID SQL.</text>
+</g>
+<circle cx="680" cy="315" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="319.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="850" cy="985" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="989.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="410" cy="570" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="574.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="680" cy="575" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="579.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="860" cy="570" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="574.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="1335" cy="700" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1335.0" y="704.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="860" cy="1090" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="1094.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="450" cy="1370" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1374.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="500" cy="1240" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="1244.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="900" cy="1080" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="1084.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="895" cy="1350" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="895.0" y="1354.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="50" cy="1115" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="50.0" y="1119.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<circle cx="500" cy="965" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="969.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">13</text>
+<circle cx="680" cy="1355" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1359.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">14</text>
+<text x="30" y="1662" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. SPA principale → Sécurité et API commune : Entrée HTTP authentifiée / principal</text>
+<text x="30" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Sécurité et API commune → PostgreSQL applicatif : Relit identité et statut / JPA</text>
+<text x="30" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Sécurité et API commune → Authentification locale : Routes d&#x27;authentification locales</text>
+<text x="30" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Sécurité et API commune → Utilisateur et préférences : Accès profil autorisé</text>
+<text x="30" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Sécurité et API commune → Connexion et synchronisation : Accès métier ACTIVE</text>
+<text x="30" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Connexion et synchronisation → API mock-bank : Authentifie / lit via les ports internes</text>
+<text x="30" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Connexion et synchronisation → PostgreSQL applicatif : Écrit le résultat validé après appels HTTP</text>
+<text x="895.0" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Import CSV → PostgreSQL applicatif : Crée transactions FILE_IMPORT après confirmation</text>
+<text x="895.0" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Catégories et revue → PostgreSQL applicatif : Lit category_id actuel ; écrit revue et mémoire</text>
+<text x="895.0" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Catégories et revue → FastAPI marchand : Reconnaissance optionnelle hors transaction SQL (pointillés)</text>
+<text x="895.0" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Comptes / transactions / budget → PostgreSQL applicatif : Lit l&#x27;historique local et les dépenses réelles</text>
+<text x="895.0" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Authentification locale → Mailpit : Email après validation du commit / SMTP</text>
+<text x="895.0" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">13. Authentification locale → Audit technique : Trace actions d&#x27;authentification</text>
+<text x="895.0" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">14. Audit technique → PostgreSQL applicatif : Ajoute des événements</text>
+<text x="30" y="2157" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les domaines imports, category et bank/lectures passent eux aussi par la même chaîne de sécurité ; toutes les flèches du fan-out ne sont pas répétées.</text>
+<text x="30" y="2179" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les catégories manuelles et déterministes restent prioritaires. Une reconnaissance crée une suggestion, jamais une affectation ML automatique.</text>
+<text x="30" y="2201" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Tous les domaines utilisent leur propre accès aux repositories applicatifs ; les principales écritures sont montrées. Les appels IA/fournisseur restent hors transactions SQL.</text>
+</g>
+</svg>

@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 2381" width="1370" height="2381" role="img" aria-labelledby="04-backend-insights-title 04-backend-insights-desc">
+<title id="04-backend-insights-title">C3 · Backend : planification et insights</title>
+<desc id="04-backend-insights-desc">Règles financières exécutables ; aucun de ces composants n&#x27;est un microservice indépendant. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="04-backend-insights-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="2381" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Backend : planification et insights</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="1010" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Backend principal / domaines métier</text>
+<g data-edge="1"><title>REST : plans mensuels</title><path d="M520 185 L492 185 L490 180 L410 180 L410 460 L408 465 L380 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="2"><title>REST : objectifs et répartition</title><path d="M675 270 L675 298 L680 300 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="3"><title>REST : génération et simulations</title><path d="M830 185 L858 185 L860 180 L860 460 L940 460 L942 465 L970 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="4"><title>REST : score de bien-être</title><path d="M675 270 L675 298 L680 300 L420 300 L420 630 L220 630 L225 632 L225 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="5"><title>REST : génération et feedback</title><path d="M675 270 L675 298 L680 300 L850 300 L850 630 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="6"><title>REST : explication et ticket</title><path d="M675 270 L675 298 L680 300 L680 310 L950 310 L950 630 L1120 630 L1125 632 L1125 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="7"><title>Lit historique ; stocke montants et métadonnées</title><path d="M225 550 L225 578 L220 580 L220 640 L500 640 L500 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="8"><title>Lit MonthlyPlan ; écrit contributions / allocations</title><path d="M675 550 L675 578 L680 580 L680 640 L850 640 L850 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="9"><title>Lit snapshots et historique ; stocke la prévision</title><path d="M1125 550 L1125 578 L1120 580 L860 580 L860 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="10"><title>Résidu agrégé TND / repli déterministe</title><path d="M1125 550 L1125 578 L1120 580 L1120 640 L950 640 L950 1370 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>Obtient l&#x27;évaluation autoritaire et ses facteurs</title><path d="M520 745 L492 745 L490 740 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="12"><title>Lit faits ; publie snapshot immutable</title><path d="M225 830 L225 858 L220 860 L220 1020 L680 1020 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="13"><title>Stocke justifications et feedback</title><path d="M675 830 L675 858 L680 860 L680 1010 L670 1010 L670 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="14"><title>Lit une recommandation appartenant à l&#x27;utilisateur</title><path d="M970 745 L942 745 L940 740 L860 740 L858 745 L830 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="15"><title>Explication ou image éphémère / HTTP</title><path d="M1125 830 L1125 858 L1120 860 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="16"><title>Trace génération de score</title><path d="M225 830 L225 858 L220 860 L210 860 L210 1010 L220 1010 L225 1012 L225 1040" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="17"><title>Trace génération et feedback</title><path d="M520 745 L492 745 L490 740 L490 1120 L410 1120 L408 1125 L380 1125" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-node="front"><title>Frontend authentifié: Budgets, objectifs, prévisions, score et prochaines étapes. | frontend/src/services</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Frontend authentifié</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">API REST</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Budgets, objectifs, prévisions, score</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et prochaines étapes.</text>
+</g>
+<g data-node="salary"><title>Salary Planning: Plan mois/devise, revenus, allocations et capacité d&#x27;épargne. | backend/src/main/java/com/azizx25/smartfinancialwellness/salary/SalaryPlanService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/salary/HistoricalSalaryRecommendationService.java</title>
+<rect x="70" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Salary Planning</text>
+<text x="86" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">salary/</text>
+<text x="86" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Plan mois/devise, revenus, allocations</text>
+<text x="86" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et capacité d&#x27;épargne.</text>
+</g>
+<g data-node="goals"><title>Goals: Progression par contributions, allocations et simulations temporaires. | backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalAllocationService.java</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Goals</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">goal/</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Progression par contributions,</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">allocations et simulations temporaires.</text>
+</g>
+<g data-node="forecast"><title>Forecast: Solde observé + flux restant déterministe + résidu ML éligible. | backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/ForecastService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/DeterministicForecastCalculator.java</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Forecast</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">forecast/</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Solde observé + flux restant</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">déterministe + résidu ML éligible.</text>
+</g>
+<g data-node="score"><title>Financial Wellness Score: Score déterministe, facteurs disponibles et snapshots immuables. | backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialScoreService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialWellnessScoreCalculator.java</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Financial Wellness Score</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">score/</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Score déterministe, facteurs</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">disponibles et snapshots immuables.</text>
+</g>
+<g data-node="recs"><title>Recommendations: Règles versionnées, justifications et feedback idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationRules.java</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Recommendations</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">recommendation/</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règles versionnées, justifications et</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">feedback idempotent.</text>
+</g>
+<g data-node="assist"><title>Assistance locale: Explication limitée et ticket validé ; aucun changement financier. | backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Assistance locale</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">assistance/</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Explication limitée et ticket validé ;</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">aucun changement financier.</text>
+</g>
+<g data-node="db"><title>PostgreSQL applicatif: Plans, goals, transactions, snapshots, facteurs et recommandations. | backend/src/main/resources/db/migration</title>
+<rect x="520" y="1400" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1416 Q675.0 1440 830 1416" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1429" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL applicatif</text>
+<text x="536" y="1452" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1471" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">JPA / JDBC · Flyway V1–V22</text>
+<text x="536" y="1495" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Plans, goals, transactions, snapshots,</text>
+<text x="536" y="1512" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">facteurs et recommandations.</text>
+</g>
+<g data-node="ai"><title>FastAPI: Résidu Forecast, explication et extraction de ticket. | ai-service/src/forecast_ai/main.py</title>
+<rect x="970" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI</text>
+<text x="986" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP interne</text>
+<text x="986" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Résidu Forecast, explication et</text>
+<text x="986" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">extraction de ticket.</text>
+</g>
+<g data-node="audit"><title>Audit append-only: Événements métiers sans mots de passe ni tokens. | backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</title>
+<rect x="70" y="1040" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="1069" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Audit append-only</text>
+<text x="86" y="1092" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="1111" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">audit/</text>
+<text x="86" y="1135" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Événements métiers sans mots de passe</text>
+<text x="86" y="1152" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">ni tokens.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="680" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="860" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="420" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="420.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="850" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="950" cy="470" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="950.0" y="474.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="500" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="850" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="860" cy="970" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="974.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="950" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="950.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="450" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="450" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<circle cx="670" cy="1190" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="670.0" y="1194.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">13</text>
+<circle cx="900" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">14</text>
+<circle cx="1120" cy="1115" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="1119.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">15</text>
+<circle cx="210" cy="935" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="210.0" y="939.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">16</text>
+<circle cx="490" cy="930" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="490.0" y="934.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">17</text>
+<text x="30" y="1662" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Frontend authentifié → Salary Planning : REST : plans mensuels</text>
+<text x="30" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Frontend authentifié → Goals : REST : objectifs et répartition</text>
+<text x="30" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Frontend authentifié → Forecast : REST : génération et simulations</text>
+<text x="30" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Frontend authentifié → Financial Wellness Score : REST : score de bien-être</text>
+<text x="30" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Frontend authentifié → Recommendations : REST : génération et feedback</text>
+<text x="30" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Frontend authentifié → Assistance locale : REST : explication et ticket</text>
+<text x="30" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Salary Planning → PostgreSQL applicatif : Lit historique ; stocke montants et</text>
+<text x="30" y="2099" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">métadonnées</text>
+<text x="30" y="2147" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Goals → PostgreSQL applicatif : Lit MonthlyPlan ; écrit contributions / allocations</text>
+<text x="30" y="2212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Forecast → PostgreSQL applicatif : Lit snapshots et historique ; stocke la prévision</text>
+<text x="700.0" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Forecast → FastAPI : Résidu agrégé TND / repli déterministe (pointillés)</text>
+<text x="700.0" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Recommendations → Financial Wellness Score : Obtient l&#x27;évaluation autoritaire et ses</text>
+<text x="700.0" y="1774" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">facteurs</text>
+<text x="700.0" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Financial Wellness Score → PostgreSQL applicatif : Lit faits ; publie snapshot</text>
+<text x="700.0" y="1839" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">immutable</text>
+<text x="700.0" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">13. Recommendations → PostgreSQL applicatif : Stocke justifications et feedback</text>
+<text x="700.0" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">14. Assistance locale → Recommendations : Lit une recommandation appartenant à</text>
+<text x="700.0" y="1969" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">l&#x27;utilisateur</text>
+<text x="700.0" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">15. Assistance locale → FastAPI : Explication ou image éphémère / HTTP (pointillés)</text>
+<text x="700.0" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">16. Financial Wellness Score → Audit append-only : Trace génération de score</text>
+<text x="700.0" y="2147" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">17. Recommendations → Audit append-only : Trace génération et feedback</text>
+<text x="30" y="2287" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le lien Salary Planning → Goals est la donnée MonthlyPlan/goal_allocation en base, pas un appel inventé entre services.</text>
+<text x="30" y="2309" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le score et les règles de recommandation n&#x27;utilisent aucun LLM. Les facteurs indisponibles sont exclus ; aucun facteur n&#x27;est inventé.</text>
+<text x="30" y="2331" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">L&#x27;IA explique seulement une règle contrôlée ; ses échecs conservent le texte déterministe. Le ticket passe par une revue humaine et un export CSV séparé.</text>
+</g>
+</svg>

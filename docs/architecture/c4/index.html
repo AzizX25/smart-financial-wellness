@@ -1,0 +1,1369 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Financial Wellness Advisor — C4</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#17324d;font:16px/1.6 system-ui,sans-serif}main{max-width:1500px;padding:24px;margin:auto}h1{font-size:26px;color:#123458;margin:0 0 8px}h2{font-size:21px}p{max-width:100ch}a{color:#123458}header{border-bottom:3px solid #ffd400;padding-bottom:16px}.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:20px 0}select,button{min-height:44px;border:1px solid #7a828e;border-radius:8px;padding:8px 12px;background:white;color:#123458;font:inherit}select{max-width:100%}button{cursor:pointer}:focus-visible{outline:3px solid #123458;outline-offset:3px}.viewport{overflow:auto;max-height:76vh;border:1px solid #dde1e7;border-radius:12px;background:white}.viewport>svg{display:block;width:100%;height:auto;max-width:none}.diagram[hidden]{display:none!important}summary{cursor:pointer;min-height:44px;padding:8px 0;font-weight:600}code{overflow-wrap:anywhere}footer{margin-top:24px;color:#59616d;font-size:14px}.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px}.legend span{border-left:5px solid #22396f;padding-left:8px}.legend .external{border-color:#7a828e}.legend .data{border-color:#8a6500}@media print{.toolbar,.diagram>p>a,header,footer,details{display:none}.viewport{max-height:none;overflow:visible;border:0}.viewport>svg{width:100%!important}main{padding:0}.diagram h2{margin-top:0}}@page{size:A3 landscape;margin:12mm}
+</style></head><body><main><header><h1>Smart Financial Wellness Advisor — modèle C4</h1>
+<p>Architecture inspectée le 2026-10-12 : Architecture du worktree actuel, y compris les composants implémentés non encore commités. Vue de démonstration ; les fonctions IA optionnelles dépendent de la configuration et des modèles installés.</p>
+<div class="legend"><span>Système / application : navy</span><span class="external">Système externe : gris</span><span class="data">Fichiers / artefacts : jaune pâle</span><span>Pointillés : option / étape hors ligne</span></div></header>
+<nav class="toolbar" aria-label="Explorer les diagrammes"><label for="diagram-select">Diagramme</label><select id="diagram-select"><option value="01-context">C1 · Contexte du système</option><option value="02-containers">C2 · Conteneurs et frontières</option><option value="03-backend-data">C3 · Backend : accès et données</option><option value="04-backend-insights">C3 · Backend : planification et insights</option><option value="05-frontend">C3 · Frontend principal</option><option value="06-ai-service">C3 · Service d&#x27;inférence</option><option value="07-mock-bank">C3 · Banque simulée</option><option value="08-ml-pipeline">C3 · Pipeline ML hors ligne</option><option value="09-deployment">Déploiement · Environnement local</option></select><button id="zoom-in" type="button" aria-label="Agrandir le diagramme">Zoom +</button><button id="zoom-out" type="button" aria-label="Réduire le diagramme">Zoom −</button><button id="fit" type="button">Ajuster</button><output id="zoom-level" aria-live="polite">100 %</output><button type="button" id="print">Imprimer / PDF</button></nav><section id="01-context" class="diagram" ><h2>C1 · Contexte du système</h2><p>Smart Financial Wellness Advisor et ses utilisateurs / systèmes externes.</p><p><a href="01-context.svg" download>Télécharger le SVG</a> · <a href="01-context.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1476" width="1370" height="1476" role="img" aria-labelledby="01-context-title 01-context-desc">
+<title id="01-context-title">C1 · Contexte du système</title>
+<desc id="01-context-desc">Smart Financial Wellness Advisor et ses utilisateurs / systèmes externes. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="01-context-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1476" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C1 · Contexte du système</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<g data-edge="1"><title>Utilise les fonctionnalités authentifiées</title><path d="M380 195 L408 195 L410 200 L410 460 L490 460 L492 465 L520 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)"/></g>
+<g data-edge="2"><title>Publie des artefacts validés hors ligne</title><path d="M675 280 L675 308 L680 310 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="3"><title>Utilise la console d&#x27;administration</title><path d="M1125 280 L1125 308 L1120 310 L1120 350 L1125 352 L1125 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)"/></g>
+<g data-edge="4"><title>Authentification bancaire et lectures REST</title><path d="M830 465 L858 465 L860 460 L940 460 L942 465 L970 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)"/></g>
+<g data-edge="5"><title>Emails après commit / SMTP</title><path d="M520 465 L492 465 L490 460 L490 760 L410 760 L408 765 L380 765" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)"/></g>
+<g data-edge="6"><title>Inférence locale optionnelle / HTTP</title><path d="M675 550 L675 578 L680 580 L680 650 L675 652 L675 680" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="7"><title>Recherche publique optionnelle de marchands / HTTPS</title><path d="M830 465 L858 465 L860 460 L860 760 L940 760 L942 765 L970 765" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-context-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="user"><title>Utilisateur: Consulte et organise ses finances par devise. | </title>
+<rect x="70" y="110" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="356" cy="133" r="8" fill="#123458"/>
+<text x="86" y="139" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Utilisateur</text>
+<text x="86" y="162" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="86" y="188" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Consulte et organise ses finances par</text>
+<text x="86" y="205" font-size="13" fill="#123458" font-weight="400" text-anchor="start">devise.</text>
+</g>
+<g data-node="sfwa"><title>Smart Financial Wellness: Budgets, objectifs, prévisions, score et pistes explicables. | frontend/src/App.jsx; backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Smart Financial Wellness</text>
+<text x="536" y="432" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Système logiciel]</text>
+<text x="536" y="451" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">React · Spring Boot · FastAPI</text>
+<text x="536" y="475" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Budgets, objectifs, prévisions, score</text>
+<text x="536" y="492" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">et pistes explicables.</text>
+</g>
+<g data-node="bank"><title>Banque simulée: Fournit des données synthétiques ; API de lecture et gestion admin. | mock-bank/src/main/java; mock-bank-ui/src/App.jsx</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Banque simulée</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">mock-bank + console admin</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Fournit des données synthétiques ; API</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">de lecture et gestion admin.</text>
+</g>
+<g data-node="admin"><title>Administrateur démo: Gère uniquement les clients et opérations synthétiques. | </title>
+<rect x="970" y="110" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="1256" cy="133" r="8" fill="#123458"/>
+<text x="986" y="139" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Administrateur démo</text>
+<text x="986" y="162" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="986" y="188" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Gère uniquement les clients et</text>
+<text x="986" y="205" font-size="13" fill="#123458" font-weight="400" text-anchor="start">opérations synthétiques.</text>
+</g>
+<g data-node="research"><title>Développeur / stagiaire: Prépare et évalue les modèles sur des données synthétiques. | ml-pipeline/scripts</title>
+<rect x="520" y="110" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="806" cy="133" r="8" fill="#123458"/>
+<text x="536" y="139" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Développeur / stagiaire</text>
+<text x="536" y="162" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="536" y="188" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Prépare et évalue les modèles sur des</text>
+<text x="536" y="205" font-size="13" fill="#123458" font-weight="400" text-anchor="start">données synthétiques.</text>
+</g>
+<g data-node="mail"><title>Messagerie locale: Reçoit les emails de vérification et de réinitialisation. | compose.yaml; backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java</title>
+<rect x="70" y="680" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="86" y="709" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Messagerie locale</text>
+<text x="86" y="732" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="86" y="751" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Mailpit · SMTP</text>
+<text x="86" y="775" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Reçoit les emails de vérification et de</text>
+<text x="86" y="792" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">réinitialisation.</text>
+</g>
+<g data-node="ollama"><title>Inférence locale: Embeddings, raisonnement et vision selon la configuration. | ai-service/src/forecast_ai/ollama_providers.py; ai-service/src/forecast_ai/assistance.py</title>
+<rect x="520" y="680" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="709" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Inférence locale</text>
+<text x="536" y="732" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="751" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Ollama sur le poste</text>
+<text x="536" y="775" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Embeddings, raisonnement et vision</text>
+<text x="536" y="792" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">selon la configuration.</text>
+</g>
+<g data-node="web"><title>Recherche web Ollama: Recherche de marchands publics, uniquement si enrichissement activé. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="970" y="680" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="709" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Recherche web Ollama</text>
+<text x="986" y="732" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="751" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS · fournisseur externe</text>
+<text x="986" y="775" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Recherche de marchands publics,</text>
+<text x="986" y="792" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">uniquement si enrichissement activé.</text>
+</g>
+<circle cx="410" cy="330" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="334.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="680" cy="330" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="334.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="1120" cy="330" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="334.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="900" cy="460" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="464.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="490" cy="610" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="490.0" y="614.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="680" cy="615" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="619.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="860" cy="610" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="614.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<text x="30" y="1082" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1112" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Utilisateur → Smart Financial Wellness : Utilise les fonctionnalités authentifiées</text>
+<text x="30" y="1177" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Développeur / stagiaire → Smart Financial Wellness : Publie des artefacts validés</text>
+<text x="30" y="1194" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">hors ligne (pointillés)</text>
+<text x="30" y="1242" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Administrateur démo → Banque simulée : Utilise la console d&#x27;administration</text>
+<text x="30" y="1307" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Smart Financial Wellness → Banque simulée : Authentification bancaire et lectures</text>
+<text x="30" y="1324" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">REST</text>
+<text x="700.0" y="1112" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Smart Financial Wellness → Messagerie locale : Emails après commit / SMTP</text>
+<text x="700.0" y="1177" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Smart Financial Wellness → Inférence locale : Inférence locale optionnelle / HTTP</text>
+<text x="700.0" y="1194" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="700.0" y="1242" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Smart Financial Wellness → Recherche web Ollama : Recherche publique optionnelle de</text>
+<text x="700.0" y="1259" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">marchands / HTTPS (pointillés)</text>
+<text x="30" y="1382" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">La banque est synthétique : aucune connexion à une banque réelle n&#x27;est démontrée.</text>
+<text x="30" y="1404" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">La recherche web est réservée à l&#x27;enrichissement marchand. Les explications et tickets restent locaux.</text>
+<text x="30" y="1426" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le score et les recommandations sont déterministes ; l&#x27;IA ne choisit ni leur valeur ni leur priorité.</text>
+</g>
+</svg>
+</div><ul><li>La banque est synthétique : aucune connexion à une banque réelle n&#x27;est démontrée.</li><li>La recherche web est réservée à l&#x27;enrichissement marchand. Les explications et tickets restent locaux.</li><li>Le score et les recommandations sont déterministes ; l&#x27;IA ne choisit ni leur valeur ni leur priorité.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/src/forecast_ai/assistance.py</code></li><li><code>ai-service/src/forecast_ai/ollama_providers.py</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java</code></li><li><code>compose.yaml</code></li><li><code>frontend/src/App.jsx</code></li><li><code>ml-pipeline/scripts</code></li><li><code>mock-bank-ui/src/App.jsx</code></li><li><code>mock-bank/src/main/java</code></li></ul></details></section><section id="02-containers" class="diagram" hidden><h2>C2 · Conteneurs et frontières</h2><p>Applications et données ; le déploiement Docker est détaillé séparément.</p><p><a href="02-containers.svg" download>Télécharger le SVG</a> · <a href="02-containers.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1640 2201" width="1640" height="2201" role="img" aria-labelledby="02-containers-title 02-containers-desc">
+<title id="02-containers-title">C2 · Conteneurs et frontières</title>
+<desc id="02-containers-desc">Applications et données ; le déploiement Docker est détaillé séparément. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="02-containers-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1640" height="2201" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C2 · Conteneurs et frontières</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="20" y="290" width="370" height="980" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="35" y="314" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Système bancaire simulé</text>
+<rect x="420" y="290" width="820" height="1190" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="435" y="314" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Smart Financial Wellness Advisor</text>
+<g data-edge="1"><title>Utilise la console / navigateur</title><path d="M205 270 L205 298 L200 300 L200 320 L205 322 L205 350" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="2"><title>REST / JSON + JWT administrateur</title><path d="M205 520 L205 548 L200 550 L200 610 L205 612 L205 640" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="3"><title>Utilise la SPA / navigateur</title><path d="M625 270 L625 298 L620 300 L620 320 L625 322 L625 350" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="4"><title>REST / JSON + JWT et cookie refresh</title><path d="M625 520 L625 548 L620 550 L620 610 L625 612 L625 640" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="5"><title>JPA / JDBC / Flyway</title><path d="M625 810 L625 838 L620 840 L620 900 L625 902 L625 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="6"><title>Ports internes / REST + JWT fournisseur</title><path d="M470 725 L442 725 L440 720 L390 720 L388 725 L360 725" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="7"><title>JPA / Flyway ; données propres</title><path d="M205 810 L205 838 L200 840 L200 900 L205 902 L205 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="8"><title>SMTP après commit</title><path d="M780 725 L808 725 L810 720 L810 1200 L1240 1200 L1240 1300 L1242 1305 L1270 1305" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="9"><title>HTTP interne / contrats JSON stricts</title><path d="M780 725 L808 725 L810 720 L840 720 L842 725 L870 725" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="10"><title>Charge et vérifie les modèles au démarrage</title><path d="M1025 810 L1025 838 L1020 840 L1020 900 L1025 902 L1025 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="11"><title>Exécute scripts et notebooks</title><path d="M1025 270 L1025 298 L1020 300 L1020 620 L850 620 L850 1190 L1020 1190 L1025 1192 L1025 1220" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)"/></g>
+<g data-edge="12"><title>Export contrôlé puis inclusion dans l&#x27;image</title><path d="M1025 1220 L1025 1192 L1020 1190 L1020 1130 L1025 1128 L1025 1100" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="13"><title>Inférence locale bornée / HTTP</title><path d="M1180 725 L1208 725 L1210 720 L1240 720 L1242 725 L1270 725" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="14"><title>Recherche marchande bornée / HTTPS</title><path d="M1180 725 L1208 725 L1210 720 L1210 1020 L1240 1020 L1242 1015 L1270 1015" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-containers-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="admin"><title>Administrateur démo: Opère la banque simulée. | </title>
+<rect x="50" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="336" cy="123" r="8" fill="#123458"/>
+<text x="66" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Administrateur démo</text>
+<text x="66" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="66" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Opère la banque simulée.</text>
+</g>
+<g data-node="user"><title>Utilisateur: Navigue dans l&#x27;application principale. | </title>
+<rect x="470" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="756" cy="123" r="8" fill="#123458"/>
+<text x="486" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Utilisateur</text>
+<text x="486" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="486" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Navigue dans l&#x27;application principale.</text>
+</g>
+<g data-node="dev"><title>Développeur / stagiaire: Lance les scripts et notebooks hors ligne. | </title>
+<rect x="870" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="1156" cy="123" r="8" fill="#123458"/>
+<text x="886" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Développeur / stagiaire</text>
+<text x="886" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="886" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Lance les scripts et notebooks hors</text>
+<text x="886" y="195" font-size="13" fill="#123458" font-weight="400" text-anchor="start">ligne.</text>
+</g>
+<g data-node="bankui"><title>Console mock-bank: Gestion de données synthétiques ; client admin séparé. | mock-bank-ui/src/App.jsx</title>
+<rect x="50" y="350" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="66" y="379" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Console mock-bank</text>
+<text x="66" y="402" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="66" y="421" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">React · Vite · JavaScript</text>
+<text x="66" y="445" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Gestion de données synthétiques ;</text>
+<text x="66" y="462" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">client admin séparé.</text>
+</g>
+<g data-node="bank"><title>API mock-bank: JWT fournisseur/admin, comptes, soldes et transactions. | mock-bank/src/main/java</title>
+<rect x="50" y="640" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="66" y="669" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">API mock-bank</text>
+<text x="66" y="692" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="66" y="711" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Java 21 · Spring Boot 4.1</text>
+<text x="66" y="735" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">JWT fournisseur/admin, comptes, soldes</text>
+<text x="66" y="752" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">et transactions.</text>
+</g>
+<g data-node="bankdb"><title>Base mock-bank: Clients, ledger synthétique et historique Flyway indépendant. | mock-bank/src/main/resources/db/migration</title>
+<rect x="50" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M50 946 Q205.0 970 360 946" fill="none" stroke="#dbe4f5"/>
+<text x="66" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Base mock-bank</text>
+<text x="66" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="66" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17 · schéma mock_bank</text>
+<text x="66" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Clients, ledger synthétique et</text>
+<text x="66" y="1042" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">historique Flyway indépendant.</text>
+</g>
+<g data-node="frontend"><title>Application principale: Authentification, finances, budgets, objectifs et insights. | frontend/src/App.jsx</title>
+<rect x="470" y="350" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="379" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Application principale</text>
+<text x="486" y="402" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="421" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">React · Vite · JavaScript</text>
+<text x="486" y="445" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Authentification, finances, budgets,</text>
+<text x="486" y="462" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">objectifs et insights.</text>
+</g>
+<g data-node="backend"><title>API principale: Autorisation, règles métier, données locales et orchestrations. | backend/src/main/java; backend/pom.xml</title>
+<rect x="470" y="640" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="669" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">API principale</text>
+<text x="486" y="692" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="711" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Java 21 · Spring Boot 4.1</text>
+<text x="486" y="735" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Autorisation, règles métier, données</text>
+<text x="486" y="752" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">locales et orchestrations.</text>
+</g>
+<g data-node="db"><title>Base applicative: Schéma smart_financial_wellness ; Flyway V1 à V22. | backend/src/main/resources/db/migration; backend/src/main/resources/application.properties</title>
+<rect x="470" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M470 946 Q625.0 970 780 946" fill="none" stroke="#dbe4f5"/>
+<text x="486" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Base applicative</text>
+<text x="486" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="486" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17</text>
+<text x="486" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Schéma smart_financial_wellness ;</text>
+<text x="486" y="1042" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Flyway V1 à V22.</text>
+</g>
+<g data-node="mail"><title>Emails de développement: Capture locale des emails d&#x27;actions de compte. | compose.yaml</title>
+<rect x="1270" y="1220" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1286" y="1249" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Emails de développement</text>
+<text x="1286" y="1272" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1286" y="1291" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Mailpit · SMTP</text>
+<text x="1286" y="1315" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Capture locale des emails d&#x27;actions de</text>
+<text x="1286" y="1332" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">compte.</text>
+</g>
+<g data-node="ai"><title>Service d&#x27;inférence: Prévision résiduelle, reconnaissance et assistance optionnelle. | ai-service/src/forecast_ai/main.py</title>
+<rect x="870" y="640" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="669" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Service d&#x27;inférence</text>
+<text x="886" y="692" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="711" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Python · FastAPI · scikit-learn</text>
+<text x="886" y="735" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Prévision résiduelle, reconnaissance et</text>
+<text x="886" y="752" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">assistance optionnelle.</text>
+</g>
+<g data-node="artifacts"><title>Modèles et métadonnées: Huber TND figé et catalogue / modèle marchand versionnés. | ai-service/models</title>
+<rect x="870" y="930" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="886" y="959" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Modèles et métadonnées</text>
+<text x="886" y="982" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="886" y="1001" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">joblib · JSON · empreintes</text>
+<text x="886" y="1025" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Huber TND figé et catalogue / modèle</text>
+<text x="886" y="1042" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">marchand versionnés.</text>
+</g>
+<g data-node="pipeline"><title>Pipeline ML hors ligne: Génération, préparation, entraînement, évaluation et export. | ml-pipeline/src; ml-pipeline/scripts</title>
+<rect x="870" y="1220" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="1249" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Pipeline ML hors ligne</text>
+<text x="886" y="1272" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="1291" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Python · scripts · notebooks</text>
+<text x="886" y="1315" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Génération, préparation, entraînement,</text>
+<text x="886" y="1332" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">évaluation et export.</text>
+</g>
+<g data-node="ollama"><title>Ollama local: Modèles configurables de raisonnement, embedding et vision. | ai-service/src/forecast_ai/ollama_providers.py; ai-service/src/forecast_ai/assistance.py</title>
+<rect x="1270" y="640" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1286" y="669" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama local</text>
+<text x="1286" y="692" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1286" y="711" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP · hôte :11434</text>
+<text x="1286" y="735" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Modèles configurables de raisonnement,</text>
+<text x="1286" y="752" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">embedding et vision.</text>
+</g>
+<g data-node="web"><title>Ollama Web Search: Evidence publique bornée pour les marchands. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="1270" y="930" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1286" y="959" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama Web Search</text>
+<text x="1286" y="982" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1286" y="1001" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS · ollama.com</text>
+<text x="1286" y="1025" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Evidence publique bornée pour les</text>
+<text x="1286" y="1042" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">marchands.</text>
+</g>
+<circle cx="205" cy="284" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="205.0" y="288.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="200" cy="580" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="200.0" y="584.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="625" cy="284" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="625.0" y="288.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="620" cy="580" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="584.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="620" cy="870" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="874.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="415" cy="720" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="415.0" y="724.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="200" cy="870" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="200.0" y="874.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="810" cy="960" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="810.0" y="964.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="825" cy="720" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="825.0" y="724.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="1020" cy="870" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="874.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="850" cy="905" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="909.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="1020" cy="1160" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="1164.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<circle cx="1225" cy="720" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1225.0" y="724.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">13</text>
+<circle cx="1210" cy="870" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1210.0" y="874.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">14</text>
+<text x="30" y="1612" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1642" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Administrateur démo → Console mock-bank : Utilise la console / navigateur</text>
+<text x="30" y="1707" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Console mock-bank → API mock-bank : REST / JSON + JWT administrateur</text>
+<text x="30" y="1772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Utilisateur → Application principale : Utilise la SPA / navigateur</text>
+<text x="30" y="1837" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Application principale → API principale : REST / JSON + JWT et cookie refresh</text>
+<text x="30" y="1902" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. API principale → Base applicative : JPA / JDBC / Flyway</text>
+<text x="30" y="1967" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. API principale → API mock-bank : Ports internes / REST + JWT fournisseur</text>
+<text x="30" y="2032" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. API mock-bank → Base mock-bank : JPA / Flyway ; données propres</text>
+<text x="835.0" y="1642" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. API principale → Emails de développement : SMTP après commit</text>
+<text x="835.0" y="1707" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. API principale → Service d&#x27;inférence : HTTP interne / contrats JSON stricts</text>
+<text x="835.0" y="1772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Service d&#x27;inférence → Modèles et métadonnées : Charge et vérifie les modèles au démarrage</text>
+<text x="835.0" y="1837" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Développeur / stagiaire → Pipeline ML hors ligne : Exécute scripts et notebooks</text>
+<text x="835.0" y="1902" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Pipeline ML hors ligne → Modèles et métadonnées : Export contrôlé puis inclusion dans l&#x27;image</text>
+<text x="835.0" y="1919" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="835.0" y="1967" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">13. Service d&#x27;inférence → Ollama local : Inférence locale bornée / HTTP (pointillés)</text>
+<text x="835.0" y="2032" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">14. Service d&#x27;inférence → Ollama Web Search : Recherche marchande bornée / HTTPS (pointillés)</text>
+<text x="30" y="2107" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le frontend principal ne contacte que l&#x27;API principale. La console mock-bank est un autre client et contacte sa propre API.</text>
+<text x="30" y="2129" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Aucun accès croisé aux deux bases. Le service IA ne dispose pas d&#x27;accès PostgreSQL.</text>
+<text x="30" y="2151" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le pipeline n&#x27;est ni un service Compose ni un entraînement en ligne ; les artefacts sont copiés dans l&#x27;image ai-service.</text>
+</g>
+</svg>
+</div><ul><li>Le frontend principal ne contacte que l&#x27;API principale. La console mock-bank est un autre client et contacte sa propre API.</li><li>Aucun accès croisé aux deux bases. Le service IA ne dispose pas d&#x27;accès PostgreSQL.</li><li>Le pipeline n&#x27;est ni un service Compose ni un entraînement en ligne ; les artefacts sont copiés dans l&#x27;image ai-service.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/models</code></li><li><code>ai-service/src/forecast_ai/assistance.py</code></li><li><code>ai-service/src/forecast_ai/main.py</code></li><li><code>ai-service/src/forecast_ai/ollama_providers.py</code></li><li><code>backend/pom.xml</code></li><li><code>backend/src/main/java</code></li><li><code>backend/src/main/resources/application.properties</code></li><li><code>backend/src/main/resources/db/migration</code></li><li><code>compose.yaml</code></li><li><code>frontend/src/App.jsx</code></li><li><code>ml-pipeline/scripts</code></li><li><code>ml-pipeline/src</code></li><li><code>mock-bank-ui/src/App.jsx</code></li><li><code>mock-bank/src/main/java</code></li><li><code>mock-bank/src/main/resources/db/migration</code></li></ul></details></section><section id="03-backend-data" class="diagram" hidden><h2>C3 · Backend : accès et données</h2><p>Composants logiques du backend principal ; chaque domaine regroupe contrôleurs, services et repositories.</p><p><a href="03-backend-data.svg" download>Télécharger le SVG</a> · <a href="03-backend-data.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 2251" width="1760" height="2251" role="img" aria-labelledby="03-backend-data-title 03-backend-data-desc">
+<title id="03-backend-data-title">C3 · Backend : accès et données</title>
+<desc id="03-backend-data-desc">Composants logiques du backend principal ; chaque domaine regroupe contrôleurs, services et repositories. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="03-backend-data-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1760" height="2251" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Backend : accès et données</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="1030" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Backend principal / frontières logiques</text>
+<g data-edge="1"><title>Entrée HTTP authentifiée / principal</title><path d="M675 270 L675 298 L680 300 L680 330 L675 332 L675 360" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="2"><title>Relit identité et statut / JPA</title><path d="M675 530 L675 558 L680 560 L680 600 L850 600 L850 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="3"><title>Routes d&#x27;authentification locales</title><path d="M520 445 L492 445 L490 440 L410 440 L410 700 L408 705 L380 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="4"><title>Accès profil autorisé</title><path d="M675 530 L675 558 L680 560 L680 590 L675 592 L675 620" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="5"><title>Accès métier ACTIVE</title><path d="M830 445 L858 445 L860 440 L860 700 L940 700 L942 705 L970 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="6"><title>Authentifie / lit via les ports internes</title><path d="M1280 705 L1308 705 L1310 700 L1360 700 L1362 705 L1390 705" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="7"><title>Écrit le résultat validé après appels HTTP</title><path d="M1125 790 L1125 818 L1120 820 L860 820 L860 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="8"><title>Crée transactions FILE_IMPORT après confirmation</title><path d="M225 1050 L225 1078 L220 1080 L220 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="9"><title>Lit category_id actuel ; écrit revue et mémoire</title><path d="M675 1050 L675 1078 L680 1080 L680 1120 L500 1120 L500 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="10"><title>Reconnaissance optionnelle hors transaction SQL</title><path d="M675 1050 L675 1078 L680 1080 L1120 1080 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>Lit l&#x27;historique local et les dépenses réelles</title><path d="M1125 1050 L1125 1078 L1120 1080 L1110 1080 L1110 1350 L680 1350 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="12"><title>Email après validation du commit / SMTP</title><path d="M225 790 L225 818 L220 820 L220 860 L50 860 L50 1370 L220 1370 L225 1372 L225 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="13"><title>Trace actions d&#x27;authentification</title><path d="M225 790 L225 818 L220 820 L500 820 L500 1110 L680 1110 L675 1112 L675 1140" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-edge="14"><title>Ajoute des événements</title><path d="M675 1310 L675 1338 L680 1340 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-backend-data-arrow)"/></g>
+<g data-node="front"><title>SPA principale: Les appels sont centrés sur l&#x27;utilisateur authentifié. | frontend/src/services/apiClient.js</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">SPA principale</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">REST / JSON</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Les appels sont centrés sur</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">l&#x27;utilisateur authentifié.</text>
+</g>
+<g data-node="security"><title>Sécurité et API commune: Principal et statuts relus en base ; erreurs JSON et CORS. | backend/src/main/java/com/azizx25/smartfinancialwellness/config/SecurityConfiguration.java; backend/src/main/java/com/azizx25/smartfinancialwellness/security/StatusAwareAuthorizationFilter.java; backend/src/main/java/com/azizx25/smartfinancialwellness/common/web</title>
+<rect x="520" y="360" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="389" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Sécurité et API commune</text>
+<text x="536" y="412" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="431" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Spring Security · JWT · validation</text>
+<text x="536" y="455" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Principal et statuts relus en base ;</text>
+<text x="536" y="472" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">erreurs JSON et CORS.</text>
+</g>
+<g data-node="auth"><title>Authentification locale: BCrypt, vérification email, refresh rotatif et réinitialisation. | backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AuthService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AccountActionService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/auth/RefreshTokenService.java</title>
+<rect x="70" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Authentification locale</text>
+<text x="86" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">auth/ · email/</text>
+<text x="86" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">BCrypt, vérification email, refresh</text>
+<text x="86" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">rotatif et réinitialisation.</text>
+</g>
+<g data-node="profile"><title>Utilisateur et préférences: Profil principal-scoped ; devise, langue et timezone. | backend/src/main/java/com/azizx25/smartfinancialwellness/profile/api/ProfileController.java; backend/src/main/java/com/azizx25/smartfinancialwellness/user/persistence</title>
+<rect x="520" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Utilisateur et préférences</text>
+<text x="536" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">profile/ · user/</text>
+<text x="536" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Profil principal-scoped ; devise,</text>
+<text x="536" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">langue et timezone.</text>
+</g>
+<g data-node="bank"><title>Connexion et synchronisation: Lecture fournisseur puis upsert local atomique et idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/BankSynchronizationService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java</title>
+<rect x="970" y="620" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Connexion et synchronisation</text>
+<text x="986" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">bank/ · adaptateur RestClient</text>
+<text x="986" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Lecture fournisseur puis upsert local</text>
+<text x="986" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">atomique et idempotent.</text>
+</g>
+<g data-node="imports"><title>Import CSV: Prévisualisation, mapping confirmé et import idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/imports/CsvImportService.java</title>
+<rect x="70" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Import CSV</text>
+<text x="86" y="932" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="951" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">imports/</text>
+<text x="86" y="975" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Prévisualisation, mapping confirmé et</text>
+<text x="86" y="992" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">import idempotent.</text>
+</g>
+<g data-node="category"><title>Catégories et revue: Règles, corrections manuelles, mémoire privée et suggestions PENDING. | backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategoryService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategorizationReviewService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/MerchantRecognitionService.java</title>
+<rect x="520" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Catégories et revue</text>
+<text x="536" y="932" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="951" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">category/</text>
+<text x="536" y="975" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règles, corrections manuelles, mémoire</text>
+<text x="536" y="992" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">privée et suggestions PENDING.</text>
+</g>
+<g data-node="reads"><title>Comptes / transactions / budget: Agrégations locales par propriétaire, mois et devise. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/LocalBankDataService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/bank/api/LocalBankDataController.java</title>
+<rect x="970" y="880" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="909" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Comptes / transactions /</text>
+<text x="986" y="931" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">budget</text>
+<text x="986" y="954" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="973" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">bank/ · lectures SQL</text>
+<text x="986" y="997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Agrégations locales par propriétaire,</text>
+<text x="986" y="1014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">mois et devise.</text>
+</g>
+<g data-node="audit"><title>Audit technique: Trace des opérations sensibles ; journal append-only. | backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</title>
+<rect x="520" y="1140" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="1169" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Audit technique</text>
+<text x="536" y="1192" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1211" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">audit/</text>
+<text x="536" y="1235" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Trace des opérations sensibles ;</text>
+<text x="536" y="1252" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">journal append-only.</text>
+</g>
+<g data-node="mail"><title>Mailpit: Capture des emails envoyés après commit. | backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java</title>
+<rect x="70" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="86" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Mailpit</text>
+<text x="86" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="86" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">SMTP</text>
+<text x="86" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Capture des emails envoyés après</text>
+<text x="86" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">commit.</text>
+</g>
+<g data-node="db"><title>PostgreSQL applicatif: Comptes, transactions, catégories, identités et journal. | backend/src/main/resources/db/migration</title>
+<rect x="520" y="1400" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1416 Q675.0 1440 830 1416" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1429" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL applicatif</text>
+<text x="536" y="1452" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1471" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">JPA / JDBC · Flyway</text>
+<text x="536" y="1495" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Comptes, transactions, catégories,</text>
+<text x="536" y="1512" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">identités et journal.</text>
+</g>
+<g data-node="bankapi"><title>API mock-bank: Client synthétique issu de la connexion stockée. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java</title>
+<rect x="1390" y="620" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1406" y="649" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">API mock-bank</text>
+<text x="1406" y="672" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1406" y="691" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">REST / JWT fournisseur</text>
+<text x="1406" y="715" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Client synthétique issu de la connexion</text>
+<text x="1406" y="732" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">stockée.</text>
+</g>
+<g data-node="ai"><title>FastAPI marchand: Reçoit clé opaque et libellé assaini ; aucun montant ni UUID SQL. | backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</title>
+<rect x="970" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI marchand</text>
+<text x="986" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP / JSON strict</text>
+<text x="986" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Reçoit clé opaque et libellé assaini ;</text>
+<text x="986" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">aucun montant ni UUID SQL.</text>
+</g>
+<circle cx="680" cy="315" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="319.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="850" cy="985" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="989.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="410" cy="570" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="574.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="680" cy="575" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="579.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="860" cy="570" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="574.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="1335" cy="700" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1335.0" y="704.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="860" cy="1090" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="1094.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="450" cy="1370" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1374.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="500" cy="1240" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="1244.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="900" cy="1080" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="1084.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="895" cy="1350" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="895.0" y="1354.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="50" cy="1115" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="50.0" y="1119.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<circle cx="500" cy="965" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="969.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">13</text>
+<circle cx="680" cy="1355" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1359.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">14</text>
+<text x="30" y="1662" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. SPA principale → Sécurité et API commune : Entrée HTTP authentifiée / principal</text>
+<text x="30" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Sécurité et API commune → PostgreSQL applicatif : Relit identité et statut / JPA</text>
+<text x="30" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Sécurité et API commune → Authentification locale : Routes d&#x27;authentification locales</text>
+<text x="30" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Sécurité et API commune → Utilisateur et préférences : Accès profil autorisé</text>
+<text x="30" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Sécurité et API commune → Connexion et synchronisation : Accès métier ACTIVE</text>
+<text x="30" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Connexion et synchronisation → API mock-bank : Authentifie / lit via les ports internes</text>
+<text x="30" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Connexion et synchronisation → PostgreSQL applicatif : Écrit le résultat validé après appels HTTP</text>
+<text x="895.0" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Import CSV → PostgreSQL applicatif : Crée transactions FILE_IMPORT après confirmation</text>
+<text x="895.0" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Catégories et revue → PostgreSQL applicatif : Lit category_id actuel ; écrit revue et mémoire</text>
+<text x="895.0" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Catégories et revue → FastAPI marchand : Reconnaissance optionnelle hors transaction SQL (pointillés)</text>
+<text x="895.0" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Comptes / transactions / budget → PostgreSQL applicatif : Lit l&#x27;historique local et les dépenses réelles</text>
+<text x="895.0" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Authentification locale → Mailpit : Email après validation du commit / SMTP</text>
+<text x="895.0" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">13. Authentification locale → Audit technique : Trace actions d&#x27;authentification</text>
+<text x="895.0" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">14. Audit technique → PostgreSQL applicatif : Ajoute des événements</text>
+<text x="30" y="2157" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les domaines imports, category et bank/lectures passent eux aussi par la même chaîne de sécurité ; toutes les flèches du fan-out ne sont pas répétées.</text>
+<text x="30" y="2179" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les catégories manuelles et déterministes restent prioritaires. Une reconnaissance crée une suggestion, jamais une affectation ML automatique.</text>
+<text x="30" y="2201" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Tous les domaines utilisent leur propre accès aux repositories applicatifs ; les principales écritures sont montrées. Les appels IA/fournisseur restent hors transactions SQL.</text>
+</g>
+</svg>
+</div><ul><li>Les domaines imports, category et bank/lectures passent eux aussi par la même chaîne de sécurité ; toutes les flèches du fan-out ne sont pas répétées.</li><li>Les catégories manuelles et déterministes restent prioritaires. Une reconnaissance crée une suggestion, jamais une affectation ML automatique.</li><li>Tous les domaines utilisent leur propre accès aux repositories applicatifs ; les principales écritures sont montrées. Les appels IA/fournisseur restent hors transactions SQL.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AccountActionService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/auth/AuthService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/auth/RefreshTokenService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/BankSynchronizationService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/LocalBankDataService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/api/LocalBankDataController.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/infrastructure/mockbank/MockBankHttpClient.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategorizationReviewService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/category/CategoryService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/category/MerchantRecognitionService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/common/web</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/config/SecurityConfiguration.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/imports/CsvImportService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/profile/api/ProfileController.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/security/StatusAwareAuthorizationFilter.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/user/persistence</code></li><li><code>backend/src/main/resources/db/migration</code></li><li><code>frontend/src/services/apiClient.js</code></li></ul></details></section><section id="04-backend-insights" class="diagram" hidden><h2>C3 · Backend : planification et insights</h2><p>Règles financières exécutables ; aucun de ces composants n&#x27;est un microservice indépendant.</p><p><a href="04-backend-insights.svg" download>Télécharger le SVG</a> · <a href="04-backend-insights.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 2381" width="1370" height="2381" role="img" aria-labelledby="04-backend-insights-title 04-backend-insights-desc">
+<title id="04-backend-insights-title">C3 · Backend : planification et insights</title>
+<desc id="04-backend-insights-desc">Règles financières exécutables ; aucun de ces composants n&#x27;est un microservice indépendant. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="04-backend-insights-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="2381" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Backend : planification et insights</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="1010" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Backend principal / domaines métier</text>
+<g data-edge="1"><title>REST : plans mensuels</title><path d="M520 185 L492 185 L490 180 L410 180 L410 460 L408 465 L380 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="2"><title>REST : objectifs et répartition</title><path d="M675 270 L675 298 L680 300 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="3"><title>REST : génération et simulations</title><path d="M830 185 L858 185 L860 180 L860 460 L940 460 L942 465 L970 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="4"><title>REST : score de bien-être</title><path d="M675 270 L675 298 L680 300 L420 300 L420 630 L220 630 L225 632 L225 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="5"><title>REST : génération et feedback</title><path d="M675 270 L675 298 L680 300 L850 300 L850 630 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="6"><title>REST : explication et ticket</title><path d="M675 270 L675 298 L680 300 L680 310 L950 310 L950 630 L1120 630 L1125 632 L1125 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="7"><title>Lit historique ; stocke montants et métadonnées</title><path d="M225 550 L225 578 L220 580 L220 640 L500 640 L500 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="8"><title>Lit MonthlyPlan ; écrit contributions / allocations</title><path d="M675 550 L675 578 L680 580 L680 640 L850 640 L850 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="9"><title>Lit snapshots et historique ; stocke la prévision</title><path d="M1125 550 L1125 578 L1120 580 L860 580 L860 1360 L680 1360 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="10"><title>Résidu agrégé TND / repli déterministe</title><path d="M1125 550 L1125 578 L1120 580 L1120 640 L950 640 L950 1370 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>Obtient l&#x27;évaluation autoritaire et ses facteurs</title><path d="M520 745 L492 745 L490 740 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="12"><title>Lit faits ; publie snapshot immutable</title><path d="M225 830 L225 858 L220 860 L220 1020 L680 1020 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="13"><title>Stocke justifications et feedback</title><path d="M675 830 L675 858 L680 860 L680 1010 L670 1010 L670 1370 L680 1370 L675 1372 L675 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="14"><title>Lit une recommandation appartenant à l&#x27;utilisateur</title><path d="M970 745 L942 745 L940 740 L860 740 L858 745 L830 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="15"><title>Explication ou image éphémère / HTTP</title><path d="M1125 830 L1125 858 L1120 860 L1120 1370 L1125 1372 L1125 1400" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="16"><title>Trace génération de score</title><path d="M225 830 L225 858 L220 860 L210 860 L210 1010 L220 1010 L225 1012 L225 1040" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-edge="17"><title>Trace génération et feedback</title><path d="M520 745 L492 745 L490 740 L490 1120 L410 1120 L408 1125 L380 1125" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-backend-insights-arrow)"/></g>
+<g data-node="front"><title>Frontend authentifié: Budgets, objectifs, prévisions, score et prochaines étapes. | frontend/src/services</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Frontend authentifié</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">API REST</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Budgets, objectifs, prévisions, score</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et prochaines étapes.</text>
+</g>
+<g data-node="salary"><title>Salary Planning: Plan mois/devise, revenus, allocations et capacité d&#x27;épargne. | backend/src/main/java/com/azizx25/smartfinancialwellness/salary/SalaryPlanService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/salary/HistoricalSalaryRecommendationService.java</title>
+<rect x="70" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Salary Planning</text>
+<text x="86" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">salary/</text>
+<text x="86" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Plan mois/devise, revenus, allocations</text>
+<text x="86" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et capacité d&#x27;épargne.</text>
+</g>
+<g data-node="goals"><title>Goals: Progression par contributions, allocations et simulations temporaires. | backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalAllocationService.java</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Goals</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">goal/</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Progression par contributions,</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">allocations et simulations temporaires.</text>
+</g>
+<g data-node="forecast"><title>Forecast: Solde observé + flux restant déterministe + résidu ML éligible. | backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/ForecastService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/DeterministicForecastCalculator.java</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Forecast</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">forecast/</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Solde observé + flux restant</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">déterministe + résidu ML éligible.</text>
+</g>
+<g data-node="score"><title>Financial Wellness Score: Score déterministe, facteurs disponibles et snapshots immuables. | backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialScoreService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialWellnessScoreCalculator.java</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Financial Wellness Score</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">score/</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Score déterministe, facteurs</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">disponibles et snapshots immuables.</text>
+</g>
+<g data-node="recs"><title>Recommendations: Règles versionnées, justifications et feedback idempotent. | backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationRules.java</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Recommendations</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">recommendation/</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règles versionnées, justifications et</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">feedback idempotent.</text>
+</g>
+<g data-node="assist"><title>Assistance locale: Explication limitée et ticket validé ; aucun changement financier. | backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceService.java; backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Assistance locale</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">assistance/</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Explication limitée et ticket validé ;</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">aucun changement financier.</text>
+</g>
+<g data-node="db"><title>PostgreSQL applicatif: Plans, goals, transactions, snapshots, facteurs et recommandations. | backend/src/main/resources/db/migration</title>
+<rect x="520" y="1400" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1416 Q675.0 1440 830 1416" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1429" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL applicatif</text>
+<text x="536" y="1452" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1471" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">JPA / JDBC · Flyway V1–V22</text>
+<text x="536" y="1495" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Plans, goals, transactions, snapshots,</text>
+<text x="536" y="1512" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">facteurs et recommandations.</text>
+</g>
+<g data-node="ai"><title>FastAPI: Résidu Forecast, explication et extraction de ticket. | ai-service/src/forecast_ai/main.py</title>
+<rect x="970" y="1400" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1429" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI</text>
+<text x="986" y="1452" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1471" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP interne</text>
+<text x="986" y="1495" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Résidu Forecast, explication et</text>
+<text x="986" y="1512" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">extraction de ticket.</text>
+</g>
+<g data-node="audit"><title>Audit append-only: Événements métiers sans mots de passe ni tokens. | backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</title>
+<rect x="70" y="1040" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="1069" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Audit append-only</text>
+<text x="86" y="1092" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="1111" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">audit/</text>
+<text x="86" y="1135" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Événements métiers sans mots de passe</text>
+<text x="86" y="1152" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">ni tokens.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="680" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="860" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="420" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="420.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="850" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="950" cy="470" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="950.0" y="474.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="500" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="500.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="850" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="860" cy="970" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="974.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="950" cy="1005" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="950.0" y="1009.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="450" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="450" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<circle cx="670" cy="1190" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="670.0" y="1194.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">13</text>
+<circle cx="900" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">14</text>
+<circle cx="1120" cy="1115" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="1119.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">15</text>
+<circle cx="210" cy="935" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="210.0" y="939.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">16</text>
+<circle cx="490" cy="930" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="490.0" y="934.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">17</text>
+<text x="30" y="1662" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Frontend authentifié → Salary Planning : REST : plans mensuels</text>
+<text x="30" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Frontend authentifié → Goals : REST : objectifs et répartition</text>
+<text x="30" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Frontend authentifié → Forecast : REST : génération et simulations</text>
+<text x="30" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Frontend authentifié → Financial Wellness Score : REST : score de bien-être</text>
+<text x="30" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Frontend authentifié → Recommendations : REST : génération et feedback</text>
+<text x="30" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Frontend authentifié → Assistance locale : REST : explication et ticket</text>
+<text x="30" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Salary Planning → PostgreSQL applicatif : Lit historique ; stocke montants et</text>
+<text x="30" y="2099" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">métadonnées</text>
+<text x="30" y="2147" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Goals → PostgreSQL applicatif : Lit MonthlyPlan ; écrit contributions / allocations</text>
+<text x="30" y="2212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Forecast → PostgreSQL applicatif : Lit snapshots et historique ; stocke la prévision</text>
+<text x="700.0" y="1692" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Forecast → FastAPI : Résidu agrégé TND / repli déterministe (pointillés)</text>
+<text x="700.0" y="1757" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Recommendations → Financial Wellness Score : Obtient l&#x27;évaluation autoritaire et ses</text>
+<text x="700.0" y="1774" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">facteurs</text>
+<text x="700.0" y="1822" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Financial Wellness Score → PostgreSQL applicatif : Lit faits ; publie snapshot</text>
+<text x="700.0" y="1839" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">immutable</text>
+<text x="700.0" y="1887" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">13. Recommendations → PostgreSQL applicatif : Stocke justifications et feedback</text>
+<text x="700.0" y="1952" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">14. Assistance locale → Recommendations : Lit une recommandation appartenant à</text>
+<text x="700.0" y="1969" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">l&#x27;utilisateur</text>
+<text x="700.0" y="2017" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">15. Assistance locale → FastAPI : Explication ou image éphémère / HTTP (pointillés)</text>
+<text x="700.0" y="2082" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">16. Financial Wellness Score → Audit append-only : Trace génération de score</text>
+<text x="700.0" y="2147" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">17. Recommendations → Audit append-only : Trace génération et feedback</text>
+<text x="30" y="2287" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le lien Salary Planning → Goals est la donnée MonthlyPlan/goal_allocation en base, pas un appel inventé entre services.</text>
+<text x="30" y="2309" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le score et les règles de recommandation n&#x27;utilisent aucun LLM. Les facteurs indisponibles sont exclus ; aucun facteur n&#x27;est inventé.</text>
+<text x="30" y="2331" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">L&#x27;IA explique seulement une règle contrôlée ; ses échecs conservent le texte déterministe. Le ticket passe par une revue humaine et un export CSV séparé.</text>
+</g>
+</svg>
+</div><ul><li>Le lien Salary Planning → Goals est la donnée MonthlyPlan/goal_allocation en base, pas un appel inventé entre services.</li><li>Le score et les règles de recommandation n&#x27;utilisent aucun LLM. Les facteurs indisponibles sont exclus ; aucun facteur n&#x27;est inventé.</li><li>L&#x27;IA explique seulement une règle contrôlée ; ses échecs conservent le texte déterministe. Le ticket passe par une revue humaine et un export CSV séparé.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/src/forecast_ai/main.py</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/audit/AuditService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/DeterministicForecastCalculator.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/forecast/ForecastService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalAllocationService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/goal/GoalService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationRules.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/recommendation/RecommendationService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/salary/HistoricalSalaryRecommendationService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/salary/SalaryPlanService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialScoreService.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/score/FinancialWellnessScoreCalculator.java</code></li><li><code>backend/src/main/resources/db/migration</code></li><li><code>frontend/src/services</code></li></ul></details></section><section id="05-frontend" class="diagram" hidden><h2>C3 · Frontend principal</h2><p>Composants React et client API partagés ; toute communication réseau passe par le backend.</p><p><a href="05-frontend.svg" download>Télécharger le SVG</a> · <a href="05-frontend.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1936" width="1370" height="1936" role="img" aria-labelledby="05-frontend-title 05-frontend-desc">
+<title id="05-frontend-title">C3 · Frontend principal</title>
+<desc id="05-frontend-desc">Composants React et client API partagés ; toute communication réseau passe par le backend. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="05-frontend-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1936" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Frontend principal</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="840" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">SPA frontend / composants logiques</text>
+<g data-edge="1"><title>Navigation et actions explicites</title><path d="M675 270 L675 298 L680 300 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="2"><title>Vérifie la session</title><path d="M520 465 L492 465 L490 460 L410 460 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="3"><title>Affiche les pages autorisées</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="4"><title>Réutilise les primitives et représentations</title><path d="M830 745 L858 745 L860 740 L860 460 L940 460 L942 465 L970 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="5"><title>Consomme et invalide les données</title><path d="M520 745 L492 745 L490 740 L420 740 L420 1020 L410 1020 L408 1025 L380 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="6"><title>Authentification et refresh</title><path d="M380 745 L408 745 L410 740 L410 1010 L490 1010 L490 1020 L492 1025 L520 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="7"><title>Services API par fonctionnalité</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="8"><title>Prévisualisation CSV et extraction de ticket</title><path d="M970 745 L942 745 L940 740 L870 740 L870 1020 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="9"><title>CSV vérifié à importer séparément</title><path d="M970 745 L942 745 L940 740 L940 730 L860 730 L860 740 L858 745 L830 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="10"><title>Comptes, agrégations et transactions</title><path d="M380 1025 L408 1025 L410 1020 L490 1020 L492 1025 L520 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-edge="11"><title>REST + JWT / cookie HttpOnly</title><path d="M675 1110 L675 1138 L680 1140 L680 1170 L675 1172 L675 1200" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-frontend-arrow)"/></g>
+<g data-node="user"><title>Utilisateur: Navigue, synchronise, corrige et confirme. | </title>
+<rect x="520" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="806" cy="123" r="8" fill="#123458"/>
+<text x="536" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Utilisateur</text>
+<text x="536" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="536" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Navigue, synchronise, corrige et</text>
+<text x="536" y="195" font-size="13" fill="#123458" font-weight="400" text-anchor="start">confirme.</text>
+</g>
+<g data-node="routes"><title>Routes et AppShell: Navigation, accès protégé, sidebar et mises en page responsive. | frontend/src/App.jsx; frontend/src/components/AppShell.jsx</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Routes et AppShell</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">React Router · AppShell</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Navigation, accès protégé, sidebar et</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">mises en page responsive.</text>
+</g>
+<g data-node="auth"><title>Session et onboarding: Login, vérification email et reprise de session. | frontend/src/auth/AuthContext.jsx; frontend/src/auth/ProtectedRoute.jsx</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Session et onboarding</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">AuthContext · ProtectedRoute</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Login, vérification email et reprise de</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">session.</text>
+</g>
+<g data-node="pages"><title>Pages financières: Dashboard, transactions, catégories, banque, budgets, goals et forecast. | frontend/src/pages</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Pages financières</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">pages/</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Dashboard, transactions, catégories,</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">banque, budgets, goals et forecast.</text>
+</g>
+<g data-node="widgets"><title>Composants de présentation: Montants affichés, score, badges et graphique Forecast indicatif. | frontend/src/components/Ui.jsx; frontend/src/components/ForecastBalanceChart.jsx; frontend/src/design-system.css</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Composants de présentation</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Ui · design-system.css</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Montants affichés, score, badges et</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">graphique Forecast indicatif.</text>
+</g>
+<g data-node="finance"><title>Données et invalidation: Charge les données locales ; recharge après les mutations. | frontend/src/financial/FinancialDataContext.jsx</title>
+<rect x="70" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Données et invalidation</text>
+<text x="86" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">FinancialDataContext</text>
+<text x="86" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Charge les données locales ; recharge</text>
+<text x="86" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">après les mutations.</text>
+</g>
+<g data-node="receipt"><title>Import et revue de ticket: Revue humaine puis CSV ; aucune transaction créée par extraction. | frontend/src/components/CsvImportPanel.jsx; frontend/src/components/ReceiptPanel.jsx; frontend/src/services/receiptCsv.js</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Import et revue de ticket</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">CsvImportPanel · ReceiptPanel</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Revue humaine puis CSV ; aucune</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">transaction créée par extraction.</text>
+</g>
+<g data-node="api"><title>Client HTTP authentifié: JWT en mémoire, refresh partagé, erreurs et paramètres encodés. | frontend/src/services/apiClient.js; frontend/src/services/authApi.js; frontend/src/services/forecastApi.js</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Client HTTP authentifié</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">services/ · apiClient.js</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">JWT en mémoire, refresh partagé,</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">erreurs et paramètres encodés.</text>
+</g>
+<g data-node="backend"><title>API principale: Source de vérité : ownership, totaux, scores et projections. | backend/src/main/java</title>
+<rect x="520" y="1200" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="1229" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">API principale</text>
+<text x="536" y="1252" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="1271" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP / REST / JSON</text>
+<text x="536" y="1295" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Source de vérité : ownership, totaux,</text>
+<text x="536" y="1312" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">scores et projections.</text>
+</g>
+<circle cx="680" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="410" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="860" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="420" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="420.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="410" cy="875" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="879.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="870" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="870.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="900" cy="730" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="734.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="450" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="680" cy="1155" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1159.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<text x="30" y="1412" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Utilisateur → Routes et AppShell : Navigation et actions explicites</text>
+<text x="30" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Routes et AppShell → Session et onboarding : Vérifie la session</text>
+<text x="30" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Routes et AppShell → Pages financières : Affiche les pages autorisées</text>
+<text x="30" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Pages financières → Composants de présentation : Réutilise les primitives et</text>
+<text x="30" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">représentations</text>
+<text x="30" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Pages financières → Données et invalidation : Consomme et invalide les données</text>
+<text x="30" y="1767" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Session et onboarding → Client HTTP authentifié : Authentification et refresh</text>
+<text x="700.0" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Pages financières → Client HTTP authentifié : Services API par fonctionnalité</text>
+<text x="700.0" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Import et revue de ticket → Client HTTP authentifié : Prévisualisation CSV et</text>
+<text x="700.0" y="1524" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">extraction de ticket</text>
+<text x="700.0" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Import et revue de ticket → Pages financières : CSV vérifié à importer séparément</text>
+<text x="700.0" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Données et invalidation → Client HTTP authentifié : Comptes, agrégations et</text>
+<text x="700.0" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">transactions</text>
+<text x="700.0" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. Client HTTP authentifié → API principale : REST + JWT / cookie HttpOnly</text>
+<text x="30" y="1842" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Pas d&#x27;appel navigateur vers :8081, FastAPI, Ollama ou une base de données.</text>
+<text x="30" y="1864" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le graphique Forecast relie le solde daté à la prévision de fin de mois ; il n&#x27;invente pas des prédictions quotidiennes.</text>
+<text x="30" y="1886" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">La console mock-bank-ui est une autre SPA, avec une session et une API d&#x27;administration séparées.</text>
+</g>
+</svg>
+</div><ul><li>Pas d&#x27;appel navigateur vers :8081, FastAPI, Ollama ou une base de données.</li><li>Le graphique Forecast relie le solde daté à la prévision de fin de mois ; il n&#x27;invente pas des prédictions quotidiennes.</li><li>La console mock-bank-ui est une autre SPA, avec une session et une API d&#x27;administration séparées.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>backend/src/main/java</code></li><li><code>frontend/src/App.jsx</code></li><li><code>frontend/src/auth/AuthContext.jsx</code></li><li><code>frontend/src/auth/ProtectedRoute.jsx</code></li><li><code>frontend/src/components/AppShell.jsx</code></li><li><code>frontend/src/components/CsvImportPanel.jsx</code></li><li><code>frontend/src/components/ForecastBalanceChart.jsx</code></li><li><code>frontend/src/components/ReceiptPanel.jsx</code></li><li><code>frontend/src/components/Ui.jsx</code></li><li><code>frontend/src/design-system.css</code></li><li><code>frontend/src/financial/FinancialDataContext.jsx</code></li><li><code>frontend/src/pages</code></li><li><code>frontend/src/services/apiClient.js</code></li><li><code>frontend/src/services/authApi.js</code></li><li><code>frontend/src/services/forecastApi.js</code></li><li><code>frontend/src/services/receiptCsv.js</code></li></ul></details></section><section id="06-ai-service" class="diagram" hidden><h2>C3 · Service d&#x27;inférence</h2><p>Runtimes figés et fournisseurs bornés ; pas d&#x27;entraînement ni d&#x27;accès aux bases applicatives.</p><p><a href="06-ai-service.svg" download>Télécharger le SVG</a> · <a href="06-ai-service.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 2231" width="1370" height="2231" role="img" aria-labelledby="06-ai-service-title 06-ai-service-desc">
+<title id="06-ai-service-title">C3 · Service d&#x27;inférence</title>
+<desc id="06-ai-service-desc">Runtimes figés et fournisseurs bornés ; pas d&#x27;entraînement ni d&#x27;accès aux bases applicatives. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="06-ai-service-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="2231" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Service d&#x27;inférence</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="850" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Processus FastAPI / Python</text>
+<g data-edge="1"><title>Appelle les routes d&#x27;inférence internes</title><path d="M675 270 L675 298 L680 300 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="2"><title>/forecast/predict-residual</title><path d="M520 465 L492 465 L490 460 L410 460 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="3"><title>/merchant-recognition/predict</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="4"><title>/recommendations/explain ; /receipts/extract</title><path d="M830 465 L858 465 L860 460 L860 740 L940 740 L942 745 L970 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="5"><title>Charge le Huber et vérifie son empreinte</title><path d="M225 830 L225 858 L220 860 L220 1180 L225 1182 L225 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="6"><title>Charge catalogue et modèle marchand</title><path d="M675 830 L675 858 L680 860 L230 860 L230 1180 L220 1180 L225 1182 L225 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="7"><title>Recours optionnel après modèle local</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="8"><title>Embedding et raisonnement local bornés</title><path d="M830 1025 L858 1025 L860 1020 L860 1300 L940 1300 L942 1295 L970 1295" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="9"><title>Recherche marchande si activée</title><path d="M675 1110 L675 1138 L680 1140 L680 1440 L675 1442 L675 1470" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="10"><title>Explication ou vision si activée</title><path d="M1125 830 L1125 858 L1120 860 L1120 1180 L1125 1182 L1125 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="backend"><title>Backend principal: Envoie uniquement le contrat minimal propre à chaque fonctionnalité. | backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Backend principal</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP / JSON strict</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Envoie uniquement le contrat minimal</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propre à chaque fonctionnalité.</text>
+</g>
+<g data-node="api"><title>FastAPI et contrats: Validation stricte, limites, erreurs sûres et health. | ai-service/src/forecast_ai/main.py; ai-service/src/forecast_ai/contracts.py; ai-service/src/forecast_ai/merchant_contracts.py</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI et contrats</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">main.py · Pydantic</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Validation stricte, limites, erreurs</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sûres et health.</text>
+</g>
+<g data-node="forecast"><title>Résidu Forecast: Huber figé TND ; features agrégées ; sortie décimale. | ai-service/src/forecast_ai/runtime.py; ai-service/src/forecast_ai/contracts.py</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Résidu Forecast</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">ModelRuntime · scikit-learn</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Huber figé TND ; features agrégées ;</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sortie décimale.</text>
+</g>
+<g data-node="merchant"><title>Reconnaissance marchande: Alias/catalogue, modèle local puis enrichissement optionnel. | ai-service/src/forecast_ai/merchant_runtime.py</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Reconnaissance marchande</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MerchantRuntime</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Alias/catalogue, modèle local puis</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">enrichissement optionnel.</text>
+</g>
+<g data-node="assist"><title>Explication et vision: Règle contrôlée ou image assainie ; sorties strictes. | ai-service/src/forecast_ai/assistance.py</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Explication et vision</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">LocalAssistance · Pillow</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règle contrôlée ou image assainie ;</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sorties strictes.</text>
+</g>
+<g data-node="artifacts"><title>Artefacts locaux: Modèles, métadonnées et versions vérifiés. | ai-service/models</title>
+<rect x="70" y="1210" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="86" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Artefacts locaux</text>
+<text x="86" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="86" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">models/forecast · models/merchant</text>
+<text x="86" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Modèles, métadonnées et versions</text>
+<text x="86" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">vérifiés.</text>
+</g>
+<g data-node="enrich"><title>Enrichissement et admission: Budget borné, cache catalogue public et un slot local partagé. | ai-service/src/forecast_ai/merchant_enrichment.py; ai-service/src/forecast_ai/inference_control.py</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Enrichissement et admission</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MerchantEnricher · inference_control</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Budget borné, cache catalogue public et</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">un slot local partagé.</text>
+</g>
+<g data-node="ollama"><title>Ollama du poste: Embedding, raisonnement et vision configurables. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="970" y="1210" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama du poste</text>
+<text x="986" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">/api/embed · /api/chat</text>
+<text x="986" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Embedding, raisonnement et vision</text>
+<text x="986" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">configurables.</text>
+</g>
+<g data-node="web"><title>Ollama Web Search: Résultats publics bornés ; URLs de preuve contrôlées. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="520" y="1470" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="1499" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama Web Search</text>
+<text x="536" y="1522" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="1541" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS / API fournisseur</text>
+<text x="536" y="1565" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Résultats publics bornés ; URLs de</text>
+<text x="536" y="1582" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">preuve contrôlées.</text>
+</g>
+<circle cx="680" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="410" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="860" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="220" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="220.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="455" cy="860" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="455.0" y="864.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="860" cy="1160" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="1164.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="680" cy="1290" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1294.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="1120" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<text x="30" y="1772" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1802" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Backend principal → FastAPI et contrats : Appelle les routes d&#x27;inférence internes</text>
+<text x="30" y="1867" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. FastAPI et contrats → Résidu Forecast : /forecast/predict-residual</text>
+<text x="30" y="1932" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. FastAPI et contrats → Reconnaissance marchande : /merchant-recognition/predict</text>
+<text x="30" y="1997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. FastAPI et contrats → Explication et vision : /recommendations/explain ;</text>
+<text x="30" y="2014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">/receipts/extract</text>
+<text x="30" y="2062" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Résidu Forecast → Artefacts locaux : Charge le Huber et vérifie son empreinte</text>
+<text x="700.0" y="1802" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Reconnaissance marchande → Artefacts locaux : Charge catalogue et modèle marchand</text>
+<text x="700.0" y="1867" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Reconnaissance marchande → Enrichissement et admission : Recours optionnel après</text>
+<text x="700.0" y="1884" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">modèle local (pointillés)</text>
+<text x="700.0" y="1932" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Enrichissement et admission → Ollama du poste : Embedding et raisonnement local</text>
+<text x="700.0" y="1949" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">bornés (pointillés)</text>
+<text x="700.0" y="1997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Enrichissement et admission → Ollama Web Search : Recherche marchande si activée</text>
+<text x="700.0" y="2014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="700.0" y="2062" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Explication et vision → Ollama du poste : Explication ou vision si activée</text>
+<text x="700.0" y="2079" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="30" y="2137" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Aucun PostgreSQL ni stockage de tickets. Les appels externes appartiennent uniquement à l&#x27;enrichissement marchand.</text>
+<text x="30" y="2159" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Contrats et provenance sont validés avant toute suggestion ; le backend reste responsable de la persistance PENDING.</text>
+<text x="30" y="2181" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le slot d&#x27;inférence couvre embeddings, raisonnement et assistance. Forecast et health restent indépendants.</text>
+</g>
+</svg>
+</div><ul><li>Aucun PostgreSQL ni stockage de tickets. Les appels externes appartiennent uniquement à l&#x27;enrichissement marchand.</li><li>Contrats et provenance sont validés avant toute suggestion ; le backend reste responsable de la persistance PENDING.</li><li>Le slot d&#x27;inférence couvre embeddings, raisonnement et assistance. Forecast et health restent indépendants.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/models</code></li><li><code>ai-service/src/forecast_ai/assistance.py</code></li><li><code>ai-service/src/forecast_ai/contracts.py</code></li><li><code>ai-service/src/forecast_ai/inference_control.py</code></li><li><code>ai-service/src/forecast_ai/main.py</code></li><li><code>ai-service/src/forecast_ai/merchant_contracts.py</code></li><li><code>ai-service/src/forecast_ai/merchant_enrichment.py</code></li><li><code>ai-service/src/forecast_ai/merchant_runtime.py</code></li><li><code>ai-service/src/forecast_ai/ollama_providers.py</code></li><li><code>ai-service/src/forecast_ai/runtime.py</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java</code></li><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</code></li></ul></details></section><section id="07-mock-bank" class="diagram" hidden><h2>C3 · Banque simulée</h2><p>Services bancaires synthétiques et administration ; aucune règle de bien-être financier.</p><p><a href="07-mock-bank.svg" download>Télécharger le SVG</a> · <a href="07-mock-bank.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1871" width="1370" height="1871" role="img" aria-labelledby="07-mock-bank-title 07-mock-bank-desc">
+<title id="07-mock-bank-title">C3 · Banque simulée</title>
+<desc id="07-mock-bank-desc">Services bancaires synthétiques et administration ; aucune règle de bien-être financier. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="07-mock-bank-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1871" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Banque simulée</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="840" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">API mock-bank / Java 21</text>
+<g data-edge="1"><title>Login client puis lectures JWT</title><path d="M380 185 L408 185 L410 180 L410 460 L490 460 L492 465 L520 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="2"><title>REST / JWT admin ; CORS :5174</title><path d="M970 185 L942 185 L940 180 L860 180 L860 460 L858 465 L830 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="3"><title>Authentifie le client synthétique</title><path d="M520 465 L492 465 L490 460 L490 740 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="4"><title>Autorise les lectures client-scoped</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="5"><title>Autorise les opérations administrateur</title><path d="M830 465 L858 465 L860 460 L860 740 L940 740 L942 745 L970 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="6"><title>Vérifie le compte et son propriétaire</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="7"><title>Charge le client et son hash BCrypt</title><path d="M380 745 L408 745 L410 740 L410 1020 L490 1020 L492 1025 L520 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="8"><title>Lit / modifie le ledger synthétique</title><path d="M970 745 L942 745 L940 740 L940 1020 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="9"><title>Réconcilie uniquement les fixtures démo</title><path d="M970 1025 L942 1025 L940 1020 L940 1030 L860 1030 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="10"><title>JPA ; transactions et migrations propres</title><path d="M675 1110 L675 1138 L680 1140 L680 1170 L675 1172 L675 1200" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-node="backend"><title>Backend principal: Consomme seulement l&#x27;authentification et les lectures. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java</title>
+<rect x="70" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="86" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Backend principal</text>
+<text x="86" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="86" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">JWT fournisseur / REST</text>
+<text x="86" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Consomme seulement l&#x27;authentification</text>
+<text x="86" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et les lectures.</text>
+</g>
+<g data-node="adminui"><title>Console administrateur: Gère les clients, comptes et opérations synthétiques. | mock-bank-ui/src/App.jsx</title>
+<rect x="970" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Console administrateur</text>
+<text x="986" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">React · mock-bank-ui</text>
+<text x="986" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Gère les clients, comptes et opérations</text>
+<text x="986" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<g data-node="security"><title>Sécurité JWT et ownership: JWT client/admin distincts ; CORS admin limité. | mock-bank/src/main/java/com/azizx25/mockbank/config/MockBankSecurityConfiguration.java; mock-bank/src/main/java/com/azizx25/mockbank/security/MockBankJwtService.java</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Sécurité JWT et ownership</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Spring Security</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">JWT client/admin distincts ; CORS admin</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">limité.</text>
+</g>
+<g data-node="auth"><title>Authentification fournisseur: Identifiants synthétiques BCrypt et JWT de courte durée. | mock-bank/src/main/java/com/azizx25/mockbank/auth/MockBankAuthenticationService.java</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Authentification fournisseur</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MockBankAuthenticationService</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Identifiants synthétiques BCrypt et JWT</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">de courte durée.</text>
+</g>
+<g data-node="queries"><title>Comptes / soldes / opérations: Lectures publiques bornées et vérification du client propriétaire. | mock-bank/src/main/java/com/azizx25/mockbank/account/AccountQueryService.java; mock-bank/src/main/java/com/azizx25/mockbank/account/BalanceQueryService.java; mock-bank/src/main/java/com/azizx25/mockbank/transaction/TransactionQueryService.java</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Comptes / soldes /</text>
+<text x="536" y="711" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">opérations</text>
+<text x="536" y="734" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="753" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Account/Balance/TransactionQueryService</text>
+<text x="536" y="777" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Lectures publiques bornées et</text>
+<text x="536" y="794" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">vérification du client propriétaire.</text>
+</g>
+<g data-node="admin"><title>Administration synthétique: Création / état des clients, comptes et transactions du ledger. | mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminManagementService.java; mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminAuthenticationService.java</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Administration synthétique</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">AdminManagementService</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Création / état des clients, comptes et</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">transactions du ledger.</text>
+</g>
+<g data-node="demo"><title>Fixture superviseur: Seeder idempotent et reset uniquement de l&#x27;identité démo. | mock-bank/src/main/java/com/azizx25/mockbank/demo/api/SupervisorDemoFixtureController.java; mock-bank/src/main/java/com/azizx25/mockbank/demo/SupervisorDemoFixtureService.java</title>
+<rect x="970" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Fixture superviseur</text>
+<text x="986" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Profil demo + flag explicite</text>
+<text x="986" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Seeder idempotent et reset uniquement</text>
+<text x="986" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">de l&#x27;identité démo.</text>
+</g>
+<g data-node="lookup"><title>Lookup et repositories: Existence, propriété et accès à la base du simulateur. | mock-bank/src/main/java/com/azizx25/mockbank/customer/CustomerLookupService.java; mock-bank/src/main/java/com/azizx25/mockbank/account/persistence; mock-bank/src/main/java/com/azizx25/mockbank/transaction/persistence</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Lookup et repositories</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">CustomerLookupService · JPA</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Existence, propriété et accès à la base</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">du simulateur.</text>
+</g>
+<g data-node="db"><title>PostgreSQL mock_bank: Données bancaires exclusivement synthétiques. | mock-bank/src/main/resources/db/migration</title>
+<rect x="520" y="1200" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1216 Q675.0 1240 830 1216" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1229" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL mock_bank</text>
+<text x="536" y="1252" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1271" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Flyway V1–V4</text>
+<text x="536" y="1295" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Données bancaires exclusivement</text>
+<text x="536" y="1312" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="860" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="490" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="490.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="860" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="410" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="940" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="940.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="900" cy="1030" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="1034.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="680" cy="1155" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1159.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<text x="30" y="1412" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Backend principal → Sécurité JWT et ownership : Login client puis lectures JWT</text>
+<text x="30" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Console administrateur → Sécurité JWT et ownership : REST / JWT admin ; CORS :5174</text>
+<text x="30" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Sécurité JWT et ownership → Authentification fournisseur : Authentifie le client</text>
+<text x="30" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétique</text>
+<text x="30" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Sécurité JWT et ownership → Comptes / soldes / opérations : Autorise les lectures</text>
+<text x="30" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">client-scoped</text>
+<text x="30" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Sécurité JWT et ownership → Administration synthétique : Autorise les opérations</text>
+<text x="30" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">administrateur</text>
+<text x="700.0" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Comptes / soldes / opérations → Lookup et repositories : Vérifie le compte et son</text>
+<text x="700.0" y="1459" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propriétaire</text>
+<text x="700.0" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Authentification fournisseur → Lookup et repositories : Charge le client et son hash</text>
+<text x="700.0" y="1524" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">BCrypt</text>
+<text x="700.0" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Administration synthétique → Lookup et repositories : Lit / modifie le ledger</text>
+<text x="700.0" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétique</text>
+<text x="700.0" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Fixture superviseur → Lookup et repositories : Réconcilie uniquement les fixtures</text>
+<text x="700.0" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">démo</text>
+<text x="700.0" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Lookup et repositories → PostgreSQL mock_bank : JPA ; transactions et migrations</text>
+<text x="700.0" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propres</text>
+<text x="30" y="1777" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Pas de flux OAuth Authorization Code / PKCE exécutable ; les tables de conception ne sont pas une API implémentée.</text>
+<text x="30" y="1799" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Un compte d&#x27;un autre client retourne 404 Account not found ; les entités JPA ne sont pas exposées.</text>
+<text x="30" y="1821" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">La fixture nécessite le profil demo, un flag activé et une authentification administrateur.</text>
+</g>
+</svg>
+</div><ul><li>Pas de flux OAuth Authorization Code / PKCE exécutable ; les tables de conception ne sont pas une API implémentée.</li><li>Un compte d&#x27;un autre client retourne 404 Account not found ; les entités JPA ne sont pas exposées.</li><li>La fixture nécessite le profil demo, un flag activé et une authentification administrateur.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java</code></li><li><code>mock-bank-ui/src/App.jsx</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/account/AccountQueryService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/account/BalanceQueryService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/account/persistence</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminAuthenticationService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminManagementService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/auth/MockBankAuthenticationService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/config/MockBankSecurityConfiguration.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/customer/CustomerLookupService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/demo/SupervisorDemoFixtureService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/demo/api/SupervisorDemoFixtureController.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/security/MockBankJwtService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/transaction/TransactionQueryService.java</code></li><li><code>mock-bank/src/main/java/com/azizx25/mockbank/transaction/persistence</code></li><li><code>mock-bank/src/main/resources/db/migration</code></li></ul></details></section><section id="08-ml-pipeline" class="diagram" hidden><h2>C3 · Pipeline ML hors ligne</h2><p>Flux de scripts / notebooks ; pas de service réseau ni de modification automatique des modèles en production.</p><p><a href="08-ml-pipeline.svg" download>Télécharger le SVG</a> · <a href="08-ml-pipeline.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1871" width="1370" height="1871" role="img" aria-labelledby="08-ml-pipeline-title 08-ml-pipeline-desc">
+<title id="08-ml-pipeline-title">C3 · Pipeline ML hors ligne</title>
+<desc id="08-ml-pipeline-desc">Flux de scripts / notebooks ; pas de service réseau ni de modification automatique des modèles en production. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="08-ml-pipeline-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1871" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Pipeline ML hors ligne</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="840" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">ml-pipeline / espace de travail hors ligne</text>
+<g data-edge="1"><title>Exécute génération avec seed</title><path d="M520 185 L492 185 L490 180 L410 180 L410 460 L408 465 L380 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="2"><title>Transactions synthétiques validées</title><path d="M380 465 L408 465 L410 460 L490 460 L492 465 L520 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="3"><title>Exemples agrégés / features versionnées</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="4"><title>Écrit dataset local</title><path d="M675 550 L675 578 L680 580 L220 580 L220 910 L225 912 L225 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="5"><title>Écrit métriques et provenance</title><path d="M520 745 L492 745 L490 740 L410 740 L410 1020 L408 1025 L380 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="6"><title>Sélection validée et export explicite</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="7"><title>Exemples et taxonomie versionnés</title><path d="M1125 550 L1125 578 L1120 580 L1120 630 L1125 632 L1125 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="8"><title>Artefact marchand validé</title><path d="M970 745 L942 745 L940 740 L860 740 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="9"><title>Export avec empreintes / inclusion build</title><path d="M675 1110 L675 1138 L680 1140 L680 1170 L675 1172 L675 1200" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="dev"><title>Développeur / stagiaire: Lance des expériences reproductibles et valide les résultats. | </title>
+<rect x="520" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="806" cy="123" r="8" fill="#123458"/>
+<text x="536" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Développeur / stagiaire</text>
+<text x="536" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="536" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Lance des expériences reproductibles et</text>
+<text x="536" y="195" font-size="13" fill="#123458" font-weight="400" text-anchor="start">valide les résultats.</text>
+</g>
+<g data-node="generator"><title>Génération et validation: Données synthétiques versionnées ; dates et devises contrôlées. | ml-pipeline/src/forecast_ml/synthetic_data.py; ml-pipeline/src/forecast_ml/validation.py</title>
+<rect x="70" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Génération et validation</text>
+<text x="86" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">synthetic_data · validation</text>
+<text x="86" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Données synthétiques versionnées ;</text>
+<text x="86" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">dates et devises contrôlées.</text>
+</g>
+<g data-node="dataset"><title>Dataset et features: Features connues au cutoff ; cible résiduelle sans fuite. | ml-pipeline/src/forecast_ml/dataset_builder.py; ml-pipeline/src/forecast_ml/feature_matrix.py</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Dataset et features</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">dataset_builder · feature_matrix</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Features connues au cutoff ; cible</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">résiduelle sans fuite.</text>
+</g>
+<g data-node="catalog"><title>Catalogue marchand: Taxonomie système et exemples marchands contrôlés. | ml-pipeline/src/merchant_ml/catalog.py</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Catalogue marchand</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">merchant_ml/catalog.py</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Taxonomie système et exemples marchands</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">contrôlés.</text>
+</g>
+<g data-node="training"><title>Expériences et évaluation: Comparaison des modèles, splits temporels et test préservé. | ml-pipeline/src/forecast_ml/modeling.py; ml-pipeline/src/forecast_ml/evaluation.py; ml-pipeline/notebooks</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Expériences et évaluation</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">modeling · temporal_split · notebooks</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Comparaison des modèles, splits</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">temporels et test préservé.</text>
+</g>
+<g data-node="merchant"><title>Entraînement marchand: Prépare le modèle / catalogue local de reconnaissance. | ml-pipeline/src/merchant_ml/artifact.py</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Entraînement marchand</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">merchant_ml/artifact.py</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Prépare le modèle / catalogue local de</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">reconnaissance.</text>
+</g>
+<g data-node="data"><title>Données et rapports locaux: Datasets et résultats générés ; hors Git lorsqu&#x27;ignorés. | ml-pipeline/.gitignore</title>
+<rect x="70" y="940" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="86" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Données et rapports locaux</text>
+<text x="86" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="86" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">data/ · artifacts/</text>
+<text x="86" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Datasets et résultats générés ; hors</text>
+<text x="86" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Git lorsqu&#x27;ignorés.</text>
+</g>
+<g data-node="export"><title>Export contrôlé des modèles: Publie l&#x27;artefact choisi avec versions et provenance. | ml-pipeline/scripts/export_frozen_model.py; ml-pipeline/scripts/export_merchant_model.py</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Export contrôlé des modèles</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">scripts/export_*_model.py</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Publie l&#x27;artefact choisi avec versions</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et provenance.</text>
+</g>
+<g data-node="models"><title>Artefacts d&#x27;inférence figés: Huber TND v1 et modèle marchand ; empaquetés au build. | ai-service/models</title>
+<rect x="520" y="1200" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="536" y="1229" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Artefacts d&#x27;inférence figés</text>
+<text x="536" y="1252" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="536" y="1271" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">ai-service/models</text>
+<text x="536" y="1295" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Huber TND v1 et modèle marchand ;</text>
+<text x="536" y="1312" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">empaquetés au build.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="450" cy="460" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="464.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="450" cy="580" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="584.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="410" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="1120" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="860" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="680" cy="1155" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1159.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<text x="30" y="1412" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Développeur / stagiaire → Génération et validation : Exécute génération avec seed</text>
+<text x="30" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Génération et validation → Dataset et features : Transactions synthétiques validées</text>
+<text x="30" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Dataset et features → Expériences et évaluation : Exemples agrégés / features</text>
+<text x="30" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">versionnées</text>
+<text x="30" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Dataset et features → Données et rapports locaux : Écrit dataset local</text>
+<text x="30" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Expériences et évaluation → Données et rapports locaux : Écrit métriques et</text>
+<text x="30" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">provenance</text>
+<text x="700.0" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Expériences et évaluation → Export contrôlé des modèles : Sélection validée et export</text>
+<text x="700.0" y="1459" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">explicite</text>
+<text x="700.0" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Catalogue marchand → Entraînement marchand : Exemples et taxonomie versionnés</text>
+<text x="700.0" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Entraînement marchand → Export contrôlé des modèles : Artefact marchand validé</text>
+<text x="700.0" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Export contrôlé des modèles → Artefacts d&#x27;inférence figés : Export avec empreintes /</text>
+<text x="700.0" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">inclusion build (pointillés)</text>
+<text x="30" y="1777" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le Huber Forecast est un prototype entraîné sur du synthétique TND ; il prédit le résidu du flux restant, pas directement un solde.</text>
+<text x="30" y="1799" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Pas d&#x27;accès automatique à PostgreSQL ; données préparées hors ligne et séparation entraînement / inférence.</text>
+<text x="30" y="1821" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">L&#x27;export n&#x27;est pas un déploiement continu. Aucun réentraînement n&#x27;est lancé par une requête utilisateur.</text>
+</g>
+</svg>
+</div><ul><li>Le Huber Forecast est un prototype entraîné sur du synthétique TND ; il prédit le résidu du flux restant, pas directement un solde.</li><li>Pas d&#x27;accès automatique à PostgreSQL ; données préparées hors ligne et séparation entraînement / inférence.</li><li>L&#x27;export n&#x27;est pas un déploiement continu. Aucun réentraînement n&#x27;est lancé par une requête utilisateur.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/models</code></li><li><code>ml-pipeline/.gitignore</code></li><li><code>ml-pipeline/notebooks</code></li><li><code>ml-pipeline/scripts/export_frozen_model.py</code></li><li><code>ml-pipeline/scripts/export_merchant_model.py</code></li><li><code>ml-pipeline/src/forecast_ml/dataset_builder.py</code></li><li><code>ml-pipeline/src/forecast_ml/evaluation.py</code></li><li><code>ml-pipeline/src/forecast_ml/feature_matrix.py</code></li><li><code>ml-pipeline/src/forecast_ml/modeling.py</code></li><li><code>ml-pipeline/src/forecast_ml/synthetic_data.py</code></li><li><code>ml-pipeline/src/forecast_ml/validation.py</code></li><li><code>ml-pipeline/src/merchant_ml/artifact.py</code></li><li><code>ml-pipeline/src/merchant_ml/catalog.py</code></li></ul></details></section><section id="09-deployment" class="diagram" hidden><h2>Déploiement · Environnement local</h2><p>Instances Compose actuelles et services sur le poste ; ports hôte configurables.</p><p><a href="09-deployment.svg" download>Télécharger le SVG</a> · <a href="09-deployment.svg" target="_blank" rel="noopener">Ouvrir le SVG seul</a></p><div class="viewport"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1710 2376" width="1710" height="2376" role="img" aria-labelledby="09-deployment-title 09-deployment-desc">
+<title id="09-deployment-title">Déploiement · Environnement local</title>
+<desc id="09-deployment-desc">Instances Compose actuelles et services sur le poste ; ports hôte configurables. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="09-deployment-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1710" height="2376" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">Déploiement · Environnement local</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="20" y="50" width="1250" height="1730" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="35" y="74" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Poste de développement</text>
+<rect x="420" y="300" width="820" height="1150" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="435" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Docker Compose / réseau interne</text>
+<g data-edge="1"><title>HTTP : assets React</title><path d="M625 280 L625 308 L620 310 L620 340 L625 342 L625 370" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="2"><title>HTTP : assets console</title><path d="M1025 280 L1025 308 L1020 310 L1020 340 L1025 342 L1025 370" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="3"><title>REST / JWT via port hôte configuré</title><path d="M625 280 L625 308 L620 310 L450 310 L450 620 L620 620 L625 622 L625 650" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="4"><title>REST / JWT admin via :8081</title><path d="M1025 280 L1025 308 L1020 310 L850 310 L850 620 L1020 620 L1025 622 L1025 650" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="5"><title>JDBC interne postgres:5432</title><path d="M625 820 L625 848 L620 850 L620 900 L625 902 L625 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="6"><title>JDBC interne mock-bank-db:5432</title><path d="M1025 820 L1025 848 L1020 850 L1020 900 L1025 902 L1025 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="7"><title>HTTP interne mock-bank:8081</title><path d="M780 735 L808 735 L810 740 L840 740 L842 735 L870 735" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="8"><title>HTTP interne ai-service:8000</title><path d="M625 820 L625 848 L620 850 L450 850 L450 1180 L620 1180 L625 1182 L625 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="9"><title>SMTP interne mailpit:1025</title><path d="M625 820 L625 848 L620 850 L850 850 L850 1180 L1020 1180 L1025 1182 L1025 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="10"><title>HTTP via host-gateway</title><path d="M780 1295 L808 1295 L810 1300 L810 1620 L840 1620 L842 1615 L870 1615" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>HTTPS pour enrichissement marchand</title><path d="M780 1295 L808 1295 L810 1300 L850 1300 L850 1400 L1260 1400 L1260 1300 L1262 1295 L1290 1295" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="12"><title>Artefacts exportés puis copiés au build</title><path d="M625 1530 L625 1502 L620 1500 L620 1410 L625 1408 L625 1380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="userbrowser"><title>Navigateur principal: Charge les assets puis appelle le backend publié. | frontend/src/services/apiClient.js</title>
+<rect x="470" y="110" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="139" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Navigateur principal</text>
+<text x="486" y="162" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Instance client]</text>
+<text x="486" y="181" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SPA React côté navigateur</text>
+<text x="486" y="205" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Charge les assets puis appelle le</text>
+<text x="486" y="222" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">backend publié.</text>
+</g>
+<g data-node="adminbrowser"><title>Navigateur administrateur: Utilise uniquement la console et l&#x27;API bancaires. | mock-bank-ui/src/api/adminApi.js</title>
+<rect x="870" y="110" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="139" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Navigateur administrateur</text>
+<text x="886" y="162" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Instance client]</text>
+<text x="886" y="181" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SPA mock-bank-ui</text>
+<text x="886" y="205" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Utilise uniquement la console et l&#x27;API</text>
+<text x="886" y="222" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">bancaires.</text>
+</g>
+<g data-node="nginx"><title>frontend: Sert les fichiers Vite ; URL API injectée au build. | frontend/Dockerfile; compose.yaml</title>
+<rect x="470" y="370" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="399" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">frontend</text>
+<text x="486" y="422" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="441" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Nginx :80 → hôte :5173</text>
+<text x="486" y="465" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Sert les fichiers Vite ; URL API</text>
+<text x="486" y="482" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">injectée au build.</text>
+</g>
+<g data-node="adminnginx"><title>mock-bank-ui: Sert la console synthétique séparée. | mock-bank-ui/Dockerfile; compose.yaml</title>
+<rect x="870" y="370" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="399" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank-ui</text>
+<text x="886" y="422" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="441" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Nginx :80 → hôte :5174</text>
+<text x="886" y="465" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Sert la console synthétique séparée.</text>
+</g>
+<g data-node="backend"><title>backend: BACKEND_PORT côté hôte ; courant observé :8082. | backend/Dockerfile; compose.yaml</title>
+<rect x="470" y="650" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="679" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">backend</text>
+<text x="486" y="702" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="721" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Spring Boot :8080</text>
+<text x="486" y="745" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">BACKEND_PORT côté hôte ; courant</text>
+<text x="486" y="762" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">observé :8082.</text>
+</g>
+<g data-node="mock"><title>mock-bank: API bancaire et admin ; données synthétiques. | mock-bank/Dockerfile; compose.yaml</title>
+<rect x="870" y="650" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="679" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank</text>
+<text x="886" y="702" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="721" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Spring Boot :8081</text>
+<text x="886" y="745" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">API bancaire et admin ; données</text>
+<text x="886" y="762" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<g data-node="pg"><title>postgres: Volume postgres-data ; migrations applicatives. | compose.yaml</title>
+<rect x="470" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M470 946 Q625.0 970 780 946" fill="none" stroke="#dbe4f5"/>
+<text x="486" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">postgres</text>
+<text x="486" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="486" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17 :5432</text>
+<text x="486" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Volume postgres-data ; migrations</text>
+<text x="486" y="1042" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">applicatives.</text>
+</g>
+<g data-node="mockpg"><title>mock-bank-db: Volume mock-bank-data indépendant. | compose.yaml</title>
+<rect x="870" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M870 946 Q1025.0 970 1180 946" fill="none" stroke="#dbe4f5"/>
+<text x="886" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank-db</text>
+<text x="886" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="886" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17 :5432 interne</text>
+<text x="886" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Volume mock-bank-data indépendant.</text>
+</g>
+<g data-node="ai"><title>ai-service: Artefacts inclus ; aucun port hôte publié. | ai-service/Dockerfile; compose.yaml</title>
+<rect x="470" y="1210" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="1239" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">ai-service</text>
+<text x="486" y="1262" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="1281" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">FastAPI / Uvicorn :8000 interne</text>
+<text x="486" y="1305" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Artefacts inclus ; aucun port hôte</text>
+<text x="486" y="1322" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">publié.</text>
+</g>
+<g data-node="mail"><title>mailpit: Messagerie locale de développement. | compose.yaml</title>
+<rect x="870" y="1210" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="1239" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mailpit</text>
+<text x="886" y="1262" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="1281" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SMTP :1025 · console :8025</text>
+<text x="886" y="1305" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Messagerie locale de développement.</text>
+</g>
+<g data-node="pipeline"><title>Pipeline hors ligne: Scripts / notebooks ; hors Compose. | ml-pipeline/scripts</title>
+<rect x="470" y="1530" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="1559" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Pipeline hors ligne</text>
+<text x="486" y="1582" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="1601" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Python sur le poste</text>
+<text x="486" y="1625" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Scripts / notebooks ; hors Compose.</text>
+</g>
+<g data-node="ollama"><title>Ollama sur le poste: Service local configurable ; modèles installés séparément. | compose.yaml</title>
+<rect x="870" y="1530" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="886" y="1559" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama sur le poste</text>
+<text x="886" y="1582" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="886" y="1601" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">host.docker.internal:11434</text>
+<text x="886" y="1625" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Service local configurable ; modèles</text>
+<text x="886" y="1642" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">installés séparément.</text>
+</g>
+<g data-node="web"><title>Recherche web Ollama: Appel optionnel depuis ai-service uniquement. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="1290" y="1210" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1306" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Recherche web Ollama</text>
+<text x="1306" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1306" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS / Internet</text>
+<text x="1306" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Appel optionnel depuis ai-service</text>
+<text x="1306" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">uniquement.</text>
+</g>
+<circle cx="620" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="1020" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="450" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="850" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="620" cy="875" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="879.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="1020" cy="875" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="879.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="825" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="825.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="450" cy="1015" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1019.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="850" cy="1015" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="1019.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="810" cy="1460" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="810.0" y="1464.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="1055" cy="1400" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1055.0" y="1404.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="620" cy="1455" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="1459.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<text x="30" y="1852" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1882" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Navigateur principal → frontend : HTTP : assets React</text>
+<text x="30" y="1947" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Navigateur administrateur → mock-bank-ui : HTTP : assets console</text>
+<text x="30" y="2012" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Navigateur principal → backend : REST / JWT via port hôte configuré</text>
+<text x="30" y="2077" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Navigateur administrateur → mock-bank : REST / JWT admin via :8081</text>
+<text x="30" y="2142" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. backend → postgres : JDBC interne postgres:5432</text>
+<text x="30" y="2207" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. mock-bank → mock-bank-db : JDBC interne mock-bank-db:5432</text>
+<text x="870.0" y="1882" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. backend → mock-bank : HTTP interne mock-bank:8081</text>
+<text x="870.0" y="1947" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. backend → ai-service : HTTP interne ai-service:8000</text>
+<text x="870.0" y="2012" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. backend → mailpit : SMTP interne mailpit:1025</text>
+<text x="870.0" y="2077" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. ai-service → Ollama sur le poste : HTTP via host-gateway (pointillés)</text>
+<text x="870.0" y="2142" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. ai-service → Recherche web Ollama : HTTPS pour enrichissement marchand (pointillés)</text>
+<text x="870.0" y="2207" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Pipeline hors ligne → ai-service : Artefacts exportés puis copiés au build (pointillés)</text>
+<text x="30" y="2282" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les connexions navigateur vers le backend utilisent une URL publique ; les noms de service Compose sont réservés aux appels entre conteneurs.</text>
+<text x="30" y="2304" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les ports sont les valeurs de Compose, configurables par environnement. :8082 est le port backend observé pendant cette session.</text>
+<text x="30" y="2326" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les deux volumes PostgreSQL sont distincts. Les healthchecks et depends_on n&#x27;impliquent pas une disponibilité garantie des fonctionnalités IA.</text>
+</g>
+</svg>
+</div><ul><li>Les connexions navigateur vers le backend utilisent une URL publique ; les noms de service Compose sont réservés aux appels entre conteneurs.</li><li>Les ports sont les valeurs de Compose, configurables par environnement. :8082 est le port backend observé pendant cette session.</li><li>Les deux volumes PostgreSQL sont distincts. Les healthchecks et depends_on n&#x27;impliquent pas une disponibilité garantie des fonctionnalités IA.</li></ul><details><summary>Évidence dans le code</summary><ul><li><code>ai-service/Dockerfile</code></li><li><code>ai-service/src/forecast_ai/ollama_providers.py</code></li><li><code>backend/Dockerfile</code></li><li><code>compose.yaml</code></li><li><code>frontend/Dockerfile</code></li><li><code>frontend/src/services/apiClient.js</code></li><li><code>ml-pipeline/scripts</code></li><li><code>mock-bank-ui/Dockerfile</code></li><li><code>mock-bank-ui/src/api/adminApi.js</code></li><li><code>mock-bank/Dockerfile</code></li></ul></details></section><footer>Vue hors ligne : aucun CDN, requête réseau ou dépendance à Docker. Source canonique : model.json ; génération reproductible : render.py. Le niveau Code C4 n'est pas ajouté : ces vues de contexte, conteneurs, composants et déploiement décrivent les frontières utiles sans recopier chaque classe Java/Python.</footer></main>
+<script>
+const selector=document.getElementById('diagram-select');let zoom=100;
+function scale(){document.querySelectorAll('.viewport>svg').forEach(svg=>svg.style.width=zoom+'%');document.getElementById('zoom-level').value=zoom+' %'}
+function show(){const id=location.hash.slice(1);if([...selector.options].some(option=>option.value===id))selector.value=id;document.querySelectorAll('.diagram').forEach(section=>section.hidden=section.id!==selector.value);zoom=100;scale()}
+selector.addEventListener('change',()=>{location.hash=selector.value;show()});window.addEventListener('hashchange',show);document.getElementById('zoom-in').onclick=()=>{zoom=Math.min(250,zoom+25);scale()};document.getElementById('zoom-out').onclick=()=>{zoom=Math.max(50,zoom-25);scale()};document.getElementById('fit').onclick=()=>{zoom=100;scale()};document.getElementById('print').onclick=()=>window.print();show();
+</script></body></html>
