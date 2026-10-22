@@ -200,7 +200,7 @@ Docker builds may download dependencies and require network access.
 ### 0. Get the project
 
 ```powershell
-git clone --branch feat/backend-foundation https://github.com/AzizX25/smart-financial-wellness.git
+git clone https://github.com/AzizX25/smart-financial-wellness.git
 Set-Location smart-financial-wellness
 git --version
 docker --version
@@ -211,9 +211,9 @@ docker info --format '{{.OSType}}'
 The last command should return `linux`. A private repository requires permission
 and GitHub authentication. A clone contains only published commits, not another
 computer's uncommitted work, private environment files or database contents.
-The command selects the application's development branch explicitly; the default
-branch may not contain the same features. Use a documented release tag instead
-when a release has been published.
+The default `main` branch contains the application. For a reproducible demo
+version, select the `v1.0.0-demo` tag after cloning with
+`git checkout v1.0.0-demo`.
 You can also download a source ZIP from GitHub and extract it before opening a
 terminal in the directory containing `compose.yaml`.
 
