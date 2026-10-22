@@ -96,4 +96,46 @@ class SupervisorDemoScenarioTests {
             assertThat(repeated).isEqualTo(existing);
         }
     }
+
+    @Test
+    void crossingMonthsKeepsLegacyAmountsOpeningEntriesAndReviewCasesUnchanged() {
+        Scenario august = SupervisorDemoScenario.generate(SupervisorDemoScenario.VERSION, AS_OF);
+        Scenario october = SupervisorDemoScenario.generate(
+                SupervisorDemoScenario.VERSION, LocalDate.of(2026, 10, 12), august.firstCompletedMonth());
+
+        assertThat(october.transactions()).containsAll(august.transactions()).hasSize(202);
+        assertThat(october.firstCompletedMonth()).isEqualTo(august.firstCompletedMonth());
+        assertThat(october.transactions().stream().filter(item -> item.externalReference().contains("OPENING-")))
+                .hasSize(2);
+        assertThat(october.transactions().stream().map(TransactionSpec::externalReference)).doesNotHaveDuplicates();
+        assertThat(october.transactions()).allSatisfy(item -> {
+            assertThat(item.bookingDate()).isBeforeOrEqualTo(october.asOfDate());
+            assertThat(item.amount().scale()).isEqualTo(4);
+        });
+        assertThat(october.transactions()).anySatisfy(item -> {
+            assertThat(item.externalReference()).isEqualTo("SFWA-DEMO-V1-2026-10-PENDING-BOOKSTORE");
+            assertThat(item.status()).isEqualTo("PENDING");
+        });
+        assertThat(october.transactions().stream().filter(item -> item.externalReference().endsWith("MYTEK")
+                && item.amount().compareTo(new BigDecimal("1450.0000")) == 0)).hasSize(1);
+        for (TransactionSpec outgoing : october.transactions().stream()
+                .filter(item -> item.externalReference().endsWith("SAVINGS-OUT")).toList()) {
+            assertThat(october.transactions()).anySatisfy(incoming -> {
+                assertThat(incoming.externalReference()).endsWith("SAVINGS-IN");
+                assertThat(incoming.bookingDate()).isEqualTo(outgoing.bookingDate());
+                assertThat(incoming.account()).isEqualTo(Account.SAVINGS);
+                assertThat(incoming.amount()).isEqualByComparingTo(outgoing.amount());
+            });
+        }
+    }
+
+    @Test
+    void anchoredHistoryRemainsStableAcrossYearsAndLaterDays() {
+        Scenario october = SupervisorDemoScenario.generate(SupervisorDemoScenario.VERSION,
+                LocalDate.of(2026, 10, 12), YearMonth.of(2025, 12));
+        Scenario january = SupervisorDemoScenario.generate(SupervisorDemoScenario.VERSION,
+                LocalDate.of(2027, 1, 21), october.firstCompletedMonth());
+        assertThat(january.transactions()).containsAll(october.transactions());
+        assertThat(january.transactions().stream().map(TransactionSpec::externalReference)).doesNotHaveDuplicates();
+    }
 }

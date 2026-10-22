@@ -14,7 +14,6 @@ $configuration = Get-DemoConfiguration
 $asOf = $AsOfDate.Date
 Assert-DemoAsOfDate -AsOfDate $asOf
 $month = $asOf.ToString('yyyy-MM')
-$expectedTransactionCount = Get-DemoExpectedTransactionCount -AsOfDate $asOf
 $results = [System.Collections.Generic.List[object]]::new()
 
 function Add-DemoCheck {
@@ -70,19 +69,31 @@ $current = @($accounts | Where-Object { $_.accountId -eq 'DEMO-TND-CURRENT-V1' }
 $savings = @($accounts | Where-Object { $_.accountId -eq 'DEMO-TND-SAVINGS-V1' })
 Add-DemoCheck 'Synthetic accounts' ($accounts.Count -eq 2 -and $current.Count -eq 1 -and $savings.Count -eq 1) `
   'One TND current account and one TND savings account exist.'
-if ($current.Count -eq 1 -and $savings.Count -eq 1) {
-  $balancesValid = [decimal]$current[0].currentBalance -ge 4000 -and [decimal]$current[0].currentBalance -le 5000 -and
-    [decimal]$savings[0].currentBalance -ge 7000 -and [decimal]$savings[0].currentBalance -le 9000
-  Add-DemoCheck 'Reconciled balance ranges' $balancesValid `
-    'Current and savings balances are inside the documented synthetic ranges.'
-}
-
 $mockTransactions = @()
-foreach ($account in $accounts) { $mockTransactions += @(Get-AllMockTransactions -AdminToken $adminToken -AccountId $account.accountId) }
+$transactionsByAccount = @{}
+foreach ($account in $accounts) {
+  $transactionsByAccount[$account.accountId] = @(Get-AllMockTransactions -AdminToken $adminToken -AccountId $account.accountId)
+  $mockTransactions += $transactionsByAccount[$account.accountId]
+}
+if ($current.Count -eq 1 -and $savings.Count -eq 1) {
+  $balancesValid = (Test-DemoLedgerBalance -Account $current[0] -Transactions $transactionsByAccount[$current[0].accountId]) -and
+    (Test-DemoLedgerBalance -Account $savings[0] -Transactions $transactionsByAccount[$savings[0].accountId])
+  Add-DemoCheck 'Reconciled ledger balances' $balancesValid `
+    'Current and available balances reconcile with posted and pending entries; history is retained across months.'
+}
 $fixtureTransactions = @($mockTransactions | Where-Object { $_.transactionId -like 'SFWA-DEMO-V1-*' })
+$currentOpening = @($transactionsByAccount['DEMO-TND-CURRENT-V1'] | Where-Object { $_.transactionId -like '*-OPENING-CURRENT' })
+$savingsOpening = @($transactionsByAccount['DEMO-TND-SAVINGS-V1'] | Where-Object { $_.transactionId -like '*-OPENING-SAVINGS' })
+$anchorValid = $currentOpening.Count -eq 1 -and $savingsOpening.Count -eq 1 -and
+  $currentOpening[0].bookingDate -eq $savingsOpening[0].bookingDate -and ([datetime]$currentOpening[0].bookingDate).Day -eq 1
+$expectedTransactionCount = 0
+if ($anchorValid) {
+  $expectedTransactionCount = Get-DemoExpectedTransactionCount -AsOfDate $asOf -FirstCompletedMonth ([datetime]$currentOpening[0].bookingDate)
+}
+Add-DemoCheck 'Stable fixture anchor' $anchorValid 'The two original opening entries share one stable history anchor.'
 $duplicates = @($fixtureTransactions | Group-Object transactionId | Where-Object Count -gt 1)
 Add-DemoCheck 'Stable transaction references' (
-  $fixtureTransactions.Count -eq $expectedTransactionCount -and $duplicates.Count -eq 0) `
+  $anchorValid -and $fixtureTransactions.Count -eq $expectedTransactionCount -and $duplicates.Count -eq 0) `
   "$($fixtureTransactions.Count)/$expectedTransactionCount expected fixture transactions; no duplicate reference."
 
 $posted = @($fixtureTransactions | Where-Object status -eq 'POSTED')
@@ -93,7 +104,8 @@ $moneyScaleValid = @($fixtureTransactions | Where-Object {
     $text = ([decimal]$_.amount).ToString([Globalization.CultureInfo]::InvariantCulture)
     $text.Contains('.') -and ($text.Split('.')[1].Length -gt 4)
   }).Count -eq 0
-Add-DemoCheck 'Relative history and money' ($completedMonths.Count -eq 8 -and $futurePosted.Count -eq 0 -and $moneyScaleValid) `
+$recentHistoryComplete = @(1..8 | Where-Object { $asOf.AddMonths(-$_).ToString('yyyy-MM') -notin $completedMonths }).Count -eq 0
+Add-DemoCheck 'Relative history and money' ($recentHistoryComplete -and $futurePosted.Count -eq 0 -and $moneyScaleValid) `
   "$($completedMonths.Count) completed months; no future posted transaction; scale is valid."
 
 $transferOut = @($posted | Where-Object { $_.description -eq 'VIREMENT VERS EPARGNE' })

@@ -140,12 +140,41 @@ function Assert-DemoAsOfDate {
 }
 
 function Get-DemoExpectedTransactionCount {
-  param([Parameter(Mandatory = $true)][datetime]$AsOfDate)
+  param(
+    [Parameter(Mandatory = $true)][datetime]$AsOfDate,
+    [datetime]$FirstCompletedMonth = [datetime]::MinValue
+  )
 
-  # 2 opening entries + 8 completed months x 18 entries + 4 current demo cases.
-  $baseCount = 150
+  $currentMonth = $AsOfDate.Date.AddDays(1 - $AsOfDate.Day)
+  if ($FirstCompletedMonth -eq [datetime]::MinValue) { $FirstCompletedMonth = $currentMonth.AddMonths(-8) }
+  $completedMonths = ($currentMonth.Year - $FirstCompletedMonth.Year) * 12 +
+    $currentMonth.Month - $FirstCompletedMonth.Month
+  if ($FirstCompletedMonth.Day -ne 1 -or $completedMonths -lt 8) {
+    throw 'The demo history anchor must be a month start with at least eight completed months.'
+  }
+  # Original opening entries and memory example remain fixed. Review cases are
+  # appended each month from the original demonstration month onward.
+  $baseCount = 2 + ($completedMonths * 18) + 1 + (($completedMonths - 7) * 3)
   $currentScheduleDays = @(2, 3, 5, 6, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 21, 22, 24, 27)
   return $baseCount + @($currentScheduleDays | Where-Object { $_ -le $AsOfDate.Day }).Count
+}
+
+function Test-DemoLedgerBalance {
+  param([Parameter(Mandatory = $true)][object]$Account, [object[]]$Transactions)
+
+  [decimal]$current = 0
+  [decimal]$available = 0
+  foreach ($transaction in $Transactions) {
+    [decimal]$amount = $transaction.amount
+    if ($transaction.status -eq 'POSTED') {
+      $signed = if ($transaction.direction -eq 'CREDIT') { $amount } else { -$amount }
+      $current += $signed
+      $available += $signed
+    } elseif ($transaction.status -eq 'PENDING' -and $transaction.direction -eq 'DEBIT') {
+      $available -= $amount
+    }
+  }
+  return $current -eq [decimal]$Account.currentBalance -and $available -eq [decimal]$Account.availableBalance
 }
 
 function Invoke-DemoApi {

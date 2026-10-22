@@ -3,6 +3,7 @@ package com.azizx25.mockbank.demo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +26,11 @@ public final class SupervisorDemoScenario {
     }
 
     public static Scenario generate(String version, LocalDate asOfDate) {
+        return generate(version, asOfDate, asOfDate == null ? null
+                : YearMonth.from(asOfDate).minusMonths(COMPLETED_MONTH_COUNT));
+    }
+
+    public static Scenario generate(String version, LocalDate asOfDate, YearMonth firstMonth) {
         if (!VERSION.equals(version)) {
             throw new InvalidAdminRequestException("Unsupported supervisor demo scenario version");
         }
@@ -33,7 +39,9 @@ public final class SupervisorDemoScenario {
         }
 
         YearMonth asOfMonth = YearMonth.from(asOfDate);
-        YearMonth firstMonth = asOfMonth.minusMonths(COMPLETED_MONTH_COUNT);
+        if (firstMonth == null || firstMonth.isAfter(asOfMonth.minusMonths(COMPLETED_MONTH_COUNT))) {
+            throw new InvalidAdminRequestException("The demo history anchor must include eight completed months");
+        }
         List<TransactionSpec> transactions = new ArrayList<>();
         transactions.add(posted(
                 Account.CURRENT,
@@ -54,12 +62,16 @@ public final class SupervisorDemoScenario {
                 "SOLDE INITIAL COMPTE EPARGNE DEMO",
                 "Fixture synthetique"));
 
-        for (int offset = 0; offset <= COMPLETED_MONTH_COUNT; offset++) {
+        long elapsedMonths = ChronoUnit.MONTHS.between(firstMonth, asOfMonth);
+        for (int offset = 0; offset <= elapsedMonths; offset++) {
             YearMonth month = firstMonth.plusMonths(offset);
             addMonthlyTransactions(transactions, month, offset);
+            if (offset >= COMPLETED_MONTH_COUNT) {
+                addReviewTransactions(transactions, month);
+            }
         }
 
-        YearMonth memoryMonth = asOfMonth.minusMonths(2);
+        YearMonth memoryMonth = firstMonth.plusMonths(COMPLETED_MONTH_COUNT - 2);
         transactions.add(posted(
                 Account.CURRENT,
                 memoryMonth,
@@ -69,9 +81,19 @@ public final class SupervisorDemoScenario {
                 "DEBIT",
                 "PAIEMENT CB MARCHE EL WARD MENZAH",
                 "Marche El Ward"));
+
+        List<TransactionSpec> visible = transactions.stream()
+                .filter(item -> !item.bookingDate().isAfter(asOfDate))
+                .sorted(Comparator.comparing(TransactionSpec::bookingDate)
+                        .thenComparing(TransactionSpec::externalReference))
+                .toList();
+        return new Scenario(VERSION, asOfDate, firstMonth, asOfMonth, visible);
+    }
+
+    private static void addReviewTransactions(List<TransactionSpec> transactions, YearMonth month) {
         transactions.add(posted(
                 Account.CURRENT,
-                asOfMonth,
+                month,
                 1,
                 "MARCHE-EL-WARD-CURRENT",
                 "102.8000",
@@ -80,7 +102,7 @@ public final class SupervisorDemoScenario {
                 "Marche El Ward"));
         transactions.add(posted(
                 Account.CURRENT,
-                asOfMonth,
+                month,
                 1,
                 "ATELIER-MEDINA-CURRENT",
                 "84.6000",
@@ -89,21 +111,14 @@ public final class SupervisorDemoScenario {
                 "Atelier Medina"));
         transactions.add(new TransactionSpec(
                 Account.CURRENT,
-                reference(asOfMonth, "PENDING-BOOKSTORE"),
-                asOfMonth.atDay(1),
+                reference(month, "PENDING-BOOKSTORE"),
+                month.atDay(1),
                 null,
                 money("64.9000"),
                 "DEBIT",
                 "PAIEMENT CB LIBRAIRIE EL KITAB EN ATTENTE",
                 "Librairie El Kitab",
                 "PENDING"));
-
-        List<TransactionSpec> visible = transactions.stream()
-                .filter(item -> !item.bookingDate().isAfter(asOfDate))
-                .sorted(Comparator.comparing(TransactionSpec::bookingDate)
-                        .thenComparing(TransactionSpec::externalReference))
-                .toList();
-        return new Scenario(VERSION, asOfDate, firstMonth, asOfMonth, visible);
     }
 
     private static void addMonthlyTransactions(

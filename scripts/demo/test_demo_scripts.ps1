@@ -55,6 +55,22 @@ $definition = Get-DemoFinancialDefinition -AsOfDate $asOf
 if ((Get-DemoExpectedTransactionCount -AsOfDate $asOf) -ne 165) {
   throw 'Expected transaction count is not deterministic for the reference date.'
 }
+if ((Get-DemoExpectedTransactionCount -AsOfDate ([datetime]'2026-10-12') -FirstCompletedMonth ([datetime]'2025-12-01')) -ne 202) {
+  throw 'Rolled-over transaction counts must retain the original fixture anchor.'
+}
+$ledgerAccount = [pscustomobject]@{ currentBalance = '90.0000'; availableBalance = '85.0000' }
+$ledgerRows = @(
+  [pscustomobject]@{ amount = '100.0000'; direction = 'CREDIT'; status = 'POSTED' },
+  [pscustomobject]@{ amount = '10.0000'; direction = 'DEBIT'; status = 'POSTED' },
+  [pscustomobject]@{ amount = '5.0000'; direction = 'DEBIT'; status = 'PENDING' }
+)
+if (-not (Test-DemoLedgerBalance -Account $ledgerAccount -Transactions $ledgerRows)) {
+  throw 'Ledger verification must include posted cash flow and pending debit reservations.'
+}
+$ledgerAccount.availableBalance = '86.0000'
+if (Test-DemoLedgerBalance -Account $ledgerAccount -Transactions $ledgerRows) {
+  throw 'Ledger verification must reject mismatched balances.'
+}
 if (-not $definition.ExpenseAllocations.Contains('FOOD')) {
   throw 'PowerShell 5.1 must be able to resolve ordered Salary Plan allocations by category code.'
 }

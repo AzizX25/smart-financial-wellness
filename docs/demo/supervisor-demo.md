@@ -37,15 +37,26 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/verify_su
 Une date de référence du mois civil courant peut être injectée. Sans paramètre, la date locale courante est utilisée. Cette limite respecte le caractère non modifiable des allocations Goals passées :
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/seed_supervisor_demo.ps1 -AsOfDate 2026-08-21
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/verify_supervisor_demo.ps1 -AsOfDate 2026-08-21
+$asOf = (Get-Date).ToString('yyyy-MM-dd')
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/seed_supervisor_demo.ps1 -AsOfDate $asOf
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/verify_supervisor_demo.ps1 -AsOfDate $asOf
 ```
 
 À version et mois de référence identiques, les références externes et le contenu de chaque opération déjà arrivée restent identiques. Une date ultérieure du même mois ajoute seulement les opérations planifiées devenues échues. Une nouvelle exécution vérifie l'identité existante, complète les éléments manquants et ne duplique ni utilisateur, compte, transaction, contribution, objectif, allocation ou connexion.
 
+Lors d'un changement de mois, la fixture bancaire conserve l'ancrage de ses deux
+écritures d'ouverture originales. Les montants et l'achat inhabituel ne sont pas
+recalculés dans une fenêtre glissante : seuls les éléments manquants sont ajoutés.
+L'historique grandit au-delà de huit mois ; les soldes évoluent selon le registre,
+sans nouveau solde d'ouverture ni ajustement artificiel. Le vérificateur utilise
+cet ancrage et rapproche les soldes comptabilisé/disponible avec les écritures.
+Les anciennes opérations en attente sont conservées, sans inventer leur règlement.
+Une date antérieure à des opérations déjà présentes est refusée, jamais utilisée
+pour les supprimer. Une fixture altérée ou sans ancrage vérifiable reste refusée.
+
 ## Contenu du scénario
 
-- huit mois terminés et le mois courant, sans opération comptabilisée dans le futur ;
+- au moins huit mois terminés et le mois courant, sans opération comptabilisée dans le futur ;
 - un compte courant TND et un compte épargne TND aux identifiants explicitement synthétiques ;
 - salaires, logement, factures, alimentation, transport, santé, restaurants, achats, abonnements et virements d'épargne réalistes mais fictifs ;
 - un achat élevé, une opération en attente et des virements internes appariés ;
@@ -66,6 +77,22 @@ Le cœur du scénario ne nécessite ni Ollama ni recherche web. Pour une présen
 5. Ouvrir Salary Planning.
 6. Ouvrir Goals, les allocations et les simulations temporaires.
 7. Ouvrir Forecast et expliquer le repli déterministe.
+
+### Score, pistes et lecture de ticket
+
+Sur le Dashboard, présenter le score et ses facteurs disponibles, puis **Mes
+prochaines étapes** et leurs justifications. Accepter ou masquer une piste ne
+modifie aucun budget, objectif ni transaction. Les deux facteurs non calculables
+restent explicitement indisponibles.
+
+Les [explications et tickets locaux](../api/local-assistance.md) sont optionnels,
+désactivés par défaut et expérimentaux. Après vérification d’Ollama, montrer une
+explication française, puis un ticket entièrement synthétique sur Transactions :
+lecture, correction humaine, export CSV et prévisualisation sans confirmer un
+doublon bancaire. Aucune transaction n’est créée par la lecture du ticket.
+
+Rejouer aussi le parcours avec ces options désactivées : les pistes déterministes,
+l’import CSV et les fonctionnalités financières doivent rester utilisables.
 
 Les mots de passe restent ceux choisis dans `.env.demo` et ne doivent pas apparaître dans une capture, un journal ou une commande partagée.
 

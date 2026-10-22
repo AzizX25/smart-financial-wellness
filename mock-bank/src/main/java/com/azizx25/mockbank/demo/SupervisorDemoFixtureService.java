@@ -67,7 +67,7 @@ public class SupervisorDemoFixtureService {
     @Transactional
     public SeedResponse seed(String scenarioVersion, LocalDate asOfDate, String rawPassword) {
         requirePassword(rawPassword);
-        Scenario scenario = SupervisorDemoScenario.generate(scenarioVersion, asOfDate);
+        Scenario requested = SupervisorDemoScenario.generate(scenarioVersion, asOfDate);
         BankCustomer customer = customer(rawPassword, asOfDate);
         BankAccount current = account(
                 customer,
@@ -81,6 +81,12 @@ public class SupervisorDemoFixtureService {
                 "Epargne projets Amine - Demo",
                 "SAVINGS",
                 asOfDate);
+
+        List<BankTransaction> previousCurrent = fixtureTransactions(current);
+        List<BankTransaction> previousSavings = fixtureTransactions(savings);
+        Scenario scenario = anchoredScenario(requested, previousCurrent, previousSavings);
+        verifyBalances(current, previousCurrent);
+        verifyBalances(savings, previousSavings);
 
         int created = 0;
         for (TransactionSpec spec : scenario.transactions()) {
@@ -183,6 +189,42 @@ public class SupervisorDemoFixtureService {
         }
     }
 
+    private Scenario anchoredScenario(
+            Scenario requested,
+            List<BankTransaction> currentTransactions,
+            List<BankTransaction> savingsTransactions) {
+        if (currentTransactions.isEmpty() && savingsTransactions.isEmpty()) {
+            return requested;
+        }
+        BankTransaction currentOpening = requireOpening(currentTransactions, "OPENING-CURRENT");
+        BankTransaction savingsOpening = requireOpening(savingsTransactions, "OPENING-SAVINGS");
+        YearMonth firstMonth = YearMonth.from(currentOpening.getBookingDate());
+        if (!currentOpening.getBookingDate().equals(firstMonth.atDay(1))
+                || !savingsOpening.getBookingDate().equals(currentOpening.getBookingDate())
+                || !currentOpening.getExternalTransactionId().equals(
+                        SupervisorDemoScenario.REFERENCE_PREFIX + firstMonth + "-OPENING-CURRENT")
+                || !savingsOpening.getExternalTransactionId().equals(
+                        SupervisorDemoScenario.REFERENCE_PREFIX + firstMonth + "-OPENING-SAVINGS")
+                || firstMonth.isAfter(requested.firstCompletedMonth())) {
+            throw new AdminConflictException("Supervisor demo history anchor could not be verified");
+        }
+        if (java.util.stream.Stream.concat(currentTransactions.stream(), savingsTransactions.stream())
+                .anyMatch(transaction -> transaction.getBookingDate().isAfter(requested.asOfDate()))) {
+            throw new AdminConflictException("Supervisor demo as-of date precedes existing transaction history");
+        }
+        return SupervisorDemoScenario.generate(requested.version(), requested.asOfDate(), firstMonth);
+    }
+
+    private BankTransaction requireOpening(List<BankTransaction> transactions, String type) {
+        List<BankTransaction> openings = transactions.stream()
+                .filter(transaction -> transaction.getExternalTransactionId().endsWith("-" + type))
+                .toList();
+        if (openings.size() != 1) {
+            throw new AdminConflictException("Supervisor demo history anchor could not be verified");
+        }
+        return openings.getFirst();
+    }
+
     private BankCustomer customer(String rawPassword, LocalDate asOfDate) {
         BankCustomer byExternal = customerRepository
                 .findByExternalCustomerId(SupervisorDemoScenario.CUSTOMER_ID)
@@ -225,7 +267,7 @@ public class SupervisorDemoFixtureService {
             String displayName,
             String accountType,
             LocalDate asOfDate) {
-        BankAccount account = accountRepository.findByExternalAccountId(externalAccountId).orElse(null);
+        BankAccount account = accountRepository.findByExternalAccountIdForUpdate(externalAccountId).orElse(null);
         if (account == null) {
             return accountRepository.save(new BankAccount(
                     customer.getId(), externalAccountId, displayName, accountType, "TND",

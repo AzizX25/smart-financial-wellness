@@ -2,6 +2,8 @@ package com.azizx25.mockbank;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.azizx25.mockbank.demo.SupervisorDemoFixtureService;
@@ -125,6 +127,101 @@ class SupervisorDemoFixtureIntegrationTests {
                 .andExpect(jsonPath("$.customerPassword").doesNotExist())
                 .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.accessToken").doesNotExist());
+    }
+
+    @Test
+    @Order(5)
+    void legacyAugustFixtureExtendsToOctoberWithoutChangingExistingRowsOrOrdinaryData() {
+        List<Map<String, Object>> original = fixtureRowsThrough(AS_OF);
+        List<Map<String, Object>> ordinary = ordinaryRows();
+        int originalCount = count("bank_transaction");
+
+        SeedResponse extended = service.seed(SupervisorDemoScenario.VERSION,
+                LocalDate.of(2026, 10, 12), SYNTHETIC_PASSWORD);
+        SeedResponse repeated = service.seed(SupervisorDemoScenario.VERSION,
+                LocalDate.of(2026, 10, 12), SYNTHETIC_PASSWORD);
+
+        assertThat(original).hasSize(165);
+        assertThat(extended.transactionCount()).isEqualTo(202);
+        assertThat(extended.createdTransactionCount()).isEqualTo(37);
+        assertThat(extended.completedMonthCount()).isEqualTo(10);
+        assertThat(repeated.createdTransactionCount()).isZero();
+        assertThat(repeated.currentAccountBalance()).isEqualByComparingTo(extended.currentAccountBalance());
+        assertThat(repeated.currentAccountAvailableBalance()).isEqualByComparingTo(extended.currentAccountAvailableBalance());
+        assertThat(repeated.savingsAccountBalance()).isEqualByComparingTo(extended.savingsAccountBalance());
+        assertThat(fixtureRowsThrough(AS_OF)).isEqualTo(original);
+        assertThat(ordinaryRows()).isEqualTo(ordinary);
+        assertThat(count("bank_transaction")).isEqualTo(originalCount + 37);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM mock_bank.bank_transaction "
+                + "WHERE external_transaction_id LIKE 'SFWA-DEMO-V1-%OPENING-%'", Integer.class)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM (SELECT 1 FROM mock_bank.bank_transaction "
+                + "WHERE external_transaction_id LIKE 'SFWA-DEMO-V1-%' "
+                + "GROUP BY bank_account_id, external_transaction_id HAVING COUNT(*) > 1) duplicates",
+                Integer.class)).isZero();
+    }
+
+    @Test
+    @Order(6)
+    void changedLegacyTransactionStillFailsAndRollsBackWithoutAppending() {
+        String reference = "SFWA-DEMO-V1-2026-02-SALARY";
+        jdbc.update("UPDATE mock_bank.bank_transaction SET description = description || ' changed' "
+                + "WHERE external_transaction_id = ?", reference);
+        List<Map<String, Object>> before = fixtureRowsThrough(LocalDate.of(2026, 10, 31));
+        try {
+            assertThatThrownBy(() -> service.seed(SupervisorDemoScenario.VERSION,
+                    LocalDate.of(2026, 10, 14), SYNTHETIC_PASSWORD))
+                    .isInstanceOf(AdminConflictException.class)
+                    .hasMessage("Supervisor demo transaction conflicts with existing data");
+            assertThat(fixtureRowsThrough(LocalDate.of(2026, 10, 31))).isEqualTo(before);
+        } finally {
+            jdbc.update("UPDATE mock_bank.bank_transaction SET description = ? WHERE external_transaction_id = ?",
+                    "VIREMENT SALAIRE CARTHAGE DIGITAL SERVICES", reference);
+        }
+    }
+
+    @Test
+    @Order(7)
+    void missingHistoryAnchorAndRegressingDatesAreRejectedWithoutResetting() {
+        String reference = "SFWA-DEMO-V1-2025-12-OPENING-CURRENT";
+        jdbc.update("UPDATE mock_bank.bank_transaction SET external_transaction_id = ? "
+                + "WHERE external_transaction_id = ?", "SFWA-DEMO-V1-UNKNOWN-OPENING", reference);
+        int before = count("bank_transaction");
+        try {
+            assertThatThrownBy(() -> service.seed(SupervisorDemoScenario.VERSION,
+                    LocalDate.of(2026, 10, 14), SYNTHETIC_PASSWORD))
+                    .isInstanceOf(AdminConflictException.class)
+                    .hasMessage("Supervisor demo history anchor could not be verified");
+            assertThat(count("bank_transaction")).isEqualTo(before);
+        } finally {
+            jdbc.update("UPDATE mock_bank.bank_transaction SET external_transaction_id = ? "
+                    + "WHERE external_transaction_id = ?", reference, "SFWA-DEMO-V1-UNKNOWN-OPENING");
+        }
+        assertThatThrownBy(() -> service.seed(SupervisorDemoScenario.VERSION,
+                LocalDate.of(2026, 10, 11), SYNTHETIC_PASSWORD))
+                .isInstanceOf(AdminConflictException.class)
+                .hasMessage("Supervisor demo as-of date precedes existing transaction history");
+        assertThat(count("bank_transaction")).isEqualTo(before);
+    }
+
+    private List<Map<String, Object>> fixtureRowsThrough(LocalDate date) {
+        return jdbc.queryForList("SELECT * FROM mock_bank.bank_transaction "
+                + "WHERE external_transaction_id LIKE 'SFWA-DEMO-V1-%' AND booking_date <= ? "
+                + "ORDER BY external_transaction_id", date);
+    }
+
+    private List<Map<String, Object>> ordinaryRows() {
+        List<Map<String, Object>> rows = new java.util.ArrayList<>(jdbc.queryForList(
+                "SELECT id, external_customer_id, display_name, country_code, status, created_at "
+                        + "FROM mock_bank.bank_customer WHERE external_customer_id <> ? ORDER BY id",
+                SupervisorDemoScenario.CUSTOMER_ID));
+        rows.addAll(jdbc.queryForList("SELECT a.* FROM mock_bank.bank_account a "
+                + "JOIN mock_bank.bank_customer c ON c.id = a.bank_customer_id "
+                + "WHERE c.external_customer_id <> ? ORDER BY a.id", SupervisorDemoScenario.CUSTOMER_ID));
+        rows.addAll(jdbc.queryForList("SELECT t.* FROM mock_bank.bank_transaction t "
+                + "JOIN mock_bank.bank_account a ON a.id = t.bank_account_id "
+                + "JOIN mock_bank.bank_customer c ON c.id = a.bank_customer_id "
+                + "WHERE c.external_customer_id <> ? ORDER BY t.id", SupervisorDemoScenario.CUSTOMER_ID));
+        return rows;
     }
 
     private int count(String table) {
