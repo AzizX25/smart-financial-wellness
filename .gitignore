@@ -106,3 +106,14 @@ temp/
 *.swp
 *.swo
 *~
+
+# Local academic drafts and rendered artifacts, not application release files.
+/Report/
+/Report_*/
+/Report*.zip
+/Final_Report_*/
+/Final_Report_*.zip
+/final report.zip
+/journal_stage_4_en.pdf
+/main.pdf
+/output/

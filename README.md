@@ -1,424 +1,794 @@
-# Smart Financial Wellness
+# Smart Financial Wellness Advisor
 
-Smart Financial Wellness is a planned platform for helping users understand transaction activity and receive informational financial-wellness insights. The repository currently provides the initial project foundation, local PostgreSQL infrastructure, authentication/profile APIs, and a secure development-only mock-bank connection slice. Broader financial business features are not yet implemented.
+Smart Financial Wellness Advisor helps users understand their spending, prepare a
+monthly budget, manage savings goals and estimate their end-of-month balance.
+The French-language interface also presents an explainable financial-wellness
+score and practical, informational recommendations.
 
-## Architecture
+This is an **internship demonstration application**, not a production banking
+platform or a source of guaranteed financial advice. Its mock bank and sample
+dataset are synthetic. Forecast ML is trained on synthetic data; optional local
+LLM and receipt-vision features remain experimental.
 
-The planned system uses:
+Configuration, installed models and available history determine which optional
+features can run. See the [local-install validation record](docs/release/local-install-validation.md)
+for the checks performed on 22 October 2026 and their remaining limits.
 
-- A React frontend built with Vite and JavaScript.
-- A Java 21 Spring Boot core backend built with Maven.
-- A separate Java 21 Spring Boot mock-bank application that simulates an external banking provider.
-- A Python FastAPI service for AI inference.
-- A separate Python ML pipeline for dataset preparation, training, validation, and model evaluation.
-- PostgreSQL for persistent data.
-- Docker Compose for local infrastructure orchestration.
+## Contents
 
-The communication flow is:
+- [Features and usage](#features-and-usage)
+- [Architecture and services](#architecture-and-services)
+- [Local setup with Docker Compose](#local-setup-with-docker-compose)
+- [Sample data (optional)](#sample-data-optional)
+- [AI and model configuration](#ai-and-model-configuration)
+- [Troubleshooting](#troubleshooting)
+- [Development and validation](#development-and-validation)
+- [API overview](#api-overview)
+- [Architecture diagrams and documentation](#architecture-diagrams-and-documentation)
+- [Limitations and next steps](#limitations-and-next-steps)
+
+## Features and usage
+
+| Area | What works today |
+| --- | --- |
+| Authentication | Email/password registration, email verification, login, rotating refresh tokens, logout and password-reset APIs |
+| Profile | Editable display/profile information and financial/interface preferences; email and account status are read-only |
+| Mon Budget / Dashboard | Server-calculated account balances, monthly income/expenses and actual spending by the current transaction category |
+| Bank connection | Connect to the synthetic mock bank and manually synchronize accounts, transactions and dated balance snapshots |
+| Transactions | Real persisted history, filters, pagination, manual category corrections and a review workflow |
+| Categories | System and private categories, private-category management and deterministic categorization |
+| Merchant recognition | Local model suggestions, private user merchant memory and optional bounded web/LLM enrichment; human approval is required |
+| CSV import | Account selection/creation, preview, editable mapping, validation and idempotent confirmation |
+| Salary Planning | One plan per user, calendar month and currency; expected income, category allocations, saving capacity and previous plans |
+| Goals | Goal lifecycle, manual contributions, progress, monthly capacity allocation and temporary contribution scenarios |
+| Forecast | Current-month end-balance estimation, saved results and temporary income/expense adjustments |
+| Financial-wellness score | Deterministic, immutable 0–100 assessments with factor explanations, history and insufficient-data states |
+| Recommendations | Versioned deterministic priorities with supporting facts, workflow links and accepted/rejected/hidden feedback |
+| Optional local assistance | French recommendation explanations and experimental receipt extraction, human review and CSV export |
+
+### First-use journey
+
+1. Open the frontend and register. New accounts remain **PENDING_VERIFICATION**.
+2. Open Mailpit, follow the verification link and sign in to the activated account.
+   Pending accounts cannot use financial APIs.
+3. In **Ma banque**, connect an existing synthetic mock-bank customer, then use
+   **Actualiser**. Alternatively, import a statement from **Transactions**.
+4. Review transactions and correct categories. Actual monthly spending uses the
+   current saved assignments; uncategorized spending stays explicit.
+5. In **Salary Planning**, select a month/currency, enter expected income, review
+   historical proposals, edit allocations and save.
+6. In **Objectifs**, create goals, record actual contributions and distribute
+   available monthly saving capacity. Try a scenario without changing real progress.
+7. In **Prévisions**, request the current estimate and optionally test temporary
+   income/expense changes.
+8. On the Dashboard, inspect the score and **Mes prochaines étapes**. New accounts
+   may legitimately have insufficient history rather than a fabricated score.
+
+Disconnecting the bank preserves already synchronized local history. Synchronization
+is an explicit action, not an automatic background process. Read-only provider
+tokens can expire; reconnect when the application requests it.
+
+### Financial rules
+
+Currencies are never combined or converted. Authoritative calculations run in the
+backend with decimal amounts at scale 4; user input with excessive precision is
+rejected. Display rounding does not change stored amounts.
+
+Salary Planning calculates:
 
 ```text
-React frontend
-      |
-      v
-Core backend -----> Mock-bank API
-      |
-      +-----------> AI inference API
+totalIncome = sum(expected income)
+effectiveAllocation = confirmed amount, otherwise recommended amount
+totalExpenses = sum(effective allocations)
+savingCapacity = totalIncome - totalExpenses
+deficit = max(-savingCapacity, 0)
 ```
 
-The frontend communicates only with the core backend. It must never call the mock bank or AI inference service directly. Each service owns its data and must not directly access another service's database.
+Historical proposals examine up to three completed months. Saved recommendation
+amounts and their metadata are persisted together; reading a saved plan does not
+recalculate them from newer history.
 
-## Repository Structure
+Goal progress is the initial amount plus contributions. Allocations are plans,
+**not contributions**, and cannot exceed `max(savingCapacity, 0)`. A missing Salary
+Plan must be created explicitly; past allocation months are read-only. Goal
+scenarios concern contribution amounts and achievement timing, not Forecast.
+
+Forecast calculates a deterministic remaining-period baseline and optionally adds
+the frozen TND Huber model's predicted residual. An unavailable or ineligible model
+leaves the deterministic result intact. The chart connects an observed balance to
+the month-end estimate; it does not represent separately predicted daily balances.
+
+The score uses up to six completed months and renormalizes available factor
+weights. Its savings/history sufficiency checks may produce `INSUFFICIENT_DATA`.
+It is not a credit score. Recommendations use available authoritative factors and
+never modify budgets, goals, categories or the score automatically.
+
+## Architecture and services
+
+```text
+User browser -> React frontend -> Core Spring Boot backend -> Application PostgreSQL
+                                      |            |
+                                      |            +-> Mailpit (local SMTP)
+                                      +-> Mock-bank API -> Mock-bank PostgreSQL
+                                      +-> FastAPI inference -> Frozen model artifacts
+                                                   |     |
+                                                   |     +-> Host Ollama (optional)
+                                                   +-> Ollama Web Search (merchant-only, optional)
+
+Administrator browser -> Separate mock-bank-ui -> Mock-bank administration API
+
+Offline Python ML pipeline -> Evaluated, versioned artifacts -> AI image build
+```
+
+The main frontend calls **only the core backend**. The separate administrator
+console calls its own mock-bank API. Each Spring Boot application owns its database;
+neither service accesses the other's database. FastAPI has no PostgreSQL access.
+Training is separate from inference, with no training triggered by user requests.
+
+| Compose service | Role | Default local access |
+| --- | --- | --- |
+| `frontend` | Main React/Vite JavaScript SPA, served by Nginx | [localhost:5173](http://localhost:5173) |
+| `backend` | Java 21 / Spring Boot 4.1 REST API and financial rules | [localhost:8080/actuator/health](http://localhost:8080/actuator/health) |
+| `postgres` | Application PostgreSQL 17; named volume `postgres-data` | Host port `5432` |
+| `mock-bank` | Independent Spring Boot synthetic banking provider | [localhost:8081/actuator/health](http://localhost:8081/actuator/health) |
+| `mock-bank-db` | Independent PostgreSQL 17; volume `mock-bank-data` | Internal port `5432` only |
+| `mock-bank-ui` | Separate React administration console | [localhost:5174](http://localhost:5174) |
+| `ai-service` | Python 3.12 / FastAPI, frozen inference and optional assistance | Internal `http://ai-service:8000`; no published host port |
+| `mailpit` | Local email capture, not a real email-delivery service | [localhost:8025](http://localhost:8025); SMTP `1025` |
+
+Ollama runs on the host at port `11434`, not as a Compose service. The ML pipeline
+runs in a separate Python environment. Structurizr is a separate documentation
+viewer, not an application dependency.
+
+### Repository structure
 
 ```text
 smart-financial-wellness/
-|-- ai-service/       # FastAPI inference service
-|-- backend/          # Core Spring Boot application
-|-- compose.yaml      # Local databases, Mailpit, and mock-bank service
-|-- docs/             # Project documentation
-|-- frontend/         # React and Vite application
-|-- infrastructure/   # Docker Compose and local infrastructure
-|-- ml-pipeline/      # Dataset, training, validation, and evaluation workflows
-|-- mock-bank-ui/     # Standalone React console for synthetic mock-bank data
-`-- mock-bank/        # External banking-provider simulator
+├── frontend/          # French user interface and shared authenticated API client
+├── backend/           # Core Spring Boot API, feature packages and Flyway migrations
+├── mock-bank/         # Independent synthetic bank API, ledger and administration
+├── mock-bank-ui/      # Separate bank-administrator frontend
+├── ai-service/        # FastAPI inference, strict contracts and frozen models
+├── ml-pipeline/       # Offline datasets, notebooks, training, evaluation and export
+├── scripts/demo/      # Synthetic-data setup, verification and script checks
+├── docs/              # Canonical API, database, architecture and demonstration guides
+├── infrastructure/    # Infrastructure supporting material
+├── compose.yaml       # Local application orchestration
+├── .env.example       # Non-private Compose configuration template
+└── .env.demo.example  # Synthetic identity and blank demo-password template
 ```
 
-## Service Responsibilities
+Flyway is the sole schema-management mechanism. The application currently has
+**V1–V24** under `backend/src/main/resources/db/migration`; the mock bank has
+**V1–V4** under its own migration directory. Hibernate uses `ddl-auto=validate`.
+Do not edit applied migrations or use schema auto-update/Flyway repair to hide drift.
+Some tables support future work; their existence alone does not prove an API exists.
 
-- `frontend` presents the user experience and communicates exclusively with the core backend.
-- `backend` owns financial-wellness business logic and coordinates calls to the mock-bank and AI inference APIs.
-- `mock-bank` behaves like an external banking provider and contains no financial-wellness business logic.
-- `ai-service` serves model inference only and remains separate from model training.
-- `ml-pipeline` prepares and versions datasets, features, model artifacts, and evaluation results before validated models are promoted.
-- `compose.yaml` defines the main PostgreSQL database, Mailpit, and the independent mock-bank application and database; `infrastructure` is reserved for broader local infrastructure as the project grows.
+## Local setup with Docker Compose
 
-Transaction ingestion supports CSV import as an alternative that remains available alongside synchronization with the mock bank.
+### Prerequisites and downloads
 
-## Current Status
+| Tool | Needed for | Official download or setup |
+| --- | --- | --- |
+| Git | Clone the repository and retrieve updates | [Git downloads](https://git-scm.com/downloads/) |
+| Docker Desktop | Build and run the application services; select Linux containers and Compose v2 | [Docker Desktop installation](https://docs.docker.com/desktop/setup/install/desktop-install/) |
+| Browser | Open the application | A current Chrome, Edge, Firefox or Safari |
+| PowerShell | Commands below and optional sample-data scripts | Windows PowerShell 5.1 is sufficient on Windows; [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) is available separately |
+| Ollama (optional) | Local explanations, merchant web reasoning and receipt reading | [Ollama download](https://ollama.com/download) |
 
-This repository remains an initial project foundation. The backend has PostgreSQL persistence with Flyway-managed schema migrations and provides local email/password registration, email verification, JWT authentication, refresh-token rotation, password reset, logout, and profile APIs. Newly registered accounts remain pending until their email address is verified. An active user can create one development mock-bank connection, synchronize it into normalized application-owned accounts and transactions, and continue reading that synchronized history after disconnection. The React Dashboard and Transactions pages now consume only those local backend-owned records; the remaining financial modules are still prototypes.
+**Java, Maven, Node.js, Python and a host PostgreSQL installation are not required
+for the Docker setup.** Their build/runtime environments are supplied by the
+images. Host development prerequisites are listed separately below.
 
-The backend database foundation defines its final MVP schema through Flyway
-migrations V1-V10; V11 adds the minimal lifecycle and provider-token fields,
-V12 adds persistent synchronization state and normalized provider data, and
-V13 adds deterministic transaction categorization and correction history. Only the JPA mappings
-needed by implemented authentication, profile, preferences, audit, connection,
-and account-read features exist; the other schema tables remain intentionally
-unmapped. See the canonical [data model](docs/data-model.md) and
-[Flyway schema documentation](docs/database/flyway-schema.md).
+Start Docker Desktop before continuing. On Windows, enable its WSL 2 backend and
+the required virtualization support following the official installation guide.
+Linux users can use Docker Engine with the Compose plugin. On macOS/Linux, use
+PowerShell 7 for the sample-data scripts; the clone/Compose commands also work in
+a normal terminal. GPU compatibility differs by operating system.
 
-The mock bank now has an independent Java 21 Spring Boot foundation, its own
-PostgreSQL database and Flyway history, and synthetic fixtures only. Its V1
-migration creates seven tables, V2 loads deterministic customers, accounts,
-and transactions, V3 adds demo usernames with BCrypt password hashes, and V4
-adds the development-administrator identity. It
-exposes a simple JWT login plus protected read-only Accounts and Transactions
-APIs backed by public response records rather than persistence entities. A
-separate French-language React console manages only this synthetic data.
-OAuth, consent pages, refresh tokens, payments, and transfers are intentionally
-not implemented.
+Local AI needs additional RAM and several gigabytes of model storage, on top of
+Docker images and database volumes. A 24 GB RAM computer is a starting point for
+trying the configured models one at a time, **not a tested minimum or a latency
+guarantee**. Available RAM, GPU/VRAM and other running applications matter. Begin
+with AI disabled, then check local response times before enabling each feature.
+Internet access is needed for initial image builds and model downloads. Merchant
+web enrichment additionally needs internet whenever it is used.
 
-The current mock-bank read-only API is:
+All commands below start from the repository root unless otherwise stated.
+Docker builds may download dependencies and require network access.
 
-| Method and path | Responsibility |
-| --- | --- |
-| `GET /api/v1/customers/{customerId}/accounts` | List public account metadata in stable external-account-ID order |
-| `GET /api/v1/customers/{customerId}/accounts/{accountId}` | Return public metadata for one customer-owned account |
-| `GET /api/v1/customers/{customerId}/accounts/{accountId}/balance` | Return only the account balance contract |
-| `GET /api/v1/customers/{customerId}/accounts/{accountId}/transactions` | Return an account's transactions with date filters and pagination |
-
-The Transactions endpoint accepts optional `from` and `to` ISO-8601 dates and
-filters the PostgreSQL `booking_date`. Both boundaries are inclusive. Results
-are ordered by `bookingDate` descending, then `externalTransactionId`
-descending as a stable tie-breaker. `page` is zero-based and defaults to `0`;
-`size` defaults to `20` and must be between `1` and `100`. The response exposes
-only `items`, `page`, `size`, `totalElements`, `totalPages`, `first`, and `last`.
-
-Unknown customers or accounts return a consistent JSON `404`. An account owned
-by another customer also returns `404` with `Account not found`, preventing the
-response from confirming that the account exists.
-
-The core backend contains internal authentication and read-only bank ports
-implemented by one synchronous mock-bank HTTP adapter. The public backend API
-never accepts an application user ID or upstream customer ID. It derives both
-from the validated application JWT and the stored connection, then supplies
-the short-lived provider bearer token only inside the adapter. The adapter maps
-responses to immutable backend-owned records, uses finite timeouts, encodes IDs
-as path segments, and does not retry or propagate raw upstream bodies.
-
-See the [mock-bank connection API guide](docs/api/mock-bank-connection.md) for
-the backend contracts, demo credentials, lifecycle, and safe error behavior.
-
-The core backend synchronization and local-history API is:
-
-| Method and path | Responsibility |
-| --- | --- |
-| `POST /api/bank/synchronizations` | Fetch all provider pages, validate them, and atomically upsert the current user's accounts, balances, and transactions |
-| `GET /api/bank/synchronizations/status` | Return the latest attempt and safe synchronization state |
-| `GET /api/accounts` | List normalized persisted accounts owned by the authenticated user |
-| `GET /api/transactions` | Page through normalized persisted transactions with optional account, inclusive date, and direction filters |
-| `GET /api/dashboard/summary?month=YYYY-MM` | Return monthly cash-flow and account-balance totals grouped by currency |
-| `GET /api/categories` | List the current user's visible system and personal categories |
-| `POST /api/categories` | Create a personal category |
-| `PATCH /api/categories/{categoryId}` | Update an owned personal category |
-| `DELETE /api/categories/{categoryId}` | Delete an unused owned personal category |
-| `PATCH /api/transactions/{transactionId}/category` | Assign, correct, or remove a transaction category |
-| `POST /api/categorization-runs` | Apply deterministic rules only to uncategorized transactions |
-| `GET /api/categories/summary?month=YYYY-MM` | Return category totals and uncategorized totals separately for each currency |
-
-Synchronization is explicit and serialized per connection. Provider HTTP calls
-finish before the atomic database write, repeated calls are idempotent, and a
-failed attempt preserves the previous successful data. These endpoints never
-accept application-user or upstream-customer identifiers.
-
-The authenticated React Dashboard and Transactions pages now consume these
-local contracts. Dashboard totals are calculated in PostgreSQL with decimal
-arithmetic, grouped by currency, and exclude recognized internal transfers.
-The Transactions page uses backend pagination and account, date, direction,
-category, uncategorized, and text filters. The Categories page uses only real
-authenticated API data and supports personal-category management, deterministic
-classification, and per-currency monthly summaries. Both pages retain synchronized history after disconnection;
-they never call the mock bank directly.
-
-Synchronization remains an explicit user action through **Actualiser**. A later
-increment may synchronize automatically only when locally persisted data is
-older than a configurable freshness threshold; that stale-data policy is not
-implemented yet.
-
-See the [transaction categorization API guide](docs/api/transaction-categories.md)
-for rule precedence, ownership, history, and error contracts.
-
-The React frontend now uses the core backend for authentication, the current
-user/profile, and the development mock-bank connection journey. Dashboard
-metrics and the other financial-planning screens remain a demonstrable UI
-prototype backed by centralized simulated data. The frontend calls only the
-core backend and never calls the mock bank directly. See the [prototype guide](docs/prototype-ui.md), the
-[thematic ERD views](docs/database/entity-relationship-diagrams.md), and the
-[system architecture view](docs/architecture/system-overview.md).
-
-## Frontend Prototype
-
-From the repository root:
+### 0. Get the project
 
 ```powershell
-Set-Location frontend
-npm install
-Copy-Item .env.example .env.local
-npm run dev
+git clone --branch feat/backend-foundation https://github.com/AzizX25/smart-financial-wellness.git
+Set-Location smart-financial-wellness
+git --version
+docker --version
+docker compose version
+docker info --format '{{.OSType}}'
 ```
 
-`VITE_API_BASE_URL` defaults locally to `http://localhost:8080` and can be
-configured in `frontend/.env.local`. Open `http://localhost:5173`. Login,
-profile identity/preferences, and the Profile/Ma banque connection views use
-authenticated backend data. Dashboard summaries, the standalone Transactions
-screen, salary planning, goals, forecasts, recommendations, and the financial
-score still use fictitious demonstration data.
+The last command should return `linux`. A private repository requires permission
+and GitHub authentication. A clone contains only published commits, not another
+computer's uncommitted work, private environment files or database contents.
+The command selects the application's development branch explicitly; the default
+branch may not contain the same features. Use a documented release tag instead
+when a release has been published.
+You can also download a source ZIP from GitHub and extract it before opening a
+terminal in the directory containing `compose.yaml`.
 
-## Local PostgreSQL, Mailpit, and Mock Bank
+### 1. Prepare private configuration
 
-Docker Desktop must be running before using Docker Compose or running backend tests.
-
-From the repository root, create a local environment file in PowerShell:
+Copy the template only if a private configuration does not already exist:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Open `.env` and replace both local password placeholders with development-only
-passwords. Never commit `.env`.
+Edit `.env` locally:
 
-Start PostgreSQL and the local Mailpit email catcher:
+- Set private `DB_PASSWORD` and `MOCK_BANK_DB_PASSWORD`.
+- Replace the example `AUTH_JWT_SECRET` and `MOCK_BANK_JWT_SECRET` with **different**
+  securely generated Base64 secrets, each decoding to at least 32 random bytes.
+- Keep optional AI flags disabled for the first run.
+- Do not commit `.env`, print its contents or share secret-bearing Compose output.
+
+For a **new installation**, this optional PowerShell snippet generates signing
+keys without displaying them:
 
 ```powershell
-docker compose up -d postgres mailpit
+function New-LocalSigningSecret {
+  $bytes = New-Object byte[] 32
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+  return [Convert]::ToBase64String($bytes)
+}
+$env:AUTH_JWT_SECRET = New-LocalSigningSecret
+$env:MOCK_BANK_JWT_SECRET = New-LocalSigningSecret
 ```
 
-Check its status and health:
+These assignments affect only this shell and its child processes; shell variables
+override matching Compose `.env` entries. Use securely managed persistent values
+for repeatable startup. Do not regenerate an existing environment's signing keys
+casually: that invalidates its JWTs. Do not change passwords for already initialized
+database volumes without a deliberate credential-change procedure.
+
+### 2. Start the application
 
 ```powershell
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --build
 docker compose ps
 ```
 
-Mailpit accepts local SMTP messages without authentication or TLS on `localhost:1025`.
-Open `http://localhost:8025` to inspect verification and password-reset emails.
+Open the main frontend, mock-bank administration console and Mailpit using the
+service table above. Register a platform user normally, or prepare the sample
+scenario below. Platform and bank credentials are separate; the bank administrator
+does not log in to the main application.
 
-Stop PostgreSQL without deleting its persistent named volume:
+The initial build can take several minutes and is not a test run: the Java
+Dockerfiles skip tests while packaging. Wait for both PostgreSQL services to be
+healthy and for the APIs to start. Flyway creates the schemas on fresh volumes;
+Hibernate validates them. No existing account or financial history is copied from
+the author's machine. A new account can start with manual transactions or CSV;
+the optional sample scenario supplies a longer synthetic history.
 
-```powershell
-docker compose stop postgres
-```
-
-Stop Mailpit separately with `docker compose stop mailpit`.
-
-Start the independent mock-bank database and application:
-
-```powershell
-docker compose up -d mock-bank-db mock-bank
-docker compose ps mock-bank-db mock-bank
-```
-
-When both services are ready, `http://localhost:8081/actuator/health` reports
-the mock-bank health. Login is public; all customer data routes require a valid
-mock-bank bearer JWT whose subject matches the customer path. Stop only these
-services without deleting their named volume:
+Backend health and info are public, but financial routes require an active
+authenticated user. Use the exact health path, with no prose or suffix appended:
 
 ```powershell
-docker compose stop mock-bank mock-bank-db
+Invoke-RestMethod http://localhost:8080/actuator/health
+Invoke-RestMethod http://localhost:8081/actuator/health
+docker compose exec -T ai-service python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).read().decode())"
 ```
 
-Docker Compose supplies the mock-bank process with its database and JWT
-settings. The application has no fallback database password or signing secret.
+AI health describes its frozen-model readiness; it does not prove every optional
+Ollama model or external search call works. Backend health does not establish a
+successful end-to-end user journey.
 
-The deterministic development-only bank credentials are:
+### 3. Match custom ports and browser origins
 
-| Username | Password |
+Defaults are backend `8080`, frontend `5173`, bank API `8081` and admin UI `5174`.
+If your local backend is published on **8082**, use:
+
+```text
+BACKEND_PORT=8082
+FRONTEND_API_URL=http://localhost:8082
+```
+
+Then use `http://localhost:8082/actuator/health` and set
+`DEMO_PLATFORM_URL=http://localhost:8082` for demo scripts. The backend's internal
+Compose port remains `8080`.
+
+Frontend API URLs are **build-time settings**. Rebuild `frontend` after changing
+`FRONTEND_API_URL`, or `mock-bank-ui` after changing `MOCK_BANK_ADMIN_API_URL`.
+Use consistent browser hostnames; mixing `localhost` and `127.0.0.1` can break
+origin/cookie expectations.
+
+Changing the frontend origin also requires matching backend `CORS_ALLOWED_ORIGIN`
+and `FRONTEND_BASE_URL` process settings; changing the admin origin requires
+`MOCK_BANK_ADMIN_UI_ORIGIN`. Compose passes only variables explicitly wired in
+`compose.yaml`: adding arbitrary Spring variables to root `.env` does not inject
+them into a container automatically. Keep default UI origins for the simple setup.
+
+### 4. Stop or inspect without deleting data
+
+```powershell
+docker compose logs --tail 100 backend ai-service mock-bank
+docker compose stop
+docker compose start
+```
+
+Inspect logs locally and redact sensitive content before sharing them. Named
+database volumes preserve data across normal restarts. **Do not use
+`docker compose down -v` to troubleshoot** or remove a shared PostgreSQL volume.
+
+## Sample data (optional)
+
+The existing versioned scenario uses a fixed, clearly synthetic identity:
+
+| Field | Synthetic value |
 | --- | --- |
-| `amina.demo` | `DemoBank2026!` |
-| `youssef.demo` | `DemoBank2026!` |
+| Name | Amine Ben Salem |
+| Platform login | `amine.bensalem@example.test` |
+| Mock-bank login | `amine.bensalem.demo` |
+| Currency / locale / timezone | TND / French (`fr-TN`) / `Africa/Tunis` |
 
-These credentials authenticate only against synthetic mock-bank data. Never
-reuse them in a real environment.
+Prepare `.env.demo` without overwriting an existing one:
 
-The separate administrator console is available at `http://localhost:5174`
-when its Compose service is running. Its clearly development-only credential is:
+```powershell
+if (-not (Test-Path .env.demo)) { Copy-Item .env.demo.example .env.demo }
+```
 
-| Username | Password |
+Privately fill `DEMO_PLATFORM_PASSWORD`, `DEMO_BANK_PASSWORD` and
+`DEMO_MOCK_BANK_ADMIN_PASSWORD` for the existing local bank administrator.
+No passwords are supplied here. Set the URLs to your actual ports. Keep
+`DEMO_RUN_MERCHANT_AI=false` for the core scenario.
+
+The platform and bank passwords must be 12–72 UTF-8 bytes. Choose them on first
+creation and keep them for later runs: changing this file does not reset an
+existing account. `DEMO_MOCK_BANK_ADMIN_PASSWORD` must match the **already
+provisioned** `admin.demo` administrator. Obtain that development credential
+privately from the project maintainer; entering an arbitrary new password does
+not create or update the administrator. Without it, use normal registration and
+manual/CSV entry instead. The sample scripts cannot bootstrap that credential.
+
+```powershell
+docker compose --env-file .env --env-file .env.demo up -d --build
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/seed_demo.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/verify_demo.ps1
+```
+
+The seed uses normal authenticated APIs and an administrator-protected fixture
+enabled only by the mock bank's `demo` profile and explicit fixture opt-in. The
+copied `.env.demo.example` supplies both switches; the default profile disables
+the endpoint. Scripts load `.env.demo`; nonempty shell settings take precedence.
+The neutral entry points delegate to the existing scripts without renaming
+persisted scenario identifiers or changing ownership checks. With PowerShell 7,
+replace `powershell.exe` with `pwsh`.
+
+The dataset contains two synthetic TND accounts, at least eight completed months
+plus elapsed current-month activity, recurring income/expenses, transfer pairs,
+a pending operation and categorization-review examples. It prepares current/future
+Salary Plans, two goals with legitimate progress/allocations and Forecast prerequisites.
+
+The default as-of date is today; `-AsOfDate yyyy-MM-dd` accepts a date in the current
+calendar month. Stable scenario references make reconciliation idempotent. Month
+rollover extends the existing ledger from its original opening anchor rather than
+resetting balances. Altered or conflicting fixtures are refused; a `409` is not
+permission to delete ordinary data or bypass checks.
+
+The verifier is non-destructive, prints PASS/FAIL checks and exits nonzero on
+failure. It validates the fixed identity and owned resources. No Ollama or web
+search is needed for core seeding.
+
+Recommended walkthrough: login → Dashboard → bank/synchronization → transactions
+and category review → Salary Planning → goals/scenarios → Forecast → score and
+recommendations. Show optional explanation/receipt flows separately and repeat
+important financial flows with those features disabled.
+
+Do not use `-ResetDemoOnly` for routine reconciliation. Its optional explicit reset
+removes only the marked mock-bank fixture, not the platform user or synchronized
+local history. See the [sample-data guide](docs/demo/local-demo.md) for safety
+checks and removal limitations.
+
+## AI and model configuration
+
+### What each AI feature does
+
+| Feature | Implementation and fallback |
 | --- | --- |
-| `admin.demo` | `AdminBank2026!` |
+| Forecast regression | Frozen scikit-learn Huber model, synthetic TND training, residual correction to a deterministic forecast; deterministic fallback |
+| Merchant recognition | Frozen model/catalog, private user memory and optional public web reasoning; invalid/unrecognized results abstain |
+| Recommendation explanations | Optional local Ollama wording of controlled rule/factor codes; original deterministic explanation on failure |
+| Receipt vision | Optional local image extraction; missing fields stay missing, human review required and no transaction created |
 
-The administrator JWT has an explicit `ADMIN` role and token type. Customer
-tokens cannot call administrator endpoints, and administrator tokens cannot
-use customer-owned banking routes. Passwords and hashes are never returned by
-management DTOs.
+The score, recommendation selection, Salary Planning and goal calculations do not
+use an LLM. No autonomous AI agents or automatic financial actions are implemented.
 
-Start only the mock-bank group and its management console with:
+Merchant AI receives an opaque key, sanitized merchant text, direction, currency
+and contract versions—not amounts, user IDs or database transaction IDs.
+Explanations send controlled rule/factor codes, not financial amounts or raw history.
+Forecast sends aggregate features. Only **merchant web enrichment** makes external
+search calls; recommendation explanations and receipt vision stay local.
 
-```powershell
-docker compose up -d --build mock-bank-db mock-bank mock-bank-ui
-docker compose ps mock-bank-db mock-bank mock-bank-ui
-```
+### Optional Ollama setup
 
-The management contracts are:
+Install Ollama from the official download above, then reopen your terminal if
+the `ollama` command is not found. Ollama runs on the **host**, not inside the
+application's current Compose stack. It is not needed for the frozen Forecast
+regression or the frozen merchant model, both included under `ai-service/models/`.
 
-| Method and path | Responsibility |
-| --- | --- |
-| `POST /api/admin/auth/login` | Authenticate the development administrator |
-| `GET /api/admin/dashboard` | Return small customer, account, and transaction summaries |
-| `GET /api/admin/customers` | Search and paginate synthetic customers |
-| `GET /api/admin/customers/{customerId}` | Load one synthetic customer |
-| `POST /api/admin/customers` | Create a customer with a BCrypt password hash |
-| `PATCH /api/admin/customers/{customerId}` | Update the supported customer metadata |
-| `POST /api/admin/customers/{customerId}/reset-password` | Replace a customer password hash |
-| `POST /api/admin/customers/{customerId}/activate` | Allow customer authentication and access |
-| `POST /api/admin/customers/{customerId}/deactivate` | Block customer authentication and access |
-| `GET /api/admin/accounts` | Filter and paginate accounts |
-| `GET /api/admin/accounts/{accountId}` | Load account details and balances |
-| `POST /api/admin/customers/{customerId}/accounts` | Create a zero-balance account for its owner |
-| `PATCH /api/admin/accounts/{accountId}` | Update account name or type without reassignment |
-| `POST /api/admin/accounts/{accountId}/activate` | Activate a non-closed account |
-| `POST /api/admin/accounts/{accountId}/freeze` | Freeze an account |
-| `POST /api/admin/accounts/{accountId}/close` | Close an account without deleting history |
-| `GET /api/admin/accounts/{accountId}/transactions` | Paginate and optionally date-filter operations |
-| `POST /api/admin/accounts/{accountId}/transactions` | Atomically post a manual credit or debit and update balances |
-
-Manual operations require an active account and a strictly positive decimal
-amount. Debits cannot exceed current or available funds. Transactions are
-immutable; correcting entries are represented by new reversing operations.
-
-With an `ACTIVE` application user's access JWT in `$appAccessToken`, connect
-through the core backend and read the linked data as follows:
+Check the host installation and installed models first:
 
 ```powershell
-$headers = @{ Authorization = "Bearer $appAccessToken" }
-$credentials = @{ username = "amina.demo"; password = "DemoBank2026!" } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/bank-connections/mock-bank" -Headers $headers -ContentType "application/json" -Body $credentials
-$accounts = Invoke-RestMethod -Uri "http://localhost:8080/api/bank/accounts" -Headers $headers
-$accountId = $accounts[0].id
-Invoke-RestMethod -Uri "http://localhost:8080/api/bank/accounts/$accountId/balance" -Headers $headers
-Invoke-RestMethod -Uri "http://localhost:8080/api/bank/accounts/$accountId/transactions?page=0&size=20" -Headers $headers
-Invoke-RestMethod -Method Delete -Uri "http://localhost:8080/api/bank-connections/mock-bank" -Headers $headers
+ollama --version
+ollama list
+ollama ps
 ```
 
-The commands intentionally use the core backend rather than exposing a mock
-customer identifier to the frontend.
+Start Ollama if needed (`ollama serve` when it is not already running). Model
+downloads are explicit, not part of application startup.
 
-To run both Spring Boot applications as containers, build only their images and
-start their required services:
+The template uses `qwen3:4b` for reasoning and `qwen3-embedding:0.6b` for embeddings.
+The previously used `qwen2.5:latest` reasoning model can be selected explicitly;
+do not assume a model is installed because it appears in configuration.
+Receipt vision uses the separate `qwen2.5vl:3b` model.
+
+For the Qwen2.5 configuration shown below, explicitly download only the models
+needed for your chosen features:
 
 ```powershell
-docker compose build backend mock-bank
-docker compose up -d postgres mock-bank-db mock-bank backend
-docker compose ps postgres mock-bank-db mock-bank backend
+ollama pull qwen2.5:latest
+# Only for optional merchant web enrichment:
+ollama pull qwen3-embedding:0.6b
+# Only for receipt-image extraction:
+ollama pull qwen2.5vl:3b
+ollama list
+Invoke-RestMethod http://localhost:11434/api/tags
 ```
 
-The backend container always uses `http://mock-bank:8081`, the Compose service
-hostname, rather than `localhost`. Stop only this group without deleting its
-named database volumes:
+If you keep the template's `qwen3:4b` reasoning setting instead, download that
+model with `ollama pull qwen3:4b`. Downloading Qwen2.5 alone does not change the
+template: set `OLLAMA_REASONING_MODEL` explicitly as below. Keep reasoning
+consistent between the backend and AI service; Compose wires that automatically.
 
-```powershell
-docker compose stop backend mock-bank mock-bank-db postgres
-```
-
-The root `.env` file configures Docker Compose through the main `DB_*`,
-`MOCK_BANK_DB_*`, and port settings. Spring Boot does not automatically load
-this file when either application is started with Maven.
-
-Before starting the backend, make `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and a Base64-encoded JWT signing secret available to its process. The backend password must match `DB_PASSWORD` in `.env`. For the example database name, username, and port, run the following from the repository root in the same PowerShell session:
-
-```powershell
-$env:DB_URL = "jdbc:postgresql://localhost:5432/smart_financial_wellness"
-$env:DB_USERNAME = "smart_financial_wellness"
-$env:DB_PASSWORD = "<same local password as .env>"
-$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$jwtSecretBytes = New-Object byte[] 32
-$rng.GetBytes($jwtSecretBytes)
-$rng.Dispose()
-$env:AUTH_JWT_SECRET = [Convert]::ToBase64String($jwtSecretBytes)
-$env:SMTP_HOST = "localhost"
-$env:SMTP_PORT = "1025"
-$env:SMTP_AUTH = "false"
-$env:SMTP_STARTTLS_ENABLE = "false"
-$env:EMAIL_SENDER_ADDRESS = "no-reply@smart-financial-wellness.local"
-$env:EMAIL_SENDER_NAME = "Mon Equilibre"
-$env:FRONTEND_BASE_URL = "http://localhost:5173"
-$env:MOCK_BANK_BASE_URL = "http://localhost:8081"
-$env:MOCK_BANK_CONNECT_TIMEOUT = "2s"
-$env:MOCK_BANK_READ_TIMEOUT = "5s"
-Set-Location backend
-mvn spring-boot:run
-```
-
-Adjust the database URL, username, and SMTP port if their Compose values were changed. The generated JWT secret is temporary for that PowerShell process; production must inject a securely managed secret. No dotenv dependency is required. See the [authentication and profile API guide](docs/api/authentication-profile.md) for all optional security and email settings and endpoint behavior.
-
-The mock-bank client settings are:
-
-| Spring property | Environment variable | Local default |
+| Feature | Host Ollama required? | Without it |
 | --- | --- | --- |
-| `app.integrations.mock-bank.base-url` | `MOCK_BANK_BASE_URL` | `http://localhost:8081` |
-| `app.integrations.mock-bank.connect-timeout` | `MOCK_BANK_CONNECT_TIMEOUT` | `2s` |
-| `app.integrations.mock-bank.read-timeout` | `MOCK_BANK_READ_TIMEOUT` | `5s` |
+| Authentication, transactions, CSV, Salary Planning, Goals and score | No | Core workflows remain available |
+| Forecast regression | No | Uses the packaged artifact when eligible; deterministic fallback otherwise |
+| Deterministic recommendations | No | Standard explanations remain available |
+| Frozen merchant model and private merchant memory | No | Eligible local suggestions still work; unknown merchants can remain for review |
+| Optional French LLM explanation | Yes, reasoning model | Original deterministic wording |
+| Receipt reading | Yes, vision model | Manual/CSV entry remains available |
+| Merchant web enrichment | Yes, reasoning and embedding models, plus private search key | Safe abstention/manual review |
 
-The base URL must be an absolute HTTP(S) URL without embedded credentials,
-query, or fragment. Both timeouts must be positive; invalid configuration stops
-backend startup.
+Configure only the features you intend to demonstrate in private `.env`:
 
-The mock-bank JWT settings are:
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_REASONING_MODEL=qwen2.5:latest
+OLLAMA_EMBEDDING_MODEL=qwen3-embedding:0.6b
+OLLAMA_VISION_MODEL=qwen2.5vl:3b
 
-| Spring property | Environment variable | Local default |
-| --- | --- | --- |
-| `app.security.jwt.secret` | `MOCK_BANK_JWT_SECRET` | None; required Base64 secret of at least 32 decoded bytes |
-| `app.security.jwt.issuer` | `MOCK_BANK_JWT_ISSUER` | `smart-financial-wellness-mock-bank` |
-| `app.security.jwt.audience` | `MOCK_BANK_JWT_AUDIENCE` | `smart-financial-wellness-backend` |
-| `app.security.jwt.access-token-ttl` | `MOCK_BANK_ACCESS_TOKEN_TTL` | `10m` |
-| `app.security.jwt.admin-access-token-ttl` | `MOCK_BANK_ADMIN_ACCESS_TOKEN_TTL` | `15m` |
-| `app.security.admin-ui-origin` | `MOCK_BANK_ADMIN_UI_ORIGIN` | `http://localhost:5174` |
-
-When the mock bank is started with Maven instead of Compose, its process must
-receive the database variables and signing secret explicitly because Spring
-Boot does not load the root `.env` file:
-
-```powershell
-$env:DB_URL = "jdbc:postgresql://localhost:5432/mock_bank"
-$env:DB_USERNAME = "mock_bank"
-$env:DB_PASSWORD = "<same mock-bank password as .env>"
-$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$mockJwtSecretBytes = New-Object byte[] 32
-$rng.GetBytes($mockJwtSecretBytes)
-$rng.Dispose()
-$env:MOCK_BANK_JWT_SECRET = [Convert]::ToBase64String($mockJwtSecretBytes)
-$env:MOCK_BANK_ADMIN_UI_ORIGIN = "http://localhost:5174"
-Set-Location mock-bank
-mvn spring-boot:run
+MERCHANT_ENRICHMENT_ENABLED=true
+RECOMMENDATION_EXPLAINER_ENABLED=true
+RECEIPT_VISION_ENABLED=true
 ```
 
-Running `mvn test` from `backend` starts an isolated `postgres:17-alpine` Testcontainer automatically. Docker is the only external test prerequisite; the local Compose database is not used by the tests.
+All three feature flags default to **false**. Merchant web enrichment additionally
+requires a private `OLLAMA_API_KEY`; local explanations and vision do not. Never
+commit or print that key. Enabling flags is not a compatibility/accuracy check:
+install the selected models explicitly and validate safe public/synthetic examples.
 
-Running `mvn test` from `mock-bank` likewise uses its own isolated PostgreSQL
-Testcontainer. It applies only the mock-bank V1 through V4 migrations and does not
-require the main application database.
+For local explanations and receipt reading **without web search**, leave
+`MERCHANT_ENRICHMENT_ENABLED=false` and `OLLAMA_API_KEY` blank. Enable the other
+two flags independently. No external key is required for these local features.
+Do not expose Ollama port 11434 publicly. The AI container must reach the host
+through `host.docker.internal`; if that fails, follow the
+[Ollama networking guidance](https://docs.ollama.com/faq) and restrict any listener
+or firewall changes to the local Docker network, not the public internet.
 
-For host-based frontend development, set `VITE_MOCK_BANK_API_URL` before
-starting Vite when the mock bank is not available at `http://localhost:8081`:
+After configuration changes, recreate only the affected services:
 
 ```powershell
-Set-Location mock-bank-ui
-$env:VITE_MOCK_BANK_API_URL = "http://localhost:8081"
-npm install
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --no-deps ai-service backend
+```
+
+Use `--build` only when source/dependencies/artifacts changed. The reasoning model
+name is propagated to the backend's expected merchant-enrichment contract by Compose.
+
+### Bounded execution and timeouts
+
+| Setting | Template value / role |
+| --- | --- |
+| `AI_SERVICE_CONNECT_TIMEOUT` / `AI_SERVICE_READ_TIMEOUT` | Forecast: `2s` / `5s` |
+| `AI_MERCHANT_CONNECT_TIMEOUT` / `AI_MERCHANT_READ_TIMEOUT` | Merchant backend client: `2s` / `90s` |
+| `MERCHANT_BATCH_TIMEOUT_SECONDS` | `80`; bounded total merchant budget |
+| `OLLAMA_READ_TIMEOUT_SECONDS` / `OLLAMA_SEARCH_TIMEOUT_SECONDS` | Template: `30` / `20`; Compose fallbacks if omitted: `12` / `8` |
+| `AI_ASSISTANCE_CONNECT_TIMEOUT` / `AI_ASSISTANCE_READ_TIMEOUT` | Explanation/receipt backend client: `2s` / `35s` |
+| `OLLAMA_ASSISTANCE_TIMEOUT_SECONDS` | `30`; local assistance budget |
+| `OLLAMA_EMBEDDING_CPU_ONLY` | `false`; set `true` to leave limited GPU memory for reasoning/vision |
+| `OLLAMA_EMBEDDING_CONTEXT_SIZE` | `1024`; bounded embedding context |
+
+A process-local admission slot avoids simultaneous local-model contention. Busy,
+invalid and unavailable inference retains safe fallback/abstention. CPU/GPU use
+depends on Ollama, installed drivers and model fit; 24 GB system RAM alone does not
+guarantee sufficient VRAM or fixed latency. Do not disable timeouts. Cold vision
+may need a bounded larger assistance budget with a correspondingly larger backend
+timeout; see [local assistance](docs/api/local-assistance.md).
+
+Receipt uploads accept one bounded JPEG/PNG (2 MiB, four million pixels). Images
+are validated and metadata-stripped in memory, not retained. Review merchant/date/
+positive scale-4 amount/currency before CSV export; a missing currency is never
+guessed. **Do not import a receipt already represented by bank transactions.**
+
+### ML training and provenance
+
+`ml-pipeline/` contains synthetic generation, dataset validation, temporal splits,
+baseline experiments and controlled artifact export. Start with notebooks
+`01_data_audit.ipynb`, `02_baseline_models.ipynb` and `03_export_frozen_model.ipynb`.
+The deployed Forecast artifact is `forecast-huber-synthetic-tnd` version `1.0.0`,
+with feature contract `forecast-residual-features-v1`.
+
+Model training is an offline developer workflow, not a frontend feature.
+Synthetic test metrics do not establish accuracy on real users. Do not silently
+retrain or replace frozen artifacts; version datasets/features/results, preserve
+an untouched temporal test set and validate before promotion. See the
+[Forecast experiment and provenance](docs/architecture/forecast-ml.md).
+
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| Docker cannot connect or reports Windows containers | Start Docker Desktop, enable Linux containers and check WSL/virtualization requirements in the installation guide. |
+| Build/download failure | Check internet, proxy and registry access. Do not change package versions or remove volumes to fix a network failure. |
+| Port already allocated | Change the conflicting host port in `.env`. For backend changes, also update `FRONTEND_API_URL`, rebuild the frontend and adjust the demo URL. Keep default UI origins unless you deliberately configure matching CORS/email origins. |
+| Database password fails after editing `.env` | Existing PostgreSQL volumes retain their original credentials. Restore the correct configuration or use an explicit password-change procedure; do not delete the volume. |
+| Login or a financial endpoint returns 401/403 | Verify the email through Mailpit, sign in again, and distinguish platform credentials from mock-bank credentials. Pending accounts cannot use financial APIs. |
+| Health URL returns 401 | Use exactly `/actuator/health` on the configured API port, with no extra text appended. |
+| A new account has no score, forecast or recommendations | Add/synchronize eligible history in the selected currency. Insufficient data is a real state, not a failed installation. |
+| AI has no suggestions | Check eligibility, model readiness, flags and strict validation. Abstention is expected for unsupported/ambiguous merchants; do not automatically assign a category. |
+| Local AI/receipt extraction is unavailable or slow | Check `ollama list`, host `/api/tags`, container-to-host connectivity, model names and flags. Inspect `ollama ps` for CPU/GPU use; free memory and try one request at a time. Keep human review and bounded timeouts. |
+| Demo setup returns 401 or 409 | A 401 can mean the configured existing administrator/customer password is wrong. A 409 indicates a fixture conflict; stop and inspect the safe error, rather than resetting data or bypassing ownership checks. |
+
+Inspect only the relevant service logs locally:
+
+```powershell
+docker compose ps
+docker compose logs --tail 100 backend ai-service mock-bank
+```
+
+Do not publish raw logs, resolved Compose configuration, `.env` files or tokens.
+The supplied Compose file is for a trusted local machine: published ports may
+bind beyond loopback. Keep them behind a local firewall; do not expose the
+databases, Mailpit, development bank or optional Ollama server to the internet.
+For updates, first preserve local changes with an intentional commit or backup,
+then retrieve the intended release and rerun Compose with the same environment
+files. Rebuild changed images; never reset a dirty worktree or delete database
+volumes as an update shortcut. Take a database backup before applying a release
+with new migrations; application rollback is not a database rollback.
+
+## Development and validation
+
+This section is optional for users running the application through Docker.
+Host development uses JDK 21, Maven/the included wrappers, Node.js 24 (matching
+the frontend Dockerfiles) and Python 3.12 with separate virtual environments.
+
+### Host frontend development
+
+Run the API/infrastructure through Compose, then use a separate frontend terminal.
+Avoid running both Nginx and Vite on the same host port:
+
+```powershell
+docker compose stop frontend
+Set-Location frontend
+npm ci
+if (-not (Test-Path .env.local)) { Copy-Item .env.example .env.local }
+# Set VITE_API_BASE_URL in .env.local to the actual backend URL.
 npm run dev
 ```
 
-The API URL is compiled into this development frontend, but administrator
-credentials are not. The JWT is stored only in `sessionStorage` and cleared on
-an administrator `401` response.
+For the admin UI, stop `mock-bank-ui`, enter that directory, set
+`$env:VITE_MOCK_BANK_API_URL='http://localhost:8081'`, then run `npm ci` and
+`npm run dev`. Keep its origin aligned with the mock-bank CORS setting.
 
-## Development Tools
+### Host backend development
 
-Development will require:
+Start `postgres`, `mailpit`, `mock-bank-db` and `mock-bank` through Compose and stop
+the containerized `backend` if it occupies the desired API port. Before Maven,
+supply `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `AUTH_JWT_SECRET` and the integration
+settings to the backend process in the same shell. The database password must match
+the initialized database's configured password.
 
-- Git
-- Node.js and npm for React and Vite
-- JDK 21 and Maven for the Spring Boot applications
-- Python and a Python virtual-environment tool for the AI and ML components
-- Docker with Docker Compose
-- PostgreSQL tooling when direct database inspection is needed
+**Spring Boot does not automatically load the root `.env` when run with Maven.**
+Compose service names resolve inside its network, not from host Java/Python.
+For a host backend use `MOCK_BANK_BASE_URL=http://localhost:8081`, local Mailpit,
+and an explicitly reachable AI URL if desired; internal AI port 8000 is not
+published by the supplied Compose file.
 
-Additional setup, configuration, and execution instructions will be added as the services are implemented.
+```powershell
+# In a shell with the required private settings already supplied:
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/smart_financial_wellness'
+$env:DB_USERNAME = 'smart_financial_wellness'
+$env:MOCK_BANK_BASE_URL = 'http://localhost:8081'
+$env:SMTP_HOST = 'localhost'
+$env:SMTP_PORT = '1025'
+Set-Location backend
+.\mvnw.cmd spring-boot:run
+```
+
+Adjust host ports/database names to your configuration. See the
+[authentication guide](docs/api/authentication-profile.md) for the full process
+variables. The mock-bank database is not exposed on the host; do not point a
+host mock-bank process at the application's database.
+
+### Host Python development
+
+Create separate virtual environments for `ai-service` and `ml-pipeline`.
+For example, in `ai-service`:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[test]"
+uvicorn forecast_ai.main:app --host 127.0.0.1 --port 8000
+```
+
+For host Ollama calls use `OLLAMA_BASE_URL=http://localhost:11434`, not the
+container-specific hostname. A host backend must use `AI_SERVICE_BASE_URL=http://localhost:8000`
+to call that host FastAPI process. In `ml-pipeline`, install `".[test]"` in its
+own environment and run `jupyter lab` to open the notebooks.
+
+### Validation commands
+
+These are commands to run, **not a claim that they were rerun for this README**.
+Run each from the indicated directory:
+
+| Directory | Command |
+| --- | --- |
+| `backend` | `.\mvnw.cmd verify` (or `mvn verify` if wrapper downloads are unavailable) |
+| `mock-bank` | `mvn verify` (no Maven wrapper is included in this module) |
+| `frontend` | `npm test`, `npm run lint`, `npm run build` |
+| `mock-bank-ui` | `npm test`, `npm run lint`, `npm run build` |
+| `ai-service` | `python -m pytest` in its test-enabled virtual environment |
+| `ml-pipeline` | `python -m pytest` in its test-enabled virtual environment |
+| Repository root | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/test_demo_scripts.ps1` |
+| Repository root | `docker compose --env-file .env config --quiet`, `git diff --check` |
+
+On Unix-like shells, Maven wrappers use `./mvnw`. Java integration tests require
+Docker and use isolated PostgreSQL Testcontainers with Flyway; they do not use the
+persistent Compose databases. Automated AI tests use controlled providers, not
+real Ollama/web requests; authentication mail tests use a fake delivery mechanism.
+
+Do not infer release acceptance from a historical test count. Validate the combined
+worktree and the intended demo environment before delivery.
+
+## Security and data handling
+
+- Access JWTs are short-lived; the main frontend keeps them in memory.
+- Refresh tokens and action tokens are hash-only in PostgreSQL. Refresh rotation
+  is transactional; consumed-token reuse revokes its family.
+- Refresh cookies are HttpOnly, SameSite=Strict and path-scoped. Enable Secure
+  for HTTPS deployment; local HTTP configuration is not production hardening.
+- Every authenticated request resolves current user/identity status. Financial
+  endpoints require both to be ACTIVE; ownership comes from the principal.
+- Passwords use BCrypt with a UTF-8 72-byte limit. Profile writes cannot change
+  email, identifiers, verification or account status.
+- Verification/reset email dispatch happens after commit. SMTP failure does not
+  undo a pending account; cooldowns are enforced server-side.
+- Bank customer identifiers remain inside the backend adapter. Cross-customer
+  bank reads return `404 Account not found`.
+- Bank access currently uses a synthetic login/JWT flow, **not implemented OAuth
+  Authorization Code with PKCE**. Schema/design references are not executable OAuth.
+- Provider fetches and AI calls do not run inside PostgreSQL write transactions.
+  Invalid AI batches do not partially persist predictions.
+- Sensitive operations are audited; credentials and model prompts/responses must
+  not be added to logs. Scores and produced factors are immutable.
+- Never commit private environment files, credentials, raw financial datasets,
+  generated outputs or model artifacts outside their approved versioned locations.
+
+## API overview
+
+The core API derives ownership from the authenticated principal. Amounts, eligibility
+and currency constraints are validated server-side; passing an arbitrary user ID
+is not an authorization mechanism.
+
+| Area | Main core-backend routes |
+| --- | --- |
+| Authentication | `POST /api/auth/register`, `login`, `refresh`, `logout`; `GET /api/auth/me` |
+| Account actions | `POST /api/auth/email-verification/confirm`, `resend`; `POST /api/auth/password-reset/request`, `confirm` |
+| Profile | `GET`, `PUT /api/profile` |
+| Bank connection | `GET`, `POST`, `DELETE /api/bank-connections/mock-bank` |
+| Synchronization | `POST /api/bank/synchronizations`; `GET /api/bank/synchronizations/status` |
+| Local data | `GET /api/accounts`, `/api/transactions`, `/api/dashboard/summary?month=YYYY-MM` |
+| Categories | `GET`, `POST /api/categories`; `PATCH`, `DELETE /api/categories/{id}`; `GET /api/categories/summary` |
+| Correction/review | `PATCH /api/transactions/{id}/category`; `POST /api/categorization-runs`, `/api/categorization-runs/merchant-recognition`; `GET /api/categorization-reviews`, `/api/merchant-memories` |
+| CSV | `POST /api/imports/accounts`, `/api/imports/csv/preview`, `/api/imports/csv/{jobId}/confirm` |
+| Salary Planning | `GET`, `PUT /api/salary-plans/{month}?currency=TND`; `GET /api/salary-plans`, `/api/salary-plans/proposals` |
+| Goals | `GET`, `POST /api/goals`; `GET`, `PUT`, `DELETE /api/goals/{id}`; `PATCH /api/goals/{id}/status` |
+| Contributions/scenarios | `GET`, `POST /api/goals/{id}/contributions`; `DELETE /api/goals/{id}/contributions/{contributionId}`; `POST /api/goals/{id}/simulations` |
+| Capacity allocation | `GET`, `PUT /api/goals/allocations/{month}?currency=TND` |
+| Forecast | `POST /api/forecasts/current`; `GET /api/forecasts`, `/api/forecasts/{id}`; `POST /api/forecasts/{id}/simulations` |
+| Score | `POST /api/financial-scores/current`; `GET /api/financial-scores`, `/api/financial-scores/{id}` |
+| Recommendations | `POST /api/recommendations/current`; `GET /api/recommendations`; `PATCH /api/recommendations/{id}/status`; `POST /api/recommendations/{id}/explanation` |
+| Receipt preview | `POST /api/receipts/extract` (multipart `file`) |
+
+Use exact `currency`, `month`, timezone and pagination parameters where required;
+see controllers and linked API guides for request/response schemas. Goal deletion
+archives rather than erasing financial history. Transaction-linked contributions
+cannot be deleted through the manual-contribution endpoint.
+
+The mock bank separately exposes `POST /api/auth/login`, customer-scoped read
+APIs under `/api/v1/customers/{customerId}/accounts` (metadata, balances and
+transactions), and administrator-only management under `/api/admin`.
+The main frontend never calls port 8081 directly.
+
+FastAPI provides `/health`, Forecast and merchant model/prediction endpoints,
+`POST /api/v1/recommendations/explain` and `POST /api/v1/receipts/extract`.
+Its supplied deployment is internal and must not be treated as a public browser API.
+
+## Architecture diagrams and documentation
+
+Open **[Structurizr diagrams](http://localhost:8085/workspace/1/diagrams)** when
+the separate local viewer is running. Its ten views cover context, containers,
+backend/frontend/AI/mock-bank/ML components and deployment.
+
+```powershell
+docker start sfwa-structurizr
+```
+
+For first creation, native DSL validation and viewing instructions, see the
+[C4 guide](docs/architecture/c4/README.md). The canonical model is
+[workspace.dsl](docs/architecture/c4/workspace.dsl); the previous
+[offline HTML viewer](docs/architecture/c4/index.html) remains an independent
+historical export, not an automatically synchronized native workspace.
+
+| Guide | Contents |
+| --- | --- |
+| [System overview](docs/architecture/system-overview.md) | Service boundaries and source evidence |
+| [Authentication and profile](docs/api/authentication-profile.md) | Tokens, activation, password reset and configuration |
+| [Mock-bank connection](docs/api/mock-bank-connection.md) | Connection lifecycle, adapter, sync and provider contracts |
+| [Transaction categories](docs/api/transaction-categories.md) | Rules, manual correction, merchant review and private memory |
+| [CSV import](docs/api/csv-import.md) | Supported formats, preview/mapping, idempotency and overlap warning |
+| [Forecast API](docs/api/forecast.md) / [ML experiment](docs/architecture/forecast-ml.md) | Deterministic fallback, synthetic Huber evaluation and provenance |
+| [Financial score](docs/api/financial-wellness-score.md) | Factors, eligibility, immutable snapshots and limitations |
+| [Recommendations](docs/api/recommendations.md) | Rule thresholds, feedback and justification integrity |
+| [Local assistance](docs/api/local-assistance.md) | Ollama setup, bounded inference, explanations and receipt vision |
+| [Sample-data scenario](docs/demo/local-demo.md) | Seeding, verification, rollover and demo-only reset |
+| [Data model](docs/data-model.md) / [Flyway schema](docs/database/flyway-schema.md) / [ER diagrams](docs/database/entity-relationship-diagrams.md) | Consolidated database design; verify implemented extensions against migrations |
+
+A [synthetic TND CSV](docs/demo/csv-import-test-tnd.csv) is available for import
+testing. Inspect its dates/account currency before importing; dated fixtures do
+not automatically become current-month activity. Older prototype or release
+reports describe their own snapshot, not the current runtime's acceptance state.
+
+## Limitations and next steps
+
+- **Synthetic provider only:** no real-bank integration, OAuth/PKCE, payments or
+  autonomous money transfers.
+- **Privacy workflows:** profile editing is real, but consent displays and
+  authenticated export/account-deletion actions still include prototype behavior.
+  No complete user-deletion workflow is implemented.
+- **Import scope:** CSV only; no Excel, separate debit/credit columns or automatic
+  reconciliation of overlapping files/bank data. Importing receipts can duplicate
+  existing banking activity.
+- **Score completeness:** `ESSENTIAL_EXPENSE_BURDEN` and `BALANCE_RESILIENCE` remain
+  unavailable because a reliable essential-expense classification is absent.
+  They are not fabricated or scored as zero.
+- **AI limitations:** synthetic-model accuracy is not proven on real users;
+  unsupported currencies retain deterministic Forecast; merchant reasoning may
+  abstain. Receipt quality/latency depends on the image, model and hardware.
+- **UI/preferences:** saved interface preferences do not imply every theme,
+  notification or accessibility setting is applied throughout the UI. Responsive
+  tests do not establish a formal WCAG compliance audit.
+- **Operational hardening:** CI/security checks, backup/restore, production TLS,
+  deployment-specific secret handling, monitoring and privacy/retention policy
+  need dedicated release work. Mailpit and development bank identities are local
+  demonstration infrastructure.
+
+Next improvements should preserve deterministic financial facts, currency isolation,
+human review and safe AI fallback. This application is an educational assistant:
+its scores, estimates and suggestions are **informational, never guaranteed
+financial advice**.

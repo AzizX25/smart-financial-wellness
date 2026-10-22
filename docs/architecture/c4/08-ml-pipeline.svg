@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1871" width="1370" height="1871" role="img" aria-labelledby="08-ml-pipeline-title 08-ml-pipeline-desc">
+<title id="08-ml-pipeline-title">C3 · Pipeline ML hors ligne</title>
+<desc id="08-ml-pipeline-desc">Flux de scripts / notebooks ; pas de service réseau ni de modification automatique des modèles en production. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="08-ml-pipeline-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1871" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Pipeline ML hors ligne</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="840" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">ml-pipeline / espace de travail hors ligne</text>
+<g data-edge="1"><title>Exécute génération avec seed</title><path d="M520 185 L492 185 L490 180 L410 180 L410 460 L408 465 L380 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="2"><title>Transactions synthétiques validées</title><path d="M380 465 L408 465 L410 460 L490 460 L492 465 L520 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="3"><title>Exemples agrégés / features versionnées</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="4"><title>Écrit dataset local</title><path d="M675 550 L675 578 L680 580 L220 580 L220 910 L225 912 L225 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="5"><title>Écrit métriques et provenance</title><path d="M520 745 L492 745 L490 740 L410 740 L410 1020 L408 1025 L380 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="6"><title>Sélection validée et export explicite</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="7"><title>Exemples et taxonomie versionnés</title><path d="M1125 550 L1125 578 L1120 580 L1120 630 L1125 632 L1125 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="8"><title>Artefact marchand validé</title><path d="M970 745 L942 745 L940 740 L860 740 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)"/></g>
+<g data-edge="9"><title>Export avec empreintes / inclusion build</title><path d="M675 1110 L675 1138 L680 1140 L680 1170 L675 1172 L675 1200" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#08-ml-pipeline-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="dev"><title>Développeur / stagiaire: Lance des expériences reproductibles et valide les résultats. | </title>
+<rect x="520" y="100" width="310" height="170" rx="24" fill="#fff7cf" stroke="#123458" stroke-width="2"/>
+<circle cx="806" cy="123" r="8" fill="#123458"/>
+<text x="536" y="129" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Développeur / stagiaire</text>
+<text x="536" y="152" font-size="12" fill="#123458" font-weight="400" text-anchor="start">[Personne]</text>
+<text x="536" y="178" font-size="13" fill="#123458" font-weight="400" text-anchor="start">Lance des expériences reproductibles et</text>
+<text x="536" y="195" font-size="13" fill="#123458" font-weight="400" text-anchor="start">valide les résultats.</text>
+</g>
+<g data-node="generator"><title>Génération et validation: Données synthétiques versionnées ; dates et devises contrôlées. | ml-pipeline/src/forecast_ml/synthetic_data.py; ml-pipeline/src/forecast_ml/validation.py</title>
+<rect x="70" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Génération et validation</text>
+<text x="86" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">synthetic_data · validation</text>
+<text x="86" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Données synthétiques versionnées ;</text>
+<text x="86" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">dates et devises contrôlées.</text>
+</g>
+<g data-node="dataset"><title>Dataset et features: Features connues au cutoff ; cible résiduelle sans fuite. | ml-pipeline/src/forecast_ml/dataset_builder.py; ml-pipeline/src/forecast_ml/feature_matrix.py</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Dataset et features</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">dataset_builder · feature_matrix</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Features connues au cutoff ; cible</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">résiduelle sans fuite.</text>
+</g>
+<g data-node="catalog"><title>Catalogue marchand: Taxonomie système et exemples marchands contrôlés. | ml-pipeline/src/merchant_ml/catalog.py</title>
+<rect x="970" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Catalogue marchand</text>
+<text x="986" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">merchant_ml/catalog.py</text>
+<text x="986" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Taxonomie système et exemples marchands</text>
+<text x="986" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">contrôlés.</text>
+</g>
+<g data-node="training"><title>Expériences et évaluation: Comparaison des modèles, splits temporels et test préservé. | ml-pipeline/src/forecast_ml/modeling.py; ml-pipeline/src/forecast_ml/evaluation.py; ml-pipeline/notebooks</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Expériences et évaluation</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">modeling · temporal_split · notebooks</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Comparaison des modèles, splits</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">temporels et test préservé.</text>
+</g>
+<g data-node="merchant"><title>Entraînement marchand: Prépare le modèle / catalogue local de reconnaissance. | ml-pipeline/src/merchant_ml/artifact.py</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Entraînement marchand</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">merchant_ml/artifact.py</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Prépare le modèle / catalogue local de</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">reconnaissance.</text>
+</g>
+<g data-node="data"><title>Données et rapports locaux: Datasets et résultats générés ; hors Git lorsqu&#x27;ignorés. | ml-pipeline/.gitignore</title>
+<rect x="70" y="940" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="86" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Données et rapports locaux</text>
+<text x="86" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="86" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">data/ · artifacts/</text>
+<text x="86" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Datasets et résultats générés ; hors</text>
+<text x="86" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Git lorsqu&#x27;ignorés.</text>
+</g>
+<g data-node="export"><title>Export contrôlé des modèles: Publie l&#x27;artefact choisi avec versions et provenance. | ml-pipeline/scripts/export_frozen_model.py; ml-pipeline/scripts/export_merchant_model.py</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Export contrôlé des modèles</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">scripts/export_*_model.py</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Publie l&#x27;artefact choisi avec versions</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et provenance.</text>
+</g>
+<g data-node="models"><title>Artefacts d&#x27;inférence figés: Huber TND v1 et modèle marchand ; empaquetés au build. | ai-service/models</title>
+<rect x="520" y="1200" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="536" y="1229" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Artefacts d&#x27;inférence figés</text>
+<text x="536" y="1252" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="536" y="1271" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">ai-service/models</text>
+<text x="536" y="1295" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Huber TND v1 et modèle marchand ;</text>
+<text x="536" y="1312" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">empaquetés au build.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="450" cy="460" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="464.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="450" cy="580" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="584.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="410" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="1120" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="860" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="680" cy="1155" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1159.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<text x="30" y="1412" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Développeur / stagiaire → Génération et validation : Exécute génération avec seed</text>
+<text x="30" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Génération et validation → Dataset et features : Transactions synthétiques validées</text>
+<text x="30" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Dataset et features → Expériences et évaluation : Exemples agrégés / features</text>
+<text x="30" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">versionnées</text>
+<text x="30" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Dataset et features → Données et rapports locaux : Écrit dataset local</text>
+<text x="30" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Expériences et évaluation → Données et rapports locaux : Écrit métriques et</text>
+<text x="30" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">provenance</text>
+<text x="700.0" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Expériences et évaluation → Export contrôlé des modèles : Sélection validée et export</text>
+<text x="700.0" y="1459" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">explicite</text>
+<text x="700.0" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Catalogue marchand → Entraînement marchand : Exemples et taxonomie versionnés</text>
+<text x="700.0" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Entraînement marchand → Export contrôlé des modèles : Artefact marchand validé</text>
+<text x="700.0" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Export contrôlé des modèles → Artefacts d&#x27;inférence figés : Export avec empreintes /</text>
+<text x="700.0" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">inclusion build (pointillés)</text>
+<text x="30" y="1777" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le Huber Forecast est un prototype entraîné sur du synthétique TND ; il prédit le résidu du flux restant, pas directement un solde.</text>
+<text x="30" y="1799" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Pas d&#x27;accès automatique à PostgreSQL ; données préparées hors ligne et séparation entraînement / inférence.</text>
+<text x="30" y="1821" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">L&#x27;export n&#x27;est pas un déploiement continu. Aucun réentraînement n&#x27;est lancé par une requête utilisateur.</text>
+</g>
+</svg>

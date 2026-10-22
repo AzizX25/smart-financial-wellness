@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1710 2376" width="1710" height="2376" role="img" aria-labelledby="09-deployment-title 09-deployment-desc">
+<title id="09-deployment-title">Déploiement · Environnement local</title>
+<desc id="09-deployment-desc">Instances Compose actuelles et services sur le poste ; ports hôte configurables. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="09-deployment-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1710" height="2376" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">Déploiement · Environnement local</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="20" y="50" width="1250" height="1730" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="35" y="74" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Poste de développement</text>
+<rect x="420" y="300" width="820" height="1150" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="435" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Docker Compose / réseau interne</text>
+<g data-edge="1"><title>HTTP : assets React</title><path d="M625 280 L625 308 L620 310 L620 340 L625 342 L625 370" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="2"><title>HTTP : assets console</title><path d="M1025 280 L1025 308 L1020 310 L1020 340 L1025 342 L1025 370" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="3"><title>REST / JWT via port hôte configuré</title><path d="M625 280 L625 308 L620 310 L450 310 L450 620 L620 620 L625 622 L625 650" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="4"><title>REST / JWT admin via :8081</title><path d="M1025 280 L1025 308 L1020 310 L850 310 L850 620 L1020 620 L1025 622 L1025 650" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="5"><title>JDBC interne postgres:5432</title><path d="M625 820 L625 848 L620 850 L620 900 L625 902 L625 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="6"><title>JDBC interne mock-bank-db:5432</title><path d="M1025 820 L1025 848 L1020 850 L1020 900 L1025 902 L1025 930" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="7"><title>HTTP interne mock-bank:8081</title><path d="M780 735 L808 735 L810 740 L840 740 L842 735 L870 735" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="8"><title>HTTP interne ai-service:8000</title><path d="M625 820 L625 848 L620 850 L450 850 L450 1180 L620 1180 L625 1182 L625 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="9"><title>SMTP interne mailpit:1025</title><path d="M625 820 L625 848 L620 850 L850 850 L850 1180 L1020 1180 L1025 1182 L1025 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)"/></g>
+<g data-edge="10"><title>HTTP via host-gateway</title><path d="M780 1295 L808 1295 L810 1300 L810 1620 L840 1620 L842 1615 L870 1615" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="11"><title>HTTPS pour enrichissement marchand</title><path d="M780 1295 L808 1295 L810 1300 L850 1300 L850 1400 L1260 1400 L1260 1300 L1262 1295 L1290 1295" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="12"><title>Artefacts exportés puis copiés au build</title><path d="M625 1530 L625 1502 L620 1500 L620 1410 L625 1408 L625 1380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#09-deployment-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="userbrowser"><title>Navigateur principal: Charge les assets puis appelle le backend publié. | frontend/src/services/apiClient.js</title>
+<rect x="470" y="110" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="139" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Navigateur principal</text>
+<text x="486" y="162" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Instance client]</text>
+<text x="486" y="181" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SPA React côté navigateur</text>
+<text x="486" y="205" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Charge les assets puis appelle le</text>
+<text x="486" y="222" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">backend publié.</text>
+</g>
+<g data-node="adminbrowser"><title>Navigateur administrateur: Utilise uniquement la console et l&#x27;API bancaires. | mock-bank-ui/src/api/adminApi.js</title>
+<rect x="870" y="110" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="139" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Navigateur administrateur</text>
+<text x="886" y="162" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Instance client]</text>
+<text x="886" y="181" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SPA mock-bank-ui</text>
+<text x="886" y="205" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Utilise uniquement la console et l&#x27;API</text>
+<text x="886" y="222" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">bancaires.</text>
+</g>
+<g data-node="nginx"><title>frontend: Sert les fichiers Vite ; URL API injectée au build. | frontend/Dockerfile; compose.yaml</title>
+<rect x="470" y="370" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="399" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">frontend</text>
+<text x="486" y="422" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="441" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Nginx :80 → hôte :5173</text>
+<text x="486" y="465" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Sert les fichiers Vite ; URL API</text>
+<text x="486" y="482" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">injectée au build.</text>
+</g>
+<g data-node="adminnginx"><title>mock-bank-ui: Sert la console synthétique séparée. | mock-bank-ui/Dockerfile; compose.yaml</title>
+<rect x="870" y="370" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="399" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank-ui</text>
+<text x="886" y="422" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="441" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Nginx :80 → hôte :5174</text>
+<text x="886" y="465" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Sert la console synthétique séparée.</text>
+</g>
+<g data-node="backend"><title>backend: BACKEND_PORT côté hôte ; courant observé :8082. | backend/Dockerfile; compose.yaml</title>
+<rect x="470" y="650" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="679" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">backend</text>
+<text x="486" y="702" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="721" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Spring Boot :8080</text>
+<text x="486" y="745" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">BACKEND_PORT côté hôte ; courant</text>
+<text x="486" y="762" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">observé :8082.</text>
+</g>
+<g data-node="mock"><title>mock-bank: API bancaire et admin ; données synthétiques. | mock-bank/Dockerfile; compose.yaml</title>
+<rect x="870" y="650" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="679" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank</text>
+<text x="886" y="702" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="721" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Spring Boot :8081</text>
+<text x="886" y="745" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">API bancaire et admin ; données</text>
+<text x="886" y="762" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<g data-node="pg"><title>postgres: Volume postgres-data ; migrations applicatives. | compose.yaml</title>
+<rect x="470" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M470 946 Q625.0 970 780 946" fill="none" stroke="#dbe4f5"/>
+<text x="486" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">postgres</text>
+<text x="486" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="486" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17 :5432</text>
+<text x="486" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Volume postgres-data ; migrations</text>
+<text x="486" y="1042" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">applicatives.</text>
+</g>
+<g data-node="mockpg"><title>mock-bank-db: Volume mock-bank-data indépendant. | compose.yaml</title>
+<rect x="870" y="930" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M870 946 Q1025.0 970 1180 946" fill="none" stroke="#dbe4f5"/>
+<text x="886" y="959" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mock-bank-db</text>
+<text x="886" y="982" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="886" y="1001" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL 17 :5432 interne</text>
+<text x="886" y="1025" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Volume mock-bank-data indépendant.</text>
+</g>
+<g data-node="ai"><title>ai-service: Artefacts inclus ; aucun port hôte publié. | ai-service/Dockerfile; compose.yaml</title>
+<rect x="470" y="1210" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="1239" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">ai-service</text>
+<text x="486" y="1262" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="1281" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">FastAPI / Uvicorn :8000 interne</text>
+<text x="486" y="1305" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Artefacts inclus ; aucun port hôte</text>
+<text x="486" y="1322" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">publié.</text>
+</g>
+<g data-node="mail"><title>mailpit: Messagerie locale de développement. | compose.yaml</title>
+<rect x="870" y="1210" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="886" y="1239" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">mailpit</text>
+<text x="886" y="1262" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="886" y="1281" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">SMTP :1025 · console :8025</text>
+<text x="886" y="1305" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Messagerie locale de développement.</text>
+</g>
+<g data-node="pipeline"><title>Pipeline hors ligne: Scripts / notebooks ; hors Compose. | ml-pipeline/scripts</title>
+<rect x="470" y="1530" width="310" height="170" rx="10" fill="#22396f" stroke="#123458" stroke-width="2"/>
+<text x="486" y="1559" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">Pipeline hors ligne</text>
+<text x="486" y="1582" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur]</text>
+<text x="486" y="1601" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Python sur le poste</text>
+<text x="486" y="1625" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Scripts / notebooks ; hors Compose.</text>
+</g>
+<g data-node="ollama"><title>Ollama sur le poste: Service local configurable ; modèles installés séparément. | compose.yaml</title>
+<rect x="870" y="1530" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="886" y="1559" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama sur le poste</text>
+<text x="886" y="1582" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="886" y="1601" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">host.docker.internal:11434</text>
+<text x="886" y="1625" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Service local configurable ; modèles</text>
+<text x="886" y="1642" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">installés séparément.</text>
+</g>
+<g data-node="web"><title>Recherche web Ollama: Appel optionnel depuis ai-service uniquement. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="1290" y="1210" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="1306" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Recherche web Ollama</text>
+<text x="1306" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="1306" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS / Internet</text>
+<text x="1306" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Appel optionnel depuis ai-service</text>
+<text x="1306" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">uniquement.</text>
+</g>
+<circle cx="620" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="1020" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="450" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="850" cy="465" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="469.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="620" cy="875" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="879.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="1020" cy="875" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1020.0" y="879.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="825" cy="740" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="825.0" y="744.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="450" cy="1015" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="450.0" y="1019.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="850" cy="1015" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="850.0" y="1019.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="810" cy="1460" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="810.0" y="1464.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<circle cx="1055" cy="1400" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1055.0" y="1404.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">11</text>
+<circle cx="620" cy="1455" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="620.0" y="1459.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">12</text>
+<text x="30" y="1852" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1882" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Navigateur principal → frontend : HTTP : assets React</text>
+<text x="30" y="1947" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Navigateur administrateur → mock-bank-ui : HTTP : assets console</text>
+<text x="30" y="2012" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Navigateur principal → backend : REST / JWT via port hôte configuré</text>
+<text x="30" y="2077" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Navigateur administrateur → mock-bank : REST / JWT admin via :8081</text>
+<text x="30" y="2142" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. backend → postgres : JDBC interne postgres:5432</text>
+<text x="30" y="2207" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. mock-bank → mock-bank-db : JDBC interne mock-bank-db:5432</text>
+<text x="870.0" y="1882" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. backend → mock-bank : HTTP interne mock-bank:8081</text>
+<text x="870.0" y="1947" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. backend → ai-service : HTTP interne ai-service:8000</text>
+<text x="870.0" y="2012" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. backend → mailpit : SMTP interne mailpit:1025</text>
+<text x="870.0" y="2077" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. ai-service → Ollama sur le poste : HTTP via host-gateway (pointillés)</text>
+<text x="870.0" y="2142" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">11. ai-service → Recherche web Ollama : HTTPS pour enrichissement marchand (pointillés)</text>
+<text x="870.0" y="2207" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">12. Pipeline hors ligne → ai-service : Artefacts exportés puis copiés au build (pointillés)</text>
+<text x="30" y="2282" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les connexions navigateur vers le backend utilisent une URL publique ; les noms de service Compose sont réservés aux appels entre conteneurs.</text>
+<text x="30" y="2304" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les ports sont les valeurs de Compose, configurables par environnement. :8082 est le port backend observé pendant cette session.</text>
+<text x="30" y="2326" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Les deux volumes PostgreSQL sont distincts. Les healthchecks et depends_on n&#x27;impliquent pas une disponibilité garantie des fonctionnalités IA.</text>
+</g>
+</svg>

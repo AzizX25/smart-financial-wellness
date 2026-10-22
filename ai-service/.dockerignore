@@ -3,3 +3,7 @@ __pycache__
 .pytest_cache
 tests
 *.pyc
+.git
+.env
+.env.*
+!.env.example

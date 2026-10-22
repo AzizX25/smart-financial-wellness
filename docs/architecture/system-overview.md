@@ -1,123 +1,134 @@
-# Vue d'architecture démontrable
+# Architecture actuelle — Smart Financial Wellness Advisor
 
-La plateforme principale et le fournisseur bancaire simulé restent deux
-systèmes séparés. Le frontend ne contacte que le backend principal ; il ne lit
-jamais directement une base de données et n'appelle jamais le mock-bank.
+Cette vue décrit les composants exécutables de la version actuelle du dépôt,
+qui comprend une application financière
+principale, un fournisseur bancaire synthétique indépendant, un service d'inférence
+et un pipeline ML hors ligne. La disponibilité des fonctions IA dépend de la
+configuration et des modèles installés.
 
-```mermaid
-flowchart LR
-    frontend["Frontend React<br/>Vite + JavaScript"]
-    backend["Backend principal<br/>Spring Boot 4.1 / Java 21"]
-    postgres[("PostgreSQL principal<br/>schéma smart_financial_wellness")]
-    mockbank["Mock-bank séparé<br/>Spring Boot / Java 21"]
-    mockdb[("PostgreSQL mock-bank<br/>historique Flyway séparé")]
+## Diagrammes C4
 
-    frontend -->|"API REST uniquement"| backend
-    backend -->|"JPA / Flyway"| postgres
-    backend -->|"API bancaire en lecture seule"| mockbank
-    mockbank -->|"données bancaires fictives"| mockdb
+Le modèle canonique est dans [c4/README.md](c4/README.md).
+Le workspace natif [c4/workspace.dsl](c4/workspace.dsl) est chargé par le
+conteneur `sfwa-structurizr`. Ouvrir **[http://localhost:8085](http://localhost:8085)**,
+puis **Diagrams**, pour parcourir ses dix vues. Les commandes de démarrage et
+de validation sont dans le guide C4. L'ancien export HTML/SVG est conservé
+comme référence hors ligne ; il n'est pas synchronisé automatiquement avec le DSL.
 
-    classDef ui fill:#e7f3ef,stroke:#1f6b63,color:#173c3a
-    classDef service fill:#fff4de,stroke:#c88a32,color:#44331d
-    classDef database fill:#eef0fa,stroke:#5967a5,color:#252d59
-    class frontend ui
-    class backend,mockbank service
-    class postgres,mockdb database
+```powershell
+Invoke-Item .\docs\architecture\c4\index.html
 ```
 
-## Frontières de responsabilité
+### C1 — Contexte
 
-- Le frontend présente l'expérience utilisateur et remplacera progressivement
-  ses fixtures par des appels au backend principal.
-- Le backend porte les règles de bien-être financier et orchestre les accès à
-  PostgreSQL, au mock-bank et, plus tard, au service d'inférence.
-- Le mock-bank simule uniquement un fournisseur bancaire externe en lecture
-  seule. Il ne contient aucune règle métier de bien-être financier.
-- Les deux applications Spring Boot ont leurs propres données, leurs propres
-  migrations Flyway et aucune clé étrangère entre leurs bases.
+![Contexte de Smart Financial Wellness Advisor](c4/01-context.svg)
 
-La page « Banque Démo » du prototype reste une maquette visuelle et ne réalise
-aucun appel au mock-bank. Le flux de connexion décrit ci-dessous est exposé par
-le backend, sans modification du frontend dans cet incrément.
+### C2 — Conteneurs
 
-## État actuel du mock-bank
+![Conteneurs et frontières des systèmes](c4/02-containers.svg)
 
-Le dossier `mock-bank/` contient une application Java 21 / Spring Boot 4.1
-indépendante. Elle utilise sa propre base PostgreSQL, le schéma `mock_bank` et
-un historique Flyway distinct de celui du backend principal. Toutes ses données
-sont synthétiques.
+Les vues C3 séparées couvrent le backend données, le backend insights, la SPA
+principale, FastAPI, le mock-bank et le pipeline ML. La dernière vue montre le
+déploiement local Compose et Ollama sur le poste.
 
-La fondation actuelle fournit les mappings JPA, repositories et services
-internes de lecture pour les clients, comptes, soldes et transactions. Elle
-expose `GET /actuator/health` ainsi que quatre routes bancaires en lecture seule :
+## Applications et responsabilités
 
-- `GET /api/v1/customers/{customerId}/accounts` retourne les métadonnées
-  publiques dans un ordre déterministe ;
-- `GET /api/v1/customers/{customerId}/accounts/{accountId}` retourne les
-  métadonnées publiques d'un compte appartenant au client ;
-- `GET /api/v1/customers/{customerId}/accounts/{accountId}/balance` retourne
-  uniquement le contrat de solde ;
-- `GET /api/v1/customers/{customerId}/accounts/{accountId}/transactions`
-  retourne une enveloppe paginée de transactions du compte.
+| Élément | Responsabilités actuelles | Évidence principale |
+| --- | --- | --- |
+| Frontend principal | Authentification, Dashboard, transactions et revue, catégories, banque, CSV/ticket, budgets, Goals, Forecast, score et recommandations | [Routes React](../../frontend/src/App.jsx), [client authentifié](../../frontend/src/services/apiClient.js) |
+| Backend principal | Autorisation, ownership, données locales, règles financières et orchestrations HTTP | [packages backend](../../backend/src/main/java/com/azizx25/smartfinancialwellness), [sécurité](../../backend/src/main/java/com/azizx25/smartfinancialwellness/config/SecurityConfiguration.java) |
+| PostgreSQL applicatif | Comptes, transactions, imports, profils, plans, objectifs, snapshots, facteurs et justifications | [Flyway V1–V22](../../backend/src/main/resources/db/migration), [configuration](../../backend/src/main/resources/application.properties) |
+| Mock-bank | Identités synthétiques, JWT client/admin, lectures de comptes/ledger et administration | [API mock-bank](../../mock-bank/src/main/java/com/azizx25/mockbank) |
+| Console mock-bank-ui | Gestion authentifiée de la banque synthétique, séparée de la SPA principale | [routes admin](../../mock-bank-ui/src/App.jsx) |
+| PostgreSQL mock-bank | Ledger synthétique et historique Flyway indépendant | [migrations V1–V4](../../mock-bank/src/main/resources/db/migration) |
+| FastAPI | Résidu Forecast, reconnaissance marchande, explications et extraction de ticket optionnelles | [application FastAPI](../../ai-service/src/forecast_ai/main.py) |
+| Pipeline ML | Données synthétiques, features, splits temporels, entraînement, évaluation et export contrôlé | [scripts](../../ml-pipeline/scripts), [modules ML](../../ml-pipeline/src), [expérience Forecast](forecast-ml.md) |
+| Ollama | Service sur le poste pour embeddings, raisonnement et vision configurables | [providers](../../ai-service/src/forecast_ai/ollama_providers.py), [assistance](../../ai-service/src/forecast_ai/assistance.py) |
+| Mailpit | Capture SMTP locale des emails de compte envoyés après commit | [dispatcher](../../backend/src/main/java/com/azizx25/smartfinancialwellness/email/AfterCommitEmailDispatcher.java), [Compose](../../compose.yaml) |
 
-La route de transactions filtre la `bookingDate` avec des bornes ISO-8601
-`from` et `to` inclusives. Elle trie par date décroissante puis par identifiant
-de transaction externe décroissant. `page` commence à `0` et vaut `0` par
-défaut ; `size` vaut `20` par défaut et accepte les valeurs de `1` à `100`.
-L'enveloppe stable contient uniquement `items`, `page`, `size`,
-`totalElements`, `totalPages`, `first` et `last`.
+## Frontières et règles représentées
 
-Les entités JPA, UUID internes et soldes ne sont pas exposés par les routes de
-métadonnées. Un client inconnu, un compte inconnu ou un compte appartenant à
-un autre client produit un JSON `404`; le dernier cas utilise toujours
-`Account not found` afin d'empêcher l'énumération des comptes.
+La SPA principale appelle uniquement le backend. La console mock-bank-ui est
+une autre application, qui appelle l'API d'administration de son simulateur.
+Aucune SPA n'accède directement aux bases, au service IA ou à Ollama.
 
-`POST /api/auth/login` valide les identifiants bancaires de démonstration avec
-BCrypt et émet un JWT de courte durée. Les routes de données exigent ce bearer,
-valident sa signature, son expiration, son issuer et son audience, puis
-vérifient que son sujet correspond au client du chemin. Les API OAuth, écran de
-consentement, refresh token, paiement et virement ne sont pas implémentées.
+Le backend est un monolithe modulaire : ses packages par fonctionnalité ne sont
+pas des microservices. L'utilisateur vient du principal JWT et l'identité / le
+statut du compte sont relus en PostgreSQL. Les comptes non vérifiés ont un accès
+limité ; les API financières exigent un utilisateur et une identité ACTIVE.
 
-## Adaptateur interne du backend principal
+La connexion bancaire repose sur un login synthétique et un JWT fournisseur
+court. Le backend retrouve le client fournisseur depuis la connexion détenue
+par le principal. Les API publiques ne demandent pas un customerId arbitraire.
+Les tables de conception OAuth ne constituent pas un flux Authorization Code /
+PKCE implémenté ; ce flux n'est pas dessiné comme actif.
 
-Le backend principal dispose d'un port d'authentification mock-bank et du port
-applicatif `ReadOnlyBankDataPort`, implémentés par un adaptateur HTTP synchrone
-fondé sur `RestClient`. Il couvre le login fournisseur et les quatre lectures :
-liste des comptes, métadonnées d'un compte, solde et page de transactions. Ses
-résultats sont des records immuables appartenant au backend ; les DTO HTTP du
-fournisseur restent confinés dans le package d'infrastructure et aucune classe
-Java du mock-bank n'est importée.
+La synchronisation reste déclenchée par l'utilisateur. Les appels fournisseur
+précèdent l'écriture applicative atomique et idempotente. L'historique local est
+conservé après déconnexion. L'import CSV possède son propre workflow de
+prévisualisation, confirmation de mapping et idempotence.
 
-L'adaptateur encode chaque identifiant comme un segment de chemin, ajoute le
-bearer fournisseur uniquement au moment de l'appel, transmet explicitement la
-pagination, et omet `from` ou `to` lorsqu'ils sont absents.
-Les montants restent des `BigDecimal`, les dates de transaction des
-`LocalDate`, et les valeurs assimilables à des énumérations restent des chaînes
-afin d'éviter un couplage de code entre applications. Son décodeur JSON accepte
-les champs amont ajoutés ultérieurement sans relâcher la validation Jackson
-globale du backend.
+Les dépenses réelles proviennent de la catégorie actuelle de la transaction,
+avec filtrage de propriétaire, mois et devise et exclusion des transactions
+bancaires non POSTED et des transferts internes confirmés. Une suggestion IA
+reste PENDING jusqu'à sa revue. Le choix manuel, les règles et la mémoire privée
+gardent leur priorité ; aucune affectation ML automatique n'est représentée.
 
-La configuration utilise `MOCK_BANK_BASE_URL` (défaut local
-`http://localhost:8081`), `MOCK_BANK_CONNECT_TIMEOUT` (défaut `2s`) et
-`MOCK_BANK_READ_TIMEOUT` (défaut `5s`). Dans Compose, le backend reçoit
-`http://mock-bank:8081`. Une URL non HTTP(S), relative ou contenant des
-identifiants, une requête ou un fragment, ainsi qu'un délai non positif,
-empêche le démarrage.
+Salary Planning produit les revenus, budgets et capacité d'épargne mensuelle.
+Goals lit la capacité persistée de MonthlyPlan pour les allocations, mais seuls
+les montants initiaux et les contributions déterminent l'épargne réelle.
+Forecast traite la fin du mois, avec une base déterministe et un résidu Huber
+synthétique TND éligible. Les simulations Goals/Forecast restent temporaires.
 
-Les erreurs sont séparées entre requête locale invalide, `404` amont, requête
-rejetée, indisponibilité réseau/serveur et violation du contrat de réponse.
-Seuls `Customer not found` et `Account not found` peuvent être repris depuis
-un corps `404`; aucun corps brut n'est propagé, aucun retry automatique n'est
-effectué et les données bancaires ne sont pas journalisées.
+Le score est déterministe et stocké dans des snapshots immuables. Les
+recommandations utilisent les facteurs disponibles de ces évaluations ; leurs
+justifications et feedback sont persistés. Un LLM peut expliquer une règle
+contrôlée, mais ne choisit ni score, priorité, montant ni action financière.
 
-Les contrôleurs publics sont strictement centrés sur l'utilisateur courant :
-ils n'acceptent ni `userId` applicatif ni `customerId` fournisseur. Le backend
-dérive l'utilisateur du JWT applicatif, retrouve sa connexion en PostgreSQL et
-fournit l'identité fournisseur stockée à l'adaptateur. Une contrainte garantit
-une seule connexion mock-bank courante par utilisateur et empêche de rattacher
-un client simulé à deux utilisateurs. Le mot de passe bancaire n'est jamais
-stocké ; le JWT fournisseur, autorisé uniquement pour cette intégration locale,
-est effacé à la déconnexion ou après un rejet d'authentification.
+Le service IA ne possède pas d'accès PostgreSQL. Forecast utilise des features
+agrégées ; la reconnaissance reçoit une clé opaque, du texte marchand assaini
+et les versions attendues, sans montant ni identifiant SQL. L'enrichissement
+marchand peut appeler une recherche web externe. Les explications et tickets
+utilisent uniquement l'inférence locale. Les tickets sont éphémères, revus
+humainement, puis exportés en CSV ; l'extraction ne crée aucune transaction.
 
-Les contrats complets sont documentés dans le
-[guide de connexion mock-bank](../api/mock-bank-connection.md).
+Les modèles sont entraînés séparément et exportés avec leurs métadonnées.
+L'image ai-service inclut les artefacts : aucun entraînement n'est déclenché
+pendant une requête. Le backend conserve ses réponses déterministes / sûres
+lorsque l'IA est désactivée, indisponible ou invalide.
+
+Chaque Spring Boot possède son schéma, ses migrations et sa base. Flyway est
+le mécanisme de gestion du schéma ; Hibernate utilise ddl-auto=validate.
+Les montants utilisent des décimaux et les devises ne sont ni combinées ni converties.
+
+## Portée locale et fonctionnalités optionnelles
+
+[compose.yaml](../../compose.yaml) fournit les deux PostgreSQL, les deux API Java,
+FastAPI, les deux serveurs Nginx et Mailpit. Ollama et le pipeline ML sont sur
+le poste, hors Compose. Les ports hôte sont configurables ; la session utilise
+le backend publié sur 8082, tandis que le port interne reste 8080.
+
+La fixture superviseur est synthétique et idempotente, avec mutations mock-bank
+restreintes au profil demo, au flag explicite et à un administrateur.
+Les options d'enrichissement, d'explication locale et de vision sont désactivées
+par défaut dans la configuration d'exemple.
+
+Les commandes d'export/suppression de données et certains choix de consentement
+du profil restent des éléments de prototype. La vue ne revendique ni ces
+workflows comme implémentés, ni une connexion bancaire réelle, ni une release
+de production.
+
+## Guides de fonctionnalité
+
+- [Authentification et profil](../api/authentication-profile.md)
+- [Connexion et synchronisation mock-bank](../api/mock-bank-connection.md)
+- [CSV import](../api/csv-import.md)
+- [Catégories et reconnaissance marchande](../api/transaction-categories.md)
+- [Forecast](../api/forecast.md) et [expérience ML](forecast-ml.md)
+- [Financial Wellness Score](../api/financial-wellness-score.md)
+- [Recommandations](../api/recommendations.md)
+- [Assistance locale et tickets](../api/local-assistance.md)
+- [Démonstration superviseur](../demo/supervisor-demo.md)
+
+Modifier [c4/workspace.dsl](c4/workspace.dsl), valider avec Structurizr,
+puis recharger le viewer local pour actualiser les vues natives.

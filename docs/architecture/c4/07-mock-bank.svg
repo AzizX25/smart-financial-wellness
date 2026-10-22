@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 1871" width="1370" height="1871" role="img" aria-labelledby="07-mock-bank-title 07-mock-bank-desc">
+<title id="07-mock-bank-title">C3 · Banque simulée</title>
+<desc id="07-mock-bank-desc">Services bancaires synthétiques et administration ; aucune règle de bien-être financier. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="07-mock-bank-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="1871" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Banque simulée</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="840" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">API mock-bank / Java 21</text>
+<g data-edge="1"><title>Login client puis lectures JWT</title><path d="M380 185 L408 185 L410 180 L410 460 L490 460 L492 465 L520 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="2"><title>REST / JWT admin ; CORS :5174</title><path d="M970 185 L942 185 L940 180 L860 180 L860 460 L858 465 L830 465" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="3"><title>Authentifie le client synthétique</title><path d="M520 465 L492 465 L490 460 L490 740 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="4"><title>Autorise les lectures client-scoped</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="5"><title>Autorise les opérations administrateur</title><path d="M830 465 L858 465 L860 460 L860 740 L940 740 L942 745 L970 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="6"><title>Vérifie le compte et son propriétaire</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="7"><title>Charge le client et son hash BCrypt</title><path d="M380 745 L408 745 L410 740 L410 1020 L490 1020 L492 1025 L520 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="8"><title>Lit / modifie le ledger synthétique</title><path d="M970 745 L942 745 L940 740 L940 1020 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="9"><title>Réconcilie uniquement les fixtures démo</title><path d="M970 1025 L942 1025 L940 1020 L940 1030 L860 1030 L860 1020 L858 1025 L830 1025" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-edge="10"><title>JPA ; transactions et migrations propres</title><path d="M675 1110 L675 1138 L680 1140 L680 1170 L675 1172 L675 1200" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#07-mock-bank-arrow)"/></g>
+<g data-node="backend"><title>Backend principal: Consomme seulement l&#x27;authentification et les lectures. | backend/src/main/java/com/azizx25/smartfinancialwellness/bank/ReadOnlyBankDataPort.java</title>
+<rect x="70" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="86" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Backend principal</text>
+<text x="86" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="86" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">JWT fournisseur / REST</text>
+<text x="86" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Consomme seulement l&#x27;authentification</text>
+<text x="86" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">et les lectures.</text>
+</g>
+<g data-node="adminui"><title>Console administrateur: Gère les clients, comptes et opérations synthétiques. | mock-bank-ui/src/App.jsx</title>
+<rect x="970" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Console administrateur</text>
+<text x="986" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">React · mock-bank-ui</text>
+<text x="986" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Gère les clients, comptes et opérations</text>
+<text x="986" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<g data-node="security"><title>Sécurité JWT et ownership: JWT client/admin distincts ; CORS admin limité. | mock-bank/src/main/java/com/azizx25/mockbank/config/MockBankSecurityConfiguration.java; mock-bank/src/main/java/com/azizx25/mockbank/security/MockBankJwtService.java</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Sécurité JWT et ownership</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Spring Security</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">JWT client/admin distincts ; CORS admin</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">limité.</text>
+</g>
+<g data-node="auth"><title>Authentification fournisseur: Identifiants synthétiques BCrypt et JWT de courte durée. | mock-bank/src/main/java/com/azizx25/mockbank/auth/MockBankAuthenticationService.java</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Authentification fournisseur</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MockBankAuthenticationService</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Identifiants synthétiques BCrypt et JWT</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">de courte durée.</text>
+</g>
+<g data-node="queries"><title>Comptes / soldes / opérations: Lectures publiques bornées et vérification du client propriétaire. | mock-bank/src/main/java/com/azizx25/mockbank/account/AccountQueryService.java; mock-bank/src/main/java/com/azizx25/mockbank/account/BalanceQueryService.java; mock-bank/src/main/java/com/azizx25/mockbank/transaction/TransactionQueryService.java</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Comptes / soldes /</text>
+<text x="536" y="711" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">opérations</text>
+<text x="536" y="734" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="753" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Account/Balance/TransactionQueryService</text>
+<text x="536" y="777" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Lectures publiques bornées et</text>
+<text x="536" y="794" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">vérification du client propriétaire.</text>
+</g>
+<g data-node="admin"><title>Administration synthétique: Création / état des clients, comptes et transactions du ledger. | mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminManagementService.java; mock-bank/src/main/java/com/azizx25/mockbank/admin/AdminAuthenticationService.java</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Administration synthétique</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">AdminManagementService</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Création / état des clients, comptes et</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">transactions du ledger.</text>
+</g>
+<g data-node="demo"><title>Fixture superviseur: Seeder idempotent et reset uniquement de l&#x27;identité démo. | mock-bank/src/main/java/com/azizx25/mockbank/demo/api/SupervisorDemoFixtureController.java; mock-bank/src/main/java/com/azizx25/mockbank/demo/SupervisorDemoFixtureService.java</title>
+<rect x="970" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Fixture superviseur</text>
+<text x="986" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">Profil demo + flag explicite</text>
+<text x="986" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Seeder idempotent et reset uniquement</text>
+<text x="986" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">de l&#x27;identité démo.</text>
+</g>
+<g data-node="lookup"><title>Lookup et repositories: Existence, propriété et accès à la base du simulateur. | mock-bank/src/main/java/com/azizx25/mockbank/customer/CustomerLookupService.java; mock-bank/src/main/java/com/azizx25/mockbank/account/persistence; mock-bank/src/main/java/com/azizx25/mockbank/transaction/persistence</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Lookup et repositories</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">CustomerLookupService · JPA</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Existence, propriété et accès à la base</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">du simulateur.</text>
+</g>
+<g data-node="db"><title>PostgreSQL mock_bank: Données bancaires exclusivement synthétiques. | mock-bank/src/main/resources/db/migration</title>
+<rect x="520" y="1200" width="310" height="170" rx="10" fill="#123458" stroke="#123458" stroke-width="2"/>
+<path d="M520 1216 Q675.0 1240 830 1216" fill="none" stroke="#dbe4f5"/>
+<text x="536" y="1229" font-size="18" fill="#ffffff" font-weight="600" text-anchor="start">PostgreSQL mock_bank</text>
+<text x="536" y="1252" font-size="12" fill="#ffffff" font-weight="400" text-anchor="start">[Conteneur de données]</text>
+<text x="536" y="1271" font-size="13" fill="#ffffff" font-weight="600" text-anchor="start">Flyway V1–V4</text>
+<text x="536" y="1295" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">Données bancaires exclusivement</text>
+<text x="536" y="1312" font-size="13" fill="#ffffff" font-weight="400" text-anchor="start">synthétiques.</text>
+</g>
+<circle cx="410" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="860" cy="320" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="324.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="490" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="490.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="860" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="410" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="940" cy="880" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="940.0" y="884.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="900" cy="1030" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="900.0" y="1034.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="680" cy="1155" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1159.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<text x="30" y="1412" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Backend principal → Sécurité JWT et ownership : Login client puis lectures JWT</text>
+<text x="30" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. Console administrateur → Sécurité JWT et ownership : REST / JWT admin ; CORS :5174</text>
+<text x="30" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. Sécurité JWT et ownership → Authentification fournisseur : Authentifie le client</text>
+<text x="30" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétique</text>
+<text x="30" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. Sécurité JWT et ownership → Comptes / soldes / opérations : Autorise les lectures</text>
+<text x="30" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">client-scoped</text>
+<text x="30" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Sécurité JWT et ownership → Administration synthétique : Autorise les opérations</text>
+<text x="30" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">administrateur</text>
+<text x="700.0" y="1442" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Comptes / soldes / opérations → Lookup et repositories : Vérifie le compte et son</text>
+<text x="700.0" y="1459" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propriétaire</text>
+<text x="700.0" y="1507" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Authentification fournisseur → Lookup et repositories : Charge le client et son hash</text>
+<text x="700.0" y="1524" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">BCrypt</text>
+<text x="700.0" y="1572" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Administration synthétique → Lookup et repositories : Lit / modifie le ledger</text>
+<text x="700.0" y="1589" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">synthétique</text>
+<text x="700.0" y="1637" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Fixture superviseur → Lookup et repositories : Réconcilie uniquement les fixtures</text>
+<text x="700.0" y="1654" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">démo</text>
+<text x="700.0" y="1702" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Lookup et repositories → PostgreSQL mock_bank : JPA ; transactions et migrations</text>
+<text x="700.0" y="1719" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propres</text>
+<text x="30" y="1777" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Pas de flux OAuth Authorization Code / PKCE exécutable ; les tables de conception ne sont pas une API implémentée.</text>
+<text x="30" y="1799" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Un compte d&#x27;un autre client retourne 404 Account not found ; les entités JPA ne sont pas exposées.</text>
+<text x="30" y="1821" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">La fixture nécessite le profil demo, un flag activé et une authentification administrateur.</text>
+</g>
+</svg>

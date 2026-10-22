@@ -1,0 +1,2586 @@
+{
+  "configuration" : { },
+  "description" : "Architecture executable du worktree - 13 octobre 2026. Banque synthetique, IA optionnelle, aucune revendication de production bancaire.",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-10-14T09:41:04Z",
+  "model" : {
+    "deploymentNodes" : [ {
+      "children" : [ {
+        "containerInstances" : [ {
+          "containerId" : "5",
+          "environment" : "Local",
+          "id" : "158",
+          "instanceId" : 1,
+          "properties" : {
+            "structurizr.dsl.identifier" : "browserApp"
+          },
+          "relationships" : [ {
+            "description" : "APIs protegees et authentification",
+            "destinationId" : "165",
+            "id" : "166",
+            "linkedRelationshipId" : "72",
+            "sourceId" : "158",
+            "technology" : "HTTP / JSON / JWT"
+          }, {
+            "description" : "Charge HTML, JS et CSS",
+            "destinationId" : "162",
+            "id" : "191",
+            "sourceId" : "158",
+            "tags" : "Relationship",
+            "technology" : "HTTP :5173"
+          } ],
+          "tags" : "Container Instance"
+        } ],
+        "description" : "SPA executee dans le navigateur, pas dans Nginx.",
+        "environment" : "Local",
+        "id" : "157",
+        "instances" : "1",
+        "name" : "Navigateur utilisateur",
+        "properties" : {
+          "structurizr.dsl.identifier" : "27f955c1-cb48-4edc-8796-e42e17a6a54d"
+        },
+        "tags" : "Element,Deployment Node",
+        "technology" : "Chrome / Edge / Brave"
+      }, {
+        "containerInstances" : [ {
+          "containerId" : "49",
+          "environment" : "Local",
+          "id" : "160",
+          "instanceId" : 1,
+          "properties" : {
+            "structurizr.dsl.identifier" : "browserAdmin"
+          },
+          "relationships" : [ {
+            "description" : "APIs admin avec JWT admin",
+            "destinationId" : "171",
+            "id" : "172",
+            "linkedRelationshipId" : "77",
+            "sourceId" : "160",
+            "technology" : "HTTP / JSON"
+          }, {
+            "description" : "Charge les assets admin",
+            "destinationId" : "163",
+            "id" : "192",
+            "sourceId" : "160",
+            "tags" : "Relationship",
+            "technology" : "HTTP :5174"
+          } ],
+          "tags" : "Container Instance"
+        } ],
+        "description" : "Console independante.",
+        "environment" : "Local",
+        "id" : "159",
+        "instances" : "1",
+        "name" : "Navigateur administrateur",
+        "properties" : {
+          "structurizr.dsl.identifier" : "43e50c31-844f-406a-ab4c-4e57143b8a69"
+        },
+        "tags" : "Element,Deployment Node",
+        "technology" : "Navigateur"
+      }, {
+        "children" : [ {
+          "containerInstances" : [ {
+            "containerId" : "15",
+            "environment" : "Local",
+            "id" : "165",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "e80e58dd-d50f-429e-9350-770d46b29c9e"
+            },
+            "relationships" : [ {
+              "description" : "Lit/ecrit ses propres donnees ; migrations et validation",
+              "destinationId" : "168",
+              "id" : "169",
+              "linkedRelationshipId" : "73",
+              "sourceId" : "165",
+              "technology" : "JPA / JDBC"
+            }, {
+              "description" : "Login synthetique, comptes, soldes et transactions",
+              "destinationId" : "171",
+              "id" : "173",
+              "linkedRelationshipId" : "74",
+              "sourceId" : "165",
+              "technology" : "HTTP / JSON / JWT"
+            }, {
+              "description" : "Features agregees, descripteurs assainis et assistance optionnelle",
+              "destinationId" : "178",
+              "id" : "179",
+              "linkedRelationshipId" : "75",
+              "sourceId" : "165",
+              "technology" : "HTTP / JSON"
+            }, {
+              "description" : "Verification et reset apres commit",
+              "destinationId" : "183",
+              "id" : "184",
+              "linkedRelationshipId" : "76",
+              "sourceId" : "165",
+              "technology" : "SMTP"
+            } ],
+            "tags" : "Container Instance"
+          } ],
+          "description" : "Port interne 8080 ; hote BACKEND_PORT (session 8082).",
+          "environment" : "Local",
+          "id" : "164",
+          "instances" : "1",
+          "name" : "backend",
+          "properties" : {
+            "structurizr.dsl.identifier" : "d1dc11f7-14d7-496a-93f7-73dd9649d3c5"
+          },
+          "tags" : "Element,Deployment Node",
+          "technology" : "JRE 21"
+        }, {
+          "containerInstances" : [ {
+            "containerId" : "32",
+            "environment" : "Local",
+            "id" : "168",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "1cbfdf54-b70c-4d01-8fa7-bba0d89f02cc"
+            },
+            "tags" : "Container Instance"
+          } ],
+          "description" : "Port 5432 ; volume postgres-data conserve.",
+          "environment" : "Local",
+          "id" : "167",
+          "instances" : "1",
+          "name" : "postgres",
+          "properties" : {
+            "structurizr.dsl.identifier" : "ee176244-8152-46ee-bcae-6b08cc70ad2d"
+          },
+          "tags" : "Element,Deployment Node",
+          "technology" : "PostgreSQL 17"
+        }, {
+          "containerInstances" : [ {
+            "containerId" : "50",
+            "environment" : "Local",
+            "id" : "171",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "d12f3837-2d5a-4f4a-81b4-e757c49c0180"
+            },
+            "relationships" : [ {
+              "description" : "Son ledger et ses identites uniquement",
+              "destinationId" : "175",
+              "id" : "176",
+              "linkedRelationshipId" : "78",
+              "sourceId" : "171",
+              "technology" : "JPA / JDBC"
+            } ],
+            "tags" : "Container Instance"
+          } ],
+          "description" : "Port publie 8081.",
+          "environment" : "Local",
+          "id" : "170",
+          "instances" : "1",
+          "name" : "mock-bank",
+          "properties" : {
+            "structurizr.dsl.identifier" : "8d23a6f4-83bd-4871-ad89-8e4c4f867a18"
+          },
+          "tags" : "Element,Deployment Node",
+          "technology" : "JRE 21"
+        }, {
+          "containerInstances" : [ {
+            "containerId" : "58",
+            "environment" : "Local",
+            "id" : "175",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "025ac6a1-93f1-4412-97af-d13d15c8e09c"
+            },
+            "tags" : "Container Instance"
+          } ],
+          "description" : "5432 interne uniquement ; volume mock-bank-data distinct.",
+          "environment" : "Local",
+          "id" : "174",
+          "instances" : "1",
+          "name" : "mock-bank-db",
+          "properties" : {
+            "structurizr.dsl.identifier" : "525cf863-7162-4e10-adb7-385ace88be18"
+          },
+          "tags" : "Element,Deployment Node",
+          "technology" : "PostgreSQL 17"
+        }, {
+          "containerInstances" : [ {
+            "containerId" : "33",
+            "environment" : "Local",
+            "id" : "178",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "3a220bb4-9b90-43db-892c-7a89622bcfab"
+            },
+            "relationships" : [ {
+              "description" : "Charge les artefacts figes",
+              "destinationId" : "180",
+              "id" : "181",
+              "linkedRelationshipId" : "79",
+              "sourceId" : "178",
+              "technology" : "Fichiers locaux"
+            }, {
+              "description" : "Embeddings, raisonnement ou vision bornes",
+              "destinationId" : "186",
+              "id" : "187",
+              "linkedRelationshipId" : "80",
+              "sourceId" : "178",
+              "technology" : "HTTP"
+            }, {
+              "description" : "Recherche marchande optionnelle",
+              "destinationId" : "194",
+              "id" : "195",
+              "linkedRelationshipId" : "81",
+              "sourceId" : "178",
+              "technology" : "HTTPS"
+            } ],
+            "tags" : "Container Instance"
+          }, {
+            "containerId" : "41",
+            "environment" : "Local",
+            "id" : "180",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "784b9d34-00c8-4de4-9721-a5a12c8c2823"
+            },
+            "tags" : "Container Instance"
+          } ],
+          "description" : "8000 interne, pas de port hote publie ; artefacts inclus dans l'image.",
+          "environment" : "Local",
+          "id" : "177",
+          "instances" : "1",
+          "name" : "ai-service",
+          "properties" : {
+            "structurizr.dsl.identifier" : "ebd62c30-3c58-4421-9ffe-abcc59b99fce"
+          },
+          "tags" : "Element,Deployment Node",
+          "technology" : "Python 3.12"
+        }, {
+          "description" : "SMTP 1025 ; interface locale 8025.",
+          "environment" : "Local",
+          "id" : "182",
+          "instances" : "1",
+          "name" : "mailpit",
+          "properties" : {
+            "structurizr.dsl.identifier" : "6a94caec-eb43-4bfb-b122-7c5ced19da8c"
+          },
+          "softwareSystemInstances" : [ {
+            "environment" : "Local",
+            "id" : "183",
+            "instanceId" : 1,
+            "properties" : {
+              "structurizr.dsl.identifier" : "2756f4ea-70cc-4f1f-a3c7-7914015bf7b3"
+            },
+            "softwareSystemId" : "59",
+            "tags" : "Software System Instance"
+          } ],
+          "tags" : "Element,Deployment Node",
+          "technology" : "Mailpit"
+        } ],
+        "description" : "Reseau local des services ; bases et volumes independants.",
+        "environment" : "Local",
+        "id" : "161",
+        "infrastructureNodes" : [ {
+          "description" : "Assets statiques ; hote 5173 vers port 80. Pas de proxy API.",
+          "environment" : "Local",
+          "id" : "162",
+          "name" : "frontend",
+          "properties" : {
+            "structurizr.dsl.identifier" : "nginxApp"
+          },
+          "tags" : "Element,Infrastructure Node",
+          "technology" : "Nginx"
+        }, {
+          "description" : "Assets admin ; hote 5174 vers port 80.",
+          "environment" : "Local",
+          "id" : "163",
+          "name" : "mock-bank-ui",
+          "properties" : {
+            "structurizr.dsl.identifier" : "nginxAdmin"
+          },
+          "tags" : "Element,Infrastructure Node",
+          "technology" : "Nginx"
+        } ],
+        "instances" : "1",
+        "name" : "Docker Compose",
+        "properties" : {
+          "structurizr.dsl.identifier" : "54505bcd-2d8c-4db7-8e7a-c5a38d7f501b"
+        },
+        "tags" : "Element,Deployment Node",
+        "technology" : "Docker Linux containers"
+      }, {
+        "description" : "11434 via host.docker.internal ; modeles configurables, non geres par Compose.",
+        "environment" : "Local",
+        "id" : "185",
+        "instances" : "1",
+        "name" : "Ollama sur le poste",
+        "properties" : {
+          "structurizr.dsl.identifier" : "5d1df0ce-f972-4fc2-8469-0eee8fbdd126"
+        },
+        "softwareSystemInstances" : [ {
+          "environment" : "Local",
+          "id" : "186",
+          "instanceId" : 1,
+          "properties" : {
+            "structurizr.dsl.identifier" : "e8390139-ad1e-49f9-850f-5a65f7e8170c"
+          },
+          "softwareSystemId" : "60",
+          "tags" : "Software System Instance"
+        } ],
+        "tags" : "Element,Deployment Node",
+        "technology" : "Ollama"
+      }, {
+        "containerInstances" : [ {
+          "containerId" : "42",
+          "environment" : "Local",
+          "id" : "189",
+          "instanceId" : 1,
+          "properties" : {
+            "structurizr.dsl.identifier" : "d145324f-876c-49d4-8f3d-b3c72f19771d"
+          },
+          "relationships" : [ {
+            "description" : "Export explicite avant build de l'image IA",
+            "destinationId" : "180",
+            "id" : "190",
+            "linkedRelationshipId" : "82",
+            "sourceId" : "189",
+            "technology" : "Fichiers / hors ligne"
+          } ],
+          "tags" : "Container Instance"
+        } ],
+        "description" : "Scripts/notebooks executes explicitement, pas un service Compose.",
+        "environment" : "Local",
+        "id" : "188",
+        "instances" : "1",
+        "name" : "Environnement ML hors ligne",
+        "properties" : {
+          "structurizr.dsl.identifier" : "11ee0fb5-8b1e-4adb-bb99-ae01db9c4e7c"
+        },
+        "tags" : "Element,Deployment Node",
+        "technology" : "Python / notebooks"
+      } ],
+      "description" : "Ports hote configurables ; backend actuellement 8082, defaut Compose 8080.",
+      "environment" : "Local",
+      "id" : "156",
+      "instances" : "1",
+      "name" : "Poste de demonstration",
+      "properties" : {
+        "structurizr.dsl.identifier" : "3a18fcb9-6131-4106-ab93-2a215062e3e1"
+      },
+      "tags" : "Element,Deployment Node",
+      "technology" : "Windows / Docker Desktop"
+    }, {
+      "description" : "Merchant enrichment uniquement ; aucun acces externe pour explications/vision.",
+      "environment" : "Local",
+      "id" : "193",
+      "instances" : "1",
+      "name" : "Internet optionnel",
+      "properties" : {
+        "structurizr.dsl.identifier" : "34b23782-3783-477c-84d4-7c32691f5c79"
+      },
+      "softwareSystemInstances" : [ {
+        "environment" : "Local",
+        "id" : "194",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "eb8e14ac-afca-4fe5-be9d-9b7ada91eb04"
+        },
+        "softwareSystemId" : "61",
+        "tags" : "Software System Instance"
+      } ],
+      "tags" : "Element,Deployment Node",
+      "technology" : "HTTPS"
+    } ],
+    "people" : [ {
+      "description" : "Gere ses finances, valide les suggestions et consulte les estimations.",
+      "id" : "1",
+      "name" : "Utilisateur",
+      "properties" : {
+        "structurizr.dsl.identifier" : "user"
+      },
+      "relationships" : [ {
+        "description" : "Consulte et gere ses finances",
+        "destinationId" : "4",
+        "id" : "62",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Utilise les pages",
+        "destinationId" : "5",
+        "id" : "69",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "Navigateur"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Administre uniquement les clients et le ledger synthetiques.",
+      "id" : "2",
+      "name" : "Administrateur mock-bank",
+      "properties" : {
+        "structurizr.dsl.identifier" : "admin"
+      },
+      "relationships" : [ {
+        "description" : "Administre la banque synthetique",
+        "destinationId" : "48",
+        "id" : "63",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Utilise la console",
+        "destinationId" : "49",
+        "id" : "70",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "Navigateur"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Prepare, evalue et exporte les modeles hors ligne.",
+      "id" : "3",
+      "name" : "Developpeur / stagiaire",
+      "properties" : {
+        "structurizr.dsl.identifier" : "developer"
+      },
+      "relationships" : [ {
+        "description" : "Prepare les modeles et la demonstration",
+        "destinationId" : "4",
+        "id" : "64",
+        "sourceId" : "3",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Execute notebooks et scripts hors ligne",
+        "destinationId" : "42",
+        "id" : "71",
+        "sourceId" : "3",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Execute et compare les experiences hors ligne",
+        "destinationId" : "45",
+        "id" : "150",
+        "sourceId" : "3",
+        "tags" : "Relationship"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "Navigation, pages publiques et routes protegees.",
+          "documentation" : { },
+          "id" : "6",
+          "name" : "Routes et AppShell",
+          "properties" : {
+            "structurizr.dsl.identifier" : "routes"
+          },
+          "relationships" : [ {
+            "description" : "Protege les routes",
+            "destinationId" : "7",
+            "id" : "83",
+            "sourceId" : "6",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Affiche les pages de donnees",
+            "destinationId" : "9",
+            "id" : "84",
+            "sourceId" : "6",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Affiche les pages de planification",
+            "destinationId" : "10",
+            "id" : "85",
+            "sourceId" : "6",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "App.jsx / AppShell.jsx"
+        }, {
+          "description" : "JWT en memoire, renouvellement via cookie HttpOnly, aucun jeton en localStorage.",
+          "documentation" : { },
+          "id" : "7",
+          "name" : "Session et protection",
+          "properties" : {
+            "structurizr.dsl.identifier" : "session"
+          },
+          "relationships" : [ {
+            "description" : "Login, me, refresh et logout",
+            "destinationId" : "14",
+            "id" : "88",
+            "sourceId" : "7",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AuthContext / ProtectedRoute"
+        }, {
+          "description" : "Comptes, historique, dashboard et invalidation apres mutation.",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Donnees financieres partagees",
+          "properties" : {
+            "structurizr.dsl.identifier" : "financialState"
+          },
+          "relationships" : [ {
+            "description" : "Recharge les donnees serveur",
+            "destinationId" : "14",
+            "id" : "87",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "FinancialDataContext"
+        }, {
+          "description" : "Dashboard, Transactions, Categories et connexion bancaire. Montants autoritatifs fournis par le serveur.",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "Pages de donnees",
+          "properties" : {
+            "structurizr.dsl.identifier" : "dataPages"
+          },
+          "relationships" : [ {
+            "description" : "Consomme / invalide les donnees",
+            "destinationId" : "8",
+            "id" : "86",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Categories et synchronisation manuelle",
+            "destinationId" : "14",
+            "id" : "89",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Affiche score et priorites",
+            "destinationId" : "11",
+            "id" : "92",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Ouvre import ou extraction revue",
+            "destinationId" : "12",
+            "id" : "93",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "React"
+        }, {
+          "description" : "Salary Planning, Goals et Forecast. Simulations temporaires et protection des reponses obsoletes.",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "Pages de planification",
+          "properties" : {
+            "structurizr.dsl.identifier" : "planningPages"
+          },
+          "relationships" : [ {
+            "description" : "Plans, objectifs et previsions",
+            "destinationId" : "14",
+            "id" : "90",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Affiche les valeurs de prevision du serveur",
+            "destinationId" : "13",
+            "id" : "91",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "React"
+        }, {
+          "description" : "Facteurs, priorites, feedback et explication locale optionnelle.",
+          "documentation" : { },
+          "id" : "11",
+          "name" : "Score et recommandations",
+          "properties" : {
+            "structurizr.dsl.identifier" : "insightsUi"
+          },
+          "relationships" : [ {
+            "description" : "Score, recommandations et explications",
+            "destinationId" : "14",
+            "id" : "94",
+            "sourceId" : "11",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "RecommendationsSection / DashboardPage"
+        }, {
+          "description" : "Preview/mapping/confirmation ; extraction experimentale, revue humaine puis export CSV.",
+          "documentation" : { },
+          "id" : "12",
+          "name" : "Import CSV et ticket",
+          "properties" : {
+            "structurizr.dsl.identifier" : "importsUi"
+          },
+          "relationships" : [ {
+            "description" : "Import et extraction, sans creation automatique",
+            "destinationId" : "14",
+            "id" : "95",
+            "sourceId" : "12",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "CsvImportPanel / ReceiptPanel"
+        }, {
+          "description" : "Solde observe et estimation de fin de mois ; liaison indicative, pas une prediction quotidienne.",
+          "documentation" : { },
+          "id" : "13",
+          "name" : "Graphique de prevision",
+          "properties" : {
+            "structurizr.dsl.identifier" : "chart"
+          },
+          "tags" : "Element,Component",
+          "technology" : "ForecastBalanceChart"
+        }, {
+          "description" : "Client partage, erreurs JSON, refresh single-flight et wrappers par fonctionnalite.",
+          "documentation" : { },
+          "id" : "14",
+          "name" : "Client API authentifie",
+          "properties" : {
+            "structurizr.dsl.identifier" : "apiClient"
+          },
+          "relationships" : [ {
+            "description" : "Seul serveur appele par la SPA principale",
+            "destinationId" : "15",
+            "id" : "96",
+            "sourceId" : "14",
+            "tags" : "Relationship",
+            "technology" : "HTTP / JSON"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "services/apiClient.js"
+        } ],
+        "description" : "SPA francaise. Aucun appel direct a la banque, FastAPI ou aux bases.",
+        "documentation" : { },
+        "id" : "5",
+        "name" : "Frontend principal",
+        "properties" : {
+          "structurizr.dsl.identifier" : "frontend"
+        },
+        "relationships" : [ {
+          "description" : "APIs protegees et authentification",
+          "destinationId" : "15",
+          "id" : "72",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JSON / JWT"
+        }, {
+          "description" : "Requetes filtrees avant les controleurs",
+          "destinationId" : "16",
+          "id" : "97",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JWT"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "React 19 / Vite / JavaScript"
+      }, {
+        "components" : [ {
+          "description" : "JWT et statuts relus en base ; ACTIVE requis pour les API financieres ; erreurs JSON et validation.",
+          "documentation" : { },
+          "id" : "16",
+          "name" : "Securite et erreurs",
+          "properties" : {
+            "structurizr.dsl.identifier" : "security"
+          },
+          "relationships" : [ {
+            "description" : "Relit identite et statuts pendant la requete",
+            "destinationId" : "32",
+            "id" : "98",
+            "sourceId" : "16",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          }, {
+            "description" : "Autorise les routes d'authentification",
+            "destinationId" : "17",
+            "id" : "99",
+            "sourceId" : "16",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "SecurityConfiguration / StatusAwareAuthorizationFilter"
+        }, {
+          "description" : "BCrypt, verification/reset, refresh hashes SHA-256, rotation et detection de reuse.",
+          "documentation" : { },
+          "id" : "17",
+          "name" : "Authentification",
+          "properties" : {
+            "structurizr.dsl.identifier" : "auth"
+          },
+          "relationships" : [ {
+            "description" : "Credentials hashees, sessions et action tokens",
+            "destinationId" : "32",
+            "id" : "100",
+            "sourceId" : "17",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          }, {
+            "description" : "Programme un dispatch apres commit",
+            "destinationId" : "19",
+            "id" : "101",
+            "sourceId" : "17",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Evenements d'authentification sans secrets",
+            "destinationId" : "20",
+            "id" : "102",
+            "sourceId" : "17",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AuthService / AccountActionService / RefreshTokenService"
+        }, {
+          "description" : "Profil issu du principal, email en lecture seule, preferences financieres et interface separees.",
+          "documentation" : { },
+          "id" : "18",
+          "name" : "Utilisateur et preferences",
+          "properties" : {
+            "structurizr.dsl.identifier" : "profile"
+          },
+          "relationships" : [ {
+            "description" : "Profil et preferences du principal",
+            "destinationId" : "32",
+            "id" : "103",
+            "sourceId" : "18",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "profile / user"
+        }, {
+          "description" : "Dispatch apres commit ; echec SMTP sans rollback du compte ; diagnostics sans secrets.",
+          "documentation" : { },
+          "id" : "19",
+          "name" : "Email apres commit",
+          "properties" : {
+            "structurizr.dsl.identifier" : "email"
+          },
+          "relationships" : [ {
+            "description" : "Envoie apres commit ; echec sans rollback",
+            "destinationId" : "59",
+            "id" : "104",
+            "sourceId" : "19",
+            "tags" : "Relationship",
+            "technology" : "SMTP"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AfterCommitEmailDispatcher"
+        }, {
+          "description" : "Evenements sensibles, journal append-only et details minimises.",
+          "documentation" : { },
+          "id" : "20",
+          "name" : "Audit",
+          "properties" : {
+            "structurizr.dsl.identifier" : "audit"
+          },
+          "relationships" : [ {
+            "description" : "Ajoute une entree append-only",
+            "destinationId" : "32",
+            "id" : "105",
+            "sourceId" : "20",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AuditService"
+        }, {
+          "description" : "Connexion utilisateur, appels avant transaction d'ecriture, upserts idempotents et snapshots de solde.",
+          "documentation" : { },
+          "id" : "21",
+          "name" : "Connexion et synchronisation",
+          "properties" : {
+            "structurizr.dsl.identifier" : "bank"
+          },
+          "relationships" : [ {
+            "description" : "Utilise les ports internes ; aucun customerId client arbitraire",
+            "destinationId" : "22",
+            "id" : "106",
+            "sourceId" : "21",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Connexions, upsert et snapshots de solde",
+            "destinationId" : "32",
+            "id" : "108",
+            "sourceId" : "21",
+            "tags" : "Relationship",
+            "technology" : "JPA / JDBC"
+          }, {
+            "description" : "Trace connexion et synchronisation",
+            "destinationId" : "20",
+            "id" : "109",
+            "sourceId" : "21",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "BankConnectionService / BankSynchronizationService"
+        }, {
+          "description" : "ReadOnlyBankDataPort et MockBankAuthenticationPort ; client HTTP borne, IDs fournisseur internes.",
+          "documentation" : { },
+          "id" : "22",
+          "name" : "Ports et adapter bancaire",
+          "properties" : {
+            "structurizr.dsl.identifier" : "bankAdapter"
+          },
+          "relationships" : [ {
+            "description" : "HTTP hors transaction de persistence",
+            "destinationId" : "50",
+            "id" : "107",
+            "sourceId" : "22",
+            "tags" : "Relationship",
+            "technology" : "HTTP / JSON / JWT"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "MockBankHttpClient"
+        }, {
+          "description" : "Preview, mappings, confirmation et idempotence fichier/ligne. Aucun import automatique depuis un ticket.",
+          "documentation" : { },
+          "id" : "23",
+          "name" : "Import CSV",
+          "properties" : {
+            "structurizr.dsl.identifier" : "csv"
+          },
+          "relationships" : [ {
+            "description" : "Source file, mappings et transactions idempotentes",
+            "destinationId" : "32",
+            "id" : "110",
+            "sourceId" : "23",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "CsvImportService"
+        }, {
+          "description" : "Categorie courante, regles deterministes, memoire privee puis IA ; suggestion PENDING uniquement.",
+          "documentation" : { },
+          "id" : "24",
+          "name" : "Categories et revue",
+          "properties" : {
+            "structurizr.dsl.identifier" : "category"
+          },
+          "relationships" : [ {
+            "description" : "Categorie actuelle, memoire et suggestions revues",
+            "destinationId" : "32",
+            "id" : "111",
+            "sourceId" : "24",
+            "tags" : "Relationship",
+            "technology" : "JPA / JDBC"
+          }, {
+            "description" : "Cle opaque, texte assaini, direction/devise/versions ; pas de montant ni ID SQL",
+            "destinationId" : "33",
+            "id" : "112",
+            "sourceId" : "24",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTP / JSON"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "CategoryService / CategorizationReviewService / MerchantRecognitionService"
+        }, {
+          "description" : "Lectures locales user/mois/devise ; debits eligibles, banque POSTED, hors transferts internes confirmes.",
+          "documentation" : { },
+          "id" : "25",
+          "name" : "Comptes, transactions et depenses",
+          "properties" : {
+            "structurizr.dsl.identifier" : "localData"
+          },
+          "relationships" : [ {
+            "description" : "Agrege category_id courant ; user/mois/devise isoles",
+            "destinationId" : "32",
+            "id" : "113",
+            "sourceId" : "25",
+            "tags" : "Relationship",
+            "technology" : "SQL"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "LocalBankDataService"
+        }, {
+          "description" : "Revenus et allocations ; capacite peut etre negative ; metadonnees de recommandations sauvegardees ensemble.",
+          "documentation" : { },
+          "id" : "26",
+          "name" : "Salary Planning",
+          "properties" : {
+            "structurizr.dsl.identifier" : "salary"
+          },
+          "relationships" : [ {
+            "description" : "Sauve plans, revenus, budgets et metadonnees ensemble",
+            "destinationId" : "32",
+            "id" : "114",
+            "sourceId" : "26",
+            "tags" : "Relationship",
+            "technology" : "JPA / SQL"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "SalaryPlanService / HistoricalSalaryRecommendationService"
+        }, {
+          "description" : "Progres = montant initial + contributions ; allocations plafonnees par MonthlyPlan ; scenarios temporaires.",
+          "documentation" : { },
+          "id" : "27",
+          "name" : "Goals",
+          "properties" : {
+            "structurizr.dsl.identifier" : "goals"
+          },
+          "relationships" : [ {
+            "description" : "Lit MonthlyPlan ; allocations <= max(capacite,0) ; contributions separees",
+            "destinationId" : "32",
+            "id" : "115",
+            "sourceId" : "27",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "GoalService / GoalAllocationService"
+        }, {
+          "description" : "Fin de mois deterministe ; residu Huber TND optionnel ; runs persistants et simulations temporaires.",
+          "documentation" : { },
+          "id" : "28",
+          "name" : "Forecast",
+          "properties" : {
+            "structurizr.dsl.identifier" : "forecast"
+          },
+          "relationships" : [ {
+            "description" : "Transactions, soldes dates et runs",
+            "destinationId" : "32",
+            "id" : "116",
+            "sourceId" : "28",
+            "tags" : "Relationship",
+            "technology" : "JPA / SQL"
+          }, {
+            "description" : "Residu TND optionnel ; base deterministe conservee",
+            "destinationId" : "33",
+            "id" : "117",
+            "sourceId" : "28",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTP / JSON"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "ForecastService / DeterministicForecastCalculator"
+        }, {
+          "description" : "Snapshots immuables 0-100, facteurs disponibles, provenance et fingerprint ; aucun LLM.",
+          "documentation" : { },
+          "id" : "29",
+          "name" : "Score financier",
+          "properties" : {
+            "structurizr.dsl.identifier" : "score"
+          },
+          "relationships" : [ {
+            "description" : "Agrege les faits autorises et produit des snapshots immuables",
+            "destinationId" : "32",
+            "id" : "118",
+            "sourceId" : "29",
+            "tags" : "Relationship",
+            "technology" : "JPA / SQL"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "FinancialScoreService / FinancialWellnessScoreCalculator"
+        }, {
+          "description" : "Regles versionnees sur facteurs immuables, justifications, idempotence et feedback. Aucune action automatique.",
+          "documentation" : { },
+          "id" : "30",
+          "name" : "Recommandations",
+          "properties" : {
+            "structurizr.dsl.identifier" : "recommendations"
+          },
+          "relationships" : [ {
+            "description" : "Obtient l'evaluation courante autoritative",
+            "destinationId" : "29",
+            "id" : "119",
+            "sourceId" : "30",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Regles, justifications de facteurs et feedback",
+            "destinationId" : "32",
+            "id" : "120",
+            "sourceId" : "30",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "RecommendationService / RecommendationRules"
+        }, {
+          "description" : "Ownership et faits minimises ; explication avec fallback ; image ephemere validee pour extraction.",
+          "documentation" : { },
+          "id" : "31",
+          "name" : "Assistance locale optionnelle",
+          "properties" : {
+            "structurizr.dsl.identifier" : "assistance"
+          },
+          "relationships" : [ {
+            "description" : "Verifie recommendation et ownership",
+            "destinationId" : "30",
+            "id" : "121",
+            "sourceId" : "31",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Contrat minimise ou image ephemere validee ; fallback",
+            "destinationId" : "33",
+            "id" : "122",
+            "sourceId" : "31",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTP / JSON"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AssistanceService / AssistanceClient"
+        } ],
+        "description" : "Monolithe modulaire ; principal et statut PostgreSQL, ownership, monnaies isolees et calculs decimaux.",
+        "documentation" : { },
+        "id" : "15",
+        "name" : "Backend principal",
+        "properties" : {
+          "structurizr.dsl.identifier" : "backend"
+        },
+        "relationships" : [ {
+          "description" : "Lit/ecrit ses propres donnees ; migrations et validation",
+          "destinationId" : "32",
+          "id" : "73",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "JPA / JDBC"
+        }, {
+          "description" : "Login synthetique, comptes, soldes et transactions",
+          "destinationId" : "50",
+          "id" : "74",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JSON / JWT"
+        }, {
+          "description" : "Features agregees, descripteurs assainis et assistance optionnelle",
+          "destinationId" : "33",
+          "id" : "75",
+          "sourceId" : "15",
+          "tags" : "Relationship,Optional",
+          "technology" : "HTTP / JSON"
+        }, {
+          "description" : "Verification et reset apres commit",
+          "destinationId" : "59",
+          "id" : "76",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "SMTP"
+        }, {
+          "description" : "Contrats minimises et reponses validees",
+          "destinationId" : "34",
+          "id" : "123",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JSON"
+        }, {
+          "description" : "Presente le JWT client fournisseur",
+          "destinationId" : "51",
+          "id" : "137",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JWT"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Java 21 / Spring Boot 4.1 / Maven"
+      }, {
+        "description" : "Schema smart_financial_wellness ; Flyway V1-V22 du worktree ; Hibernate validate. Plans, contributions, transactions, snapshots et audit.",
+        "documentation" : { },
+        "id" : "32",
+        "name" : "PostgreSQL applicatif",
+        "properties" : {
+          "structurizr.dsl.identifier" : "appDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 17"
+      }, {
+        "components" : [ {
+          "description" : "Forecast, merchant-recognition, explications et tickets ; Pydantic strict et versions de contrat.",
+          "documentation" : { },
+          "id" : "34",
+          "name" : "API et contrats",
+          "properties" : {
+            "structurizr.dsl.identifier" : "aiApi"
+          },
+          "relationships" : [ {
+            "description" : "Valide le contrat Forecast",
+            "destinationId" : "35",
+            "id" : "124",
+            "sourceId" : "34",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Valide le batch marchand atomique",
+            "destinationId" : "36",
+            "id" : "125",
+            "sourceId" : "34",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Explications et tickets optionnels",
+            "destinationId" : "39",
+            "id" : "126",
+            "sourceId" : "34",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "main.py / contracts.py / merchant_contracts.py"
+        }, {
+          "description" : "Charge le Huber fige, verifie artefact/versions et predit le residu net TND.",
+          "documentation" : { },
+          "id" : "35",
+          "name" : "Runtime Forecast",
+          "properties" : {
+            "structurizr.dsl.identifier" : "forecastRuntime"
+          },
+          "relationships" : [ {
+            "description" : "Charge Huber et metadonnees",
+            "destinationId" : "41",
+            "id" : "127",
+            "sourceId" : "35",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "runtime.py"
+        }, {
+          "description" : "Aliases/catalogue et modele fige, puis enrichissement optionnel ; aucun choix applique a une transaction.",
+          "documentation" : { },
+          "id" : "36",
+          "name" : "Runtime marchand",
+          "properties" : {
+            "structurizr.dsl.identifier" : "merchantRuntime"
+          },
+          "relationships" : [ {
+            "description" : "Charge catalogue et modele fige",
+            "destinationId" : "41",
+            "id" : "128",
+            "sourceId" : "36",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Recours borne si reconnaissance insuffisante",
+            "destinationId" : "37",
+            "id" : "129",
+            "sourceId" : "36",
+            "tags" : "Relationship,Optional",
+            "technology" : "Python"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "merchant_runtime.py"
+        }, {
+          "description" : "Candidats comme indices, evidence non fiable, categorie enum et SUGGEST/ABSTAIN strict ; provenance HTTPS.",
+          "documentation" : { },
+          "id" : "37",
+          "name" : "Enrichissement marchand borne",
+          "properties" : {
+            "structurizr.dsl.identifier" : "enrichment"
+          },
+          "relationships" : [ {
+            "description" : "Embeddings, evidence publique et raisonnement strict",
+            "destinationId" : "38",
+            "id" : "130",
+            "sourceId" : "37",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "merchant_enrichment.py"
+        }, {
+          "description" : "Embeddings, raisonnement JSON strict et recherche web optionnelle ; aucune journalisation de prompts/secrets.",
+          "documentation" : { },
+          "id" : "38",
+          "name" : "Providers Ollama",
+          "properties" : {
+            "structurizr.dsl.identifier" : "providers"
+          },
+          "relationships" : [ {
+            "description" : "Acquiert le slot local / budget",
+            "destinationId" : "40",
+            "id" : "131",
+            "sourceId" : "38",
+            "tags" : "Relationship"
+          }, {
+            "description" : "api/embed et api/chat ; JSON schema et think=false",
+            "destinationId" : "60",
+            "id" : "132",
+            "sourceId" : "38",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTP"
+          }, {
+            "description" : "api/web_search ; resultat non fiable comme instruction",
+            "destinationId" : "61",
+            "id" : "133",
+            "sourceId" : "38",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTPS"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "ollama_providers.py"
+        }, {
+          "description" : "Francais controle sans faits inventes ; JPEG/PNG ephemere nettoye, champs decimaux revus par l'utilisateur.",
+          "documentation" : { },
+          "id" : "39",
+          "name" : "Explication et vision",
+          "properties" : {
+            "structurizr.dsl.identifier" : "localAssistance"
+          },
+          "relationships" : [ {
+            "description" : "Partage le slot et respecte le budget",
+            "destinationId" : "40",
+            "id" : "134",
+            "sourceId" : "39",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Explication et vision sans recherche externe",
+            "destinationId" : "60",
+            "id" : "135",
+            "sourceId" : "39",
+            "tags" : "Relationship,Optional",
+            "technology" : "HTTP"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "assistance.py"
+        }, {
+          "description" : "Slot d'inference partage par processus, delais bornes et reponses busy/fallback sures.",
+          "documentation" : { },
+          "id" : "40",
+          "name" : "Admission locale",
+          "properties" : {
+            "structurizr.dsl.identifier" : "admission"
+          },
+          "tags" : "Element,Component",
+          "technology" : "inference_control.py"
+        } ],
+        "description" : "Inference uniquement ; contrats stricts, budgets bornes et fallback. Aucun acces PostgreSQL.",
+        "documentation" : { },
+        "id" : "33",
+        "name" : "Service IA",
+        "properties" : {
+          "structurizr.dsl.identifier" : "ai"
+        },
+        "relationships" : [ {
+          "description" : "Charge les artefacts figes",
+          "destinationId" : "41",
+          "id" : "79",
+          "sourceId" : "33",
+          "tags" : "Relationship",
+          "technology" : "Fichiers locaux"
+        }, {
+          "description" : "Embeddings, raisonnement ou vision bornes",
+          "destinationId" : "60",
+          "id" : "80",
+          "sourceId" : "33",
+          "tags" : "Relationship,Optional",
+          "technology" : "HTTP"
+        }, {
+          "description" : "Recherche marchande optionnelle",
+          "destinationId" : "61",
+          "id" : "81",
+          "sourceId" : "33",
+          "tags" : "Relationship,Optional",
+          "technology" : "HTTPS"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Python 3.12 / FastAPI / scikit-learn"
+      }, {
+        "description" : "Modeles Forecast Huber synthetique TND et marchand, catalogue, versions et empreintes ; inclus dans l'image ai-service.",
+        "documentation" : { },
+        "id" : "41",
+        "name" : "Artefacts figes et metadonnees",
+        "properties" : {
+          "structurizr.dsl.identifier" : "models"
+        },
+        "tags" : "Element,Container,FileStore",
+        "technology" : "joblib / JSON"
+      }, {
+        "components" : [ {
+          "description" : "Donnees synthetiques reproductibles, dates et schemas controles.",
+          "documentation" : { },
+          "id" : "43",
+          "name" : "Generation et validation",
+          "properties" : {
+            "structurizr.dsl.identifier" : "generate"
+          },
+          "relationships" : [ {
+            "description" : "Fournit les donnees validees",
+            "destinationId" : "44",
+            "id" : "151",
+            "sourceId" : "43",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "synthetic_data.py / validation.py"
+        }, {
+          "description" : "Target residuel, preparation et matrice de features versionnees.",
+          "documentation" : { },
+          "id" : "44",
+          "name" : "Dataset et features",
+          "properties" : {
+            "structurizr.dsl.identifier" : "features"
+          },
+          "relationships" : [ {
+            "description" : "Features / target sans fuite temporelle",
+            "destinationId" : "45",
+            "id" : "152",
+            "sourceId" : "44",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "dataset_builder.py / feature_matrix.py"
+        }, {
+          "description" : "Splits temporels, baselines, Huber et test conserve ; seeds/configuration et resultats.",
+          "documentation" : { },
+          "id" : "45",
+          "name" : "Entrainement et evaluation Forecast",
+          "properties" : {
+            "structurizr.dsl.identifier" : "experiments"
+          },
+          "relationships" : [ {
+            "description" : "Modele evalue et metadonnees reproductibles",
+            "destinationId" : "47",
+            "id" : "153",
+            "sourceId" : "45",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "temporal_split.py / modeling.py / evaluation.py"
+        }, {
+          "description" : "Catalogue, normalisation et export reproductible du modele de reconnaissance.",
+          "documentation" : { },
+          "id" : "46",
+          "name" : "Preparation et modele marchand",
+          "properties" : {
+            "structurizr.dsl.identifier" : "merchantTraining"
+          },
+          "relationships" : [ {
+            "description" : "Catalogue et modele versionnes",
+            "destinationId" : "47",
+            "id" : "154",
+            "sourceId" : "46",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "merchant_ml / export_merchant_model.py"
+        }, {
+          "description" : "Promotion explicite des artefacts/metadonnees vers ai-service/models avant build ; pas de deploiement automatique.",
+          "documentation" : { },
+          "id" : "47",
+          "name" : "Export controle",
+          "properties" : {
+            "structurizr.dsl.identifier" : "export"
+          },
+          "relationships" : [ {
+            "description" : "Copie explicitement vers ai-service/models",
+            "destinationId" : "41",
+            "id" : "155",
+            "sourceId" : "47",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "artifact.py / export_frozen_model.py"
+        } ],
+        "description" : "Scripts et notebooks, jamais entraine a la requete et hors Docker Compose.",
+        "documentation" : { },
+        "id" : "42",
+        "name" : "Pipeline ML hors ligne",
+        "properties" : {
+          "structurizr.dsl.identifier" : "pipeline"
+        },
+        "relationships" : [ {
+          "description" : "Export explicite avant build de l'image IA",
+          "destinationId" : "41",
+          "id" : "82",
+          "sourceId" : "42",
+          "tags" : "Relationship",
+          "technology" : "Fichiers / hors ligne"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Python / scikit-learn / notebooks"
+      } ],
+      "description" : "Assistant financier personnel : donnees reelles locales, budgets, objectifs, previsions et conseils informatifs.",
+      "documentation" : { },
+      "id" : "4",
+      "name" : "Smart Financial Wellness Advisor",
+      "properties" : {
+        "structurizr.dsl.identifier" : "app"
+      },
+      "relationships" : [ {
+        "description" : "Authentifie le client et lit ses donnees",
+        "destinationId" : "48",
+        "id" : "65",
+        "sourceId" : "4",
+        "tags" : "Relationship",
+        "technology" : "HTTP / JWT fournisseur"
+      }, {
+        "description" : "Emails apres commit",
+        "destinationId" : "59",
+        "id" : "66",
+        "sourceId" : "4",
+        "tags" : "Relationship",
+        "technology" : "SMTP"
+      }, {
+        "description" : "Inference locale optionnelle",
+        "destinationId" : "60",
+        "id" : "67",
+        "sourceId" : "4",
+        "tags" : "Relationship,Optional",
+        "technology" : "HTTP"
+      }, {
+        "description" : "Evidence marchande publique optionnelle",
+        "destinationId" : "61",
+        "id" : "68",
+        "sourceId" : "4",
+        "tags" : "Relationship,Optional",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Software System"
+    }, {
+      "containers" : [ {
+        "description" : "Application d'administration independante du frontend financier.",
+        "documentation" : { },
+        "id" : "49",
+        "name" : "Console mock-bank-ui",
+        "properties" : {
+          "structurizr.dsl.identifier" : "mockUi"
+        },
+        "relationships" : [ {
+          "description" : "APIs admin avec JWT admin",
+          "destinationId" : "50",
+          "id" : "77",
+          "sourceId" : "49",
+          "tags" : "Relationship",
+          "technology" : "HTTP / JSON"
+        }, {
+          "description" : "Presente le JWT admin",
+          "destinationId" : "51",
+          "id" : "136",
+          "sourceId" : "49",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "React / Vite / JavaScript"
+      }, {
+        "components" : [ {
+          "description" : "JWT, scopes client/admin et CORS admin limite ; aucun flux OAuth/PKCE actif.",
+          "documentation" : { },
+          "id" : "51",
+          "name" : "Securite fournisseur",
+          "properties" : {
+            "structurizr.dsl.identifier" : "mockSecurity"
+          },
+          "relationships" : [ {
+            "description" : "Login client",
+            "destinationId" : "52",
+            "id" : "138",
+            "sourceId" : "51",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Login admin",
+            "destinationId" : "53",
+            "id" : "139",
+            "sourceId" : "51",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Autorise les lectures client",
+            "destinationId" : "54",
+            "id" : "140",
+            "sourceId" : "51",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Exige le JWT administrateur",
+            "destinationId" : "56",
+            "id" : "141",
+            "sourceId" : "51",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Exige administrateur, profil et flag",
+            "destinationId" : "57",
+            "id" : "142",
+            "sourceId" : "51",
+            "tags" : "Relationship,Optional",
+            "technology" : "Spring Security"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "MockBankSecurityConfiguration / MockBankJwtService"
+        }, {
+          "description" : "Credentials synthetiques BCrypt, JWT de lecture et identite fournisseur.",
+          "documentation" : { },
+          "id" : "52",
+          "name" : "Login client",
+          "properties" : {
+            "structurizr.dsl.identifier" : "customerAuth"
+          },
+          "relationships" : [ {
+            "description" : "Verifie le hash et l'etat client",
+            "destinationId" : "58",
+            "id" : "143",
+            "sourceId" : "52",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "MockBankAuthenticationService"
+        }, {
+          "description" : "Authentification separee pour mutations de fixtures/ledger.",
+          "documentation" : { },
+          "id" : "53",
+          "name" : "Login administrateur",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminAuth"
+          },
+          "relationships" : [ {
+            "description" : "Verifie le hash administrateur",
+            "destinationId" : "58",
+            "id" : "144",
+            "sourceId" : "53",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AdminAuthenticationService"
+        }, {
+          "description" : "Accounts, balance et transactions paginees ; DTOs seulement ; autre client = 404 Account not found.",
+          "documentation" : { },
+          "id" : "54",
+          "name" : "Lectures de donnees",
+          "properties" : {
+            "structurizr.dsl.identifier" : "bankReads"
+          },
+          "relationships" : [ {
+            "description" : "Verifie le proprietaire avant lecture",
+            "destinationId" : "55",
+            "id" : "145",
+            "sourceId" : "54",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Lit comptes, soldes et ledger",
+            "destinationId" : "58",
+            "id" : "147",
+            "sourceId" : "54",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AccountQueryService / BalanceQueryService / TransactionQueryService"
+        }, {
+          "description" : "Verification partagee du client et du compte ; aucune revelation inter-clients.",
+          "documentation" : { },
+          "id" : "55",
+          "name" : "Ownership client/compte",
+          "properties" : {
+            "structurizr.dsl.identifier" : "lookup"
+          },
+          "relationships" : [ {
+            "description" : "Charge le client/compte autorise",
+            "destinationId" : "58",
+            "id" : "146",
+            "sourceId" : "55",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "CustomerLookupService"
+        }, {
+          "description" : "Gestion de clients, comptes et transactions selon les regles du ledger mock.",
+          "documentation" : { },
+          "id" : "56",
+          "name" : "Administration synthetique",
+          "properties" : {
+            "structurizr.dsl.identifier" : "management"
+          },
+          "relationships" : [ {
+            "description" : "Mutations administratives du ledger synthetique",
+            "destinationId" : "58",
+            "id" : "148",
+            "sourceId" : "56",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "AdminManagementService"
+        }, {
+          "description" : "Idempotente, identite fixe ; profil demo ET flag explicite ET administrateur. Desactivee par defaut.",
+          "documentation" : { },
+          "id" : "57",
+          "name" : "Fixture superviseur",
+          "properties" : {
+            "structurizr.dsl.identifier" : "demo"
+          },
+          "relationships" : [ {
+            "description" : "Reconciliation strictement demo-only",
+            "destinationId" : "58",
+            "id" : "149",
+            "sourceId" : "57",
+            "tags" : "Relationship",
+            "technology" : "JPA"
+          } ],
+          "tags" : "Element,Component,Optional",
+          "technology" : "SupervisorDemoFixtureService / Controller"
+        } ],
+        "description" : "Comptes, soldes, transactions et administration synthetiques ; JWT client/admin separes.",
+        "documentation" : { },
+        "id" : "50",
+        "name" : "API mock-bank",
+        "properties" : {
+          "structurizr.dsl.identifier" : "mockApi"
+        },
+        "relationships" : [ {
+          "description" : "Son ledger et ses identites uniquement",
+          "destinationId" : "58",
+          "id" : "78",
+          "sourceId" : "50",
+          "tags" : "Relationship",
+          "technology" : "JPA / JDBC"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Java 21 / Spring Boot 4.1"
+      }, {
+        "description" : "Schema mock_bank, Flyway V1-V4 et ledger synthetique ; volume distinct.",
+        "documentation" : { },
+        "id" : "58",
+        "name" : "PostgreSQL mock-bank",
+        "properties" : {
+          "structurizr.dsl.identifier" : "mockDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 17"
+      } ],
+      "description" : "Fournisseur bancaire externe simule ; pas de logique de bien-etre financier.",
+      "documentation" : { },
+      "id" : "48",
+      "name" : "Mock bank",
+      "properties" : {
+        "structurizr.dsl.identifier" : "mock"
+      },
+      "tags" : "Element,Software System"
+    }, {
+      "description" : "Capture SMTP des emails d'actions de compte en developpement.",
+      "documentation" : { },
+      "id" : "59",
+      "name" : "Mailpit local",
+      "properties" : {
+        "structurizr.dsl.identifier" : "mail"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "description" : "Embeddings, raisonnement et vision sur le poste ; modeles configurables ; hors Compose.",
+      "documentation" : { },
+      "id" : "60",
+      "name" : "Ollama local",
+      "properties" : {
+        "structurizr.dsl.identifier" : "ollama"
+      },
+      "tags" : "Element,Software System,External,Optional"
+    }, {
+      "description" : "Recherche publique HTTPS optionnelle pour marchands seulement ; aucun appel web pour explications/tickets.",
+      "documentation" : { },
+      "id" : "61",
+      "name" : "Ollama Web Search",
+      "properties" : {
+        "structurizr.dsl.identifier" : "web"
+      },
+      "tags" : "Element,Software System,External,Optional"
+    } ]
+  },
+  "name" : "Smart Financial Wellness Advisor",
+  "properties" : {
+    "structurizr.inspection.error" : "51",
+    "structurizr.dsl" : "d29ya3NwYWNlICJTbWFydCBGaW5hbmNpYWwgV2VsbG5lc3MgQWR2aXNvciIgIkFyY2hpdGVjdHVyZSBleGVjdXRhYmxlIGR1IHdvcmt0cmVlIC0gMTMgb2N0b2JyZSAyMDI2LiBCYW5xdWUgc3ludGhldGlxdWUsIElBIG9wdGlvbm5lbGxlLCBhdWN1bmUgcmV2ZW5kaWNhdGlvbiBkZSBwcm9kdWN0aW9uIGJhbmNhaXJlLiIgewogICAgIWltcGxpZWRSZWxhdGlvbnNoaXBzIGZhbHNlCgogICAgbW9kZWwgewogICAgICAgIHVzZXIgPSBwZXJzb24gIlV0aWxpc2F0ZXVyIiAiR2VyZSBzZXMgZmluYW5jZXMsIHZhbGlkZSBsZXMgc3VnZ2VzdGlvbnMgZXQgY29uc3VsdGUgbGVzIGVzdGltYXRpb25zLiIKICAgICAgICBhZG1pbiA9IHBlcnNvbiAiQWRtaW5pc3RyYXRldXIgbW9jay1iYW5rIiAiQWRtaW5pc3RyZSB1bmlxdWVtZW50IGxlcyBjbGllbnRzIGV0IGxlIGxlZGdlciBzeW50aGV0aXF1ZXMuIgogICAgICAgIGRldmVsb3BlciA9IHBlcnNvbiAiRGV2ZWxvcHBldXIgLyBzdGFnaWFpcmUiICJQcmVwYXJlLCBldmFsdWUgZXQgZXhwb3J0ZSBsZXMgbW9kZWxlcyBob3JzIGxpZ25lLiIKCiAgICAgICAgYXBwID0gc29mdHdhcmVTeXN0ZW0gIlNtYXJ0IEZpbmFuY2lhbCBXZWxsbmVzcyBBZHZpc29yIiAiQXNzaXN0YW50IGZpbmFuY2llciBwZXJzb25uZWwgOiBkb25uZWVzIHJlZWxsZXMgbG9jYWxlcywgYnVkZ2V0cywgb2JqZWN0aWZzLCBwcmV2aXNpb25zIGV0IGNvbnNlaWxzIGluZm9ybWF0aWZzLiIgewogICAgICAgICAgICBmcm9udGVuZCA9IGNvbnRhaW5lciAiRnJvbnRlbmQgcHJpbmNpcGFsIiAiU1BBIGZyYW5jYWlzZS4gQXVjdW4gYXBwZWwgZGlyZWN0IGEgbGEgYmFucXVlLCBGYXN0QVBJIG91IGF1eCBiYXNlcy4iICJSZWFjdCAxOSAvIFZpdGUgLyBKYXZhU2NyaXB0IiB7CiAgICAgICAgICAgICAgICByb3V0ZXMgPSBjb21wb25lbnQgIlJvdXRlcyBldCBBcHBTaGVsbCIgIk5hdmlnYXRpb24sIHBhZ2VzIHB1YmxpcXVlcyBldCByb3V0ZXMgcHJvdGVnZWVzLiIgIkFwcC5qc3ggLyBBcHBTaGVsbC5qc3giCiAgICAgICAgICAgICAgICBzZXNzaW9uID0gY29tcG9uZW50ICJTZXNzaW9uIGV0IHByb3RlY3Rpb24iICJKV1QgZW4gbWVtb2lyZSwgcmVub3V2ZWxsZW1lbnQgdmlhIGNvb2tpZSBIdHRwT25seSwgYXVjdW4gamV0b24gZW4gbG9jYWxTdG9yYWdlLiIgIkF1dGhDb250ZXh0IC8gUHJvdGVjdGVkUm91dGUiCiAgICAgICAgICAgICAgICBmaW5hbmNpYWxTdGF0ZSA9IGNvbXBvbmVudCAiRG9ubmVlcyBmaW5hbmNpZXJlcyBwYXJ0YWdlZXMiICJDb21wdGVzLCBoaXN0b3JpcXVlLCBkYXNoYm9hcmQgZXQgaW52YWxpZGF0aW9uIGFwcmVzIG11dGF0aW9uLiIgIkZpbmFuY2lhbERhdGFDb250ZXh0IgogICAgICAgICAgICAgICAgZGF0YVBhZ2VzID0gY29tcG9uZW50ICJQYWdlcyBkZSBkb25uZWVzIiAiRGFzaGJvYXJkLCBUcmFuc2FjdGlvbnMsIENhdGVnb3JpZXMgZXQgY29ubmV4aW9uIGJhbmNhaXJlLiBNb250YW50cyBhdXRvcml0YXRpZnMgZm91cm5pcyBwYXIgbGUgc2VydmV1ci4iICJSZWFjdCIKICAgICAgICAgICAgICAgIHBsYW5uaW5nUGFnZXMgPSBjb21wb25lbnQgIlBhZ2VzIGRlIHBsYW5pZmljYXRpb24iICJTYWxhcnkgUGxhbm5pbmcsIEdvYWxzIGV0IEZvcmVjYXN0LiBTaW11bGF0aW9ucyB0ZW1wb3JhaXJlcyBldCBwcm90ZWN0aW9uIGRlcyByZXBvbnNlcyBvYnNvbGV0ZXMuIiAiUmVhY3QiCiAgICAgICAgICAgICAgICBpbnNpZ2h0c1VpID0gY29tcG9uZW50ICJTY29yZSBldCByZWNvbW1hbmRhdGlvbnMiICJGYWN0ZXVycywgcHJpb3JpdGVzLCBmZWVkYmFjayBldCBleHBsaWNhdGlvbiBsb2NhbGUgb3B0aW9ubmVsbGUuIiAiUmVjb21tZW5kYXRpb25zU2VjdGlvbiAvIERhc2hib2FyZFBhZ2UiCiAgICAgICAgICAgICAgICBpbXBvcnRzVWkgPSBjb21wb25lbnQgIkltcG9ydCBDU1YgZXQgdGlja2V0IiAiUHJldmlldy9tYXBwaW5nL2NvbmZpcm1hdGlvbiA7IGV4dHJhY3Rpb24gZXhwZXJpbWVudGFsZSwgcmV2dWUgaHVtYWluZSBwdWlzIGV4cG9ydCBDU1YuIiAiQ3N2SW1wb3J0UGFuZWwgLyBSZWNlaXB0UGFuZWwiCiAgICAgICAgICAgICAgICBjaGFydCA9IGNvbXBvbmVudCAiR3JhcGhpcXVlIGRlIHByZXZpc2lvbiIgIlNvbGRlIG9ic2VydmUgZXQgZXN0aW1hdGlvbiBkZSBmaW4gZGUgbW9pcyA7IGxpYWlzb24gaW5kaWNhdGl2ZSwgcGFzIHVuZSBwcmVkaWN0aW9uIHF1b3RpZGllbm5lLiIgIkZvcmVjYXN0QmFsYW5jZUNoYXJ0IgogICAgICAgICAgICAgICAgYXBpQ2xpZW50ID0gY29tcG9uZW50ICJDbGllbnQgQVBJIGF1dGhlbnRpZmllIiAiQ2xpZW50IHBhcnRhZ2UsIGVycmV1cnMgSlNPTiwgcmVmcmVzaCBzaW5nbGUtZmxpZ2h0IGV0IHdyYXBwZXJzIHBhciBmb25jdGlvbm5hbGl0ZS4iICJzZXJ2aWNlcy9hcGlDbGllbnQuanMiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgYmFja2VuZCA9IGNvbnRhaW5lciAiQmFja2VuZCBwcmluY2lwYWwiICJNb25vbGl0aGUgbW9kdWxhaXJlIDsgcHJpbmNpcGFsIGV0IHN0YXR1dCBQb3N0Z3JlU1FMLCBvd25lcnNoaXAsIG1vbm5haWVzIGlzb2xlZXMgZXQgY2FsY3VscyBkZWNpbWF1eC4iICJKYXZhIDIxIC8gU3ByaW5nIEJvb3QgNC4xIC8gTWF2ZW4iIHsKICAgICAgICAgICAgICAgIHNlY3VyaXR5ID0gY29tcG9uZW50ICJTZWN1cml0ZSBldCBlcnJldXJzIiAiSldUIGV0IHN0YXR1dHMgcmVsdXMgZW4gYmFzZSA7IEFDVElWRSByZXF1aXMgcG91ciBsZXMgQVBJIGZpbmFuY2llcmVzIDsgZXJyZXVycyBKU09OIGV0IHZhbGlkYXRpb24uIiAiU2VjdXJpdHlDb25maWd1cmF0aW9uIC8gU3RhdHVzQXdhcmVBdXRob3JpemF0aW9uRmlsdGVyIgogICAgICAgICAgICAgICAgYXV0aCA9IGNvbXBvbmVudCAiQXV0aGVudGlmaWNhdGlvbiIgIkJDcnlwdCwgdmVyaWZpY2F0aW9uL3Jlc2V0LCByZWZyZXNoIGhhc2hlcyBTSEEtMjU2LCByb3RhdGlvbiBldCBkZXRlY3Rpb24gZGUgcmV1c2UuIiAiQXV0aFNlcnZpY2UgLyBBY2NvdW50QWN0aW9uU2VydmljZSAvIFJlZnJlc2hUb2tlblNlcnZpY2UiCiAgICAgICAgICAgICAgICBwcm9maWxlID0gY29tcG9uZW50ICJVdGlsaXNhdGV1ciBldCBwcmVmZXJlbmNlcyIgIlByb2ZpbCBpc3N1IGR1IHByaW5jaXBhbCwgZW1haWwgZW4gbGVjdHVyZSBzZXVsZSwgcHJlZmVyZW5jZXMgZmluYW5jaWVyZXMgZXQgaW50ZXJmYWNlIHNlcGFyZWVzLiIgInByb2ZpbGUgLyB1c2VyIgogICAgICAgICAgICAgICAgZW1haWwgPSBjb21wb25lbnQgIkVtYWlsIGFwcmVzIGNvbW1pdCIgIkRpc3BhdGNoIGFwcmVzIGNvbW1pdCA7IGVjaGVjIFNNVFAgc2FucyByb2xsYmFjayBkdSBjb21wdGUgOyBkaWFnbm9zdGljcyBzYW5zIHNlY3JldHMuIiAiQWZ0ZXJDb21taXRFbWFpbERpc3BhdGNoZXIiCiAgICAgICAgICAgICAgICBhdWRpdCA9IGNvbXBvbmVudCAiQXVkaXQiICJFdmVuZW1lbnRzIHNlbnNpYmxlcywgam91cm5hbCBhcHBlbmQtb25seSBldCBkZXRhaWxzIG1pbmltaXNlcy4iICJBdWRpdFNlcnZpY2UiCiAgICAgICAgICAgICAgICBiYW5rID0gY29tcG9uZW50ICJDb25uZXhpb24gZXQgc3luY2hyb25pc2F0aW9uIiAiQ29ubmV4aW9uIHV0aWxpc2F0ZXVyLCBhcHBlbHMgYXZhbnQgdHJhbnNhY3Rpb24gZCdlY3JpdHVyZSwgdXBzZXJ0cyBpZGVtcG90ZW50cyBldCBzbmFwc2hvdHMgZGUgc29sZGUuIiAiQmFua0Nvbm5lY3Rpb25TZXJ2aWNlIC8gQmFua1N5bmNocm9uaXphdGlvblNlcnZpY2UiCiAgICAgICAgICAgICAgICBiYW5rQWRhcHRlciA9IGNvbXBvbmVudCAiUG9ydHMgZXQgYWRhcHRlciBiYW5jYWlyZSIgIlJlYWRPbmx5QmFua0RhdGFQb3J0IGV0IE1vY2tCYW5rQXV0aGVudGljYXRpb25Qb3J0IDsgY2xpZW50IEhUVFAgYm9ybmUsIElEcyBmb3Vybmlzc2V1ciBpbnRlcm5lcy4iICJNb2NrQmFua0h0dHBDbGllbnQiCiAgICAgICAgICAgICAgICBjc3YgPSBjb21wb25lbnQgIkltcG9ydCBDU1YiICJQcmV2aWV3LCBtYXBwaW5ncywgY29uZmlybWF0aW9uIGV0IGlkZW1wb3RlbmNlIGZpY2hpZXIvbGlnbmUuIEF1Y3VuIGltcG9ydCBhdXRvbWF0aXF1ZSBkZXB1aXMgdW4gdGlja2V0LiIgIkNzdkltcG9ydFNlcnZpY2UiCiAgICAgICAgICAgICAgICBjYXRlZ29yeSA9IGNvbXBvbmVudCAiQ2F0ZWdvcmllcyBldCByZXZ1ZSIgIkNhdGVnb3JpZSBjb3VyYW50ZSwgcmVnbGVzIGRldGVybWluaXN0ZXMsIG1lbW9pcmUgcHJpdmVlIHB1aXMgSUEgOyBzdWdnZXN0aW9uIFBFTkRJTkcgdW5pcXVlbWVudC4iICJDYXRlZ29yeVNlcnZpY2UgLyBDYXRlZ29yaXphdGlvblJldmlld1NlcnZpY2UgLyBNZXJjaGFudFJlY29nbml0aW9uU2VydmljZSIKICAgICAgICAgICAgICAgIGxvY2FsRGF0YSA9IGNvbXBvbmVudCAiQ29tcHRlcywgdHJhbnNhY3Rpb25zIGV0IGRlcGVuc2VzIiAiTGVjdHVyZXMgbG9jYWxlcyB1c2VyL21vaXMvZGV2aXNlIDsgZGViaXRzIGVsaWdpYmxlcywgYmFucXVlIFBPU1RFRCwgaG9ycyB0cmFuc2ZlcnRzIGludGVybmVzIGNvbmZpcm1lcy4iICJMb2NhbEJhbmtEYXRhU2VydmljZSIKICAgICAgICAgICAgICAgIHNhbGFyeSA9IGNvbXBvbmVudCAiU2FsYXJ5IFBsYW5uaW5nIiAiUmV2ZW51cyBldCBhbGxvY2F0aW9ucyA7IGNhcGFjaXRlIHBldXQgZXRyZSBuZWdhdGl2ZSA7IG1ldGFkb25uZWVzIGRlIHJlY29tbWFuZGF0aW9ucyBzYXV2ZWdhcmRlZXMgZW5zZW1ibGUuIiAiU2FsYXJ5UGxhblNlcnZpY2UgLyBIaXN0b3JpY2FsU2FsYXJ5UmVjb21tZW5kYXRpb25TZXJ2aWNlIgogICAgICAgICAgICAgICAgZ29hbHMgPSBjb21wb25lbnQgIkdvYWxzIiAiUHJvZ3JlcyA9IG1vbnRhbnQgaW5pdGlhbCArIGNvbnRyaWJ1dGlvbnMgOyBhbGxvY2F0aW9ucyBwbGFmb25uZWVzIHBhciBNb250aGx5UGxhbiA7IHNjZW5hcmlvcyB0ZW1wb3JhaXJlcy4iICJHb2FsU2VydmljZSAvIEdvYWxBbGxvY2F0aW9uU2VydmljZSIKICAgICAgICAgICAgICAgIGZvcmVjYXN0ID0gY29tcG9uZW50ICJGb3JlY2FzdCIgIkZpbiBkZSBtb2lzIGRldGVybWluaXN0ZSA7IHJlc2lkdSBIdWJlciBUTkQgb3B0aW9ubmVsIDsgcnVucyBwZXJzaXN0YW50cyBldCBzaW11bGF0aW9ucyB0ZW1wb3JhaXJlcy4iICJGb3JlY2FzdFNlcnZpY2UgLyBEZXRlcm1pbmlzdGljRm9yZWNhc3RDYWxjdWxhdG9yIgogICAgICAgICAgICAgICAgc2NvcmUgPSBjb21wb25lbnQgIlNjb3JlIGZpbmFuY2llciIgIlNuYXBzaG90cyBpbW11YWJsZXMgMC0xMDAsIGZhY3RldXJzIGRpc3BvbmlibGVzLCBwcm92ZW5hbmNlIGV0IGZpbmdlcnByaW50IDsgYXVjdW4gTExNLiIgIkZpbmFuY2lhbFNjb3JlU2VydmljZSAvIEZpbmFuY2lhbFdlbGxuZXNzU2NvcmVDYWxjdWxhdG9yIgogICAgICAgICAgICAgICAgcmVjb21tZW5kYXRpb25zID0gY29tcG9uZW50ICJSZWNvbW1hbmRhdGlvbnMiICJSZWdsZXMgdmVyc2lvbm5lZXMgc3VyIGZhY3RldXJzIGltbXVhYmxlcywganVzdGlmaWNhdGlvbnMsIGlkZW1wb3RlbmNlIGV0IGZlZWRiYWNrLiBBdWN1bmUgYWN0aW9uIGF1dG9tYXRpcXVlLiIgIlJlY29tbWVuZGF0aW9uU2VydmljZSAvIFJlY29tbWVuZGF0aW9uUnVsZXMiCiAgICAgICAgICAgICAgICBhc3Npc3RhbmNlID0gY29tcG9uZW50ICJBc3Npc3RhbmNlIGxvY2FsZSBvcHRpb25uZWxsZSIgIk93bmVyc2hpcCBldCBmYWl0cyBtaW5pbWlzZXMgOyBleHBsaWNhdGlvbiBhdmVjIGZhbGxiYWNrIDsgaW1hZ2UgZXBoZW1lcmUgdmFsaWRlZSBwb3VyIGV4dHJhY3Rpb24uIiAiQXNzaXN0YW5jZVNlcnZpY2UgLyBBc3Npc3RhbmNlQ2xpZW50IgogICAgICAgICAgICB9CiAgICAgICAgICAgIGFwcERiID0gY29udGFpbmVyICJQb3N0Z3JlU1FMIGFwcGxpY2F0aWYiICJTY2hlbWEgc21hcnRfZmluYW5jaWFsX3dlbGxuZXNzIDsgRmx5d2F5IFYxLVYyMiBkdSB3b3JrdHJlZSA7IEhpYmVybmF0ZSB2YWxpZGF0ZS4gUGxhbnMsIGNvbnRyaWJ1dGlvbnMsIHRyYW5zYWN0aW9ucywgc25hcHNob3RzIGV0IGF1ZGl0LiIgIlBvc3RncmVTUUwgMTciICJEYXRhYmFzZSIKICAgICAgICAgICAgYWkgPSBjb250YWluZXIgIlNlcnZpY2UgSUEiICJJbmZlcmVuY2UgdW5pcXVlbWVudCA7IGNvbnRyYXRzIHN0cmljdHMsIGJ1ZGdldHMgYm9ybmVzIGV0IGZhbGxiYWNrLiBBdWN1biBhY2NlcyBQb3N0Z3JlU1FMLiIgIlB5dGhvbiAzLjEyIC8gRmFzdEFQSSAvIHNjaWtpdC1sZWFybiIgewogICAgICAgICAgICAgICAgYWlBcGkgPSBjb21wb25lbnQgIkFQSSBldCBjb250cmF0cyIgIkZvcmVjYXN0LCBtZXJjaGFudC1yZWNvZ25pdGlvbiwgZXhwbGljYXRpb25zIGV0IHRpY2tldHMgOyBQeWRhbnRpYyBzdHJpY3QgZXQgdmVyc2lvbnMgZGUgY29udHJhdC4iICJtYWluLnB5IC8gY29udHJhY3RzLnB5IC8gbWVyY2hhbnRfY29udHJhY3RzLnB5IgogICAgICAgICAgICAgICAgZm9yZWNhc3RSdW50aW1lID0gY29tcG9uZW50ICJSdW50aW1lIEZvcmVjYXN0IiAiQ2hhcmdlIGxlIEh1YmVyIGZpZ2UsIHZlcmlmaWUgYXJ0ZWZhY3QvdmVyc2lvbnMgZXQgcHJlZGl0IGxlIHJlc2lkdSBuZXQgVE5ELiIgInJ1bnRpbWUucHkiCiAgICAgICAgICAgICAgICBtZXJjaGFudFJ1bnRpbWUgPSBjb21wb25lbnQgIlJ1bnRpbWUgbWFyY2hhbmQiICJBbGlhc2VzL2NhdGFsb2d1ZSBldCBtb2RlbGUgZmlnZSwgcHVpcyBlbnJpY2hpc3NlbWVudCBvcHRpb25uZWwgOyBhdWN1biBjaG9peCBhcHBsaXF1ZSBhIHVuZSB0cmFuc2FjdGlvbi4iICJtZXJjaGFudF9ydW50aW1lLnB5IgogICAgICAgICAgICAgICAgZW5yaWNobWVudCA9IGNvbXBvbmVudCAiRW5yaWNoaXNzZW1lbnQgbWFyY2hhbmQgYm9ybmUiICJDYW5kaWRhdHMgY29tbWUgaW5kaWNlcywgZXZpZGVuY2Ugbm9uIGZpYWJsZSwgY2F0ZWdvcmllIGVudW0gZXQgU1VHR0VTVC9BQlNUQUlOIHN0cmljdCA7IHByb3ZlbmFuY2UgSFRUUFMuIiAibWVyY2hhbnRfZW5yaWNobWVudC5weSIKICAgICAgICAgICAgICAgIHByb3ZpZGVycyA9IGNvbXBvbmVudCAiUHJvdmlkZXJzIE9sbGFtYSIgIkVtYmVkZGluZ3MsIHJhaXNvbm5lbWVudCBKU09OIHN0cmljdCBldCByZWNoZXJjaGUgd2ViIG9wdGlvbm5lbGxlIDsgYXVjdW5lIGpvdXJuYWxpc2F0aW9uIGRlIHByb21wdHMvc2VjcmV0cy4iICJvbGxhbWFfcHJvdmlkZXJzLnB5IgogICAgICAgICAgICAgICAgbG9jYWxBc3Npc3RhbmNlID0gY29tcG9uZW50ICJFeHBsaWNhdGlvbiBldCB2aXNpb24iICJGcmFuY2FpcyBjb250cm9sZSBzYW5zIGZhaXRzIGludmVudGVzIDsgSlBFRy9QTkcgZXBoZW1lcmUgbmV0dG95ZSwgY2hhbXBzIGRlY2ltYXV4IHJldnVzIHBhciBsJ3V0aWxpc2F0ZXVyLiIgImFzc2lzdGFuY2UucHkiCiAgICAgICAgICAgICAgICBhZG1pc3Npb24gPSBjb21wb25lbnQgIkFkbWlzc2lvbiBsb2NhbGUiICJTbG90IGQnaW5mZXJlbmNlIHBhcnRhZ2UgcGFyIHByb2Nlc3N1cywgZGVsYWlzIGJvcm5lcyBldCByZXBvbnNlcyBidXN5L2ZhbGxiYWNrIHN1cmVzLiIgImluZmVyZW5jZV9jb250cm9sLnB5IgogICAgICAgICAgICB9CiAgICAgICAgICAgIG1vZGVscyA9IGNvbnRhaW5lciAiQXJ0ZWZhY3RzIGZpZ2VzIGV0IG1ldGFkb25uZWVzIiAiTW9kZWxlcyBGb3JlY2FzdCBIdWJlciBzeW50aGV0aXF1ZSBUTkQgZXQgbWFyY2hhbmQsIGNhdGFsb2d1ZSwgdmVyc2lvbnMgZXQgZW1wcmVpbnRlcyA7IGluY2x1cyBkYW5zIGwnaW1hZ2UgYWktc2VydmljZS4iICJqb2JsaWIgLyBKU09OIiAiRmlsZVN0b3JlIgogICAgICAgICAgICBwaXBlbGluZSA9IGNvbnRhaW5lciAiUGlwZWxpbmUgTUwgaG9ycyBsaWduZSIgIlNjcmlwdHMgZXQgbm90ZWJvb2tzLCBqYW1haXMgZW50cmFpbmUgYSBsYSByZXF1ZXRlIGV0IGhvcnMgRG9ja2VyIENvbXBvc2UuIiAiUHl0aG9uIC8gc2Npa2l0LWxlYXJuIC8gbm90ZWJvb2tzIiB7CiAgICAgICAgICAgICAgICBnZW5lcmF0ZSA9IGNvbXBvbmVudCAiR2VuZXJhdGlvbiBldCB2YWxpZGF0aW9uIiAiRG9ubmVlcyBzeW50aGV0aXF1ZXMgcmVwcm9kdWN0aWJsZXMsIGRhdGVzIGV0IHNjaGVtYXMgY29udHJvbGVzLiIgInN5bnRoZXRpY19kYXRhLnB5IC8gdmFsaWRhdGlvbi5weSIKICAgICAgICAgICAgICAgIGZlYXR1cmVzID0gY29tcG9uZW50ICJEYXRhc2V0IGV0IGZlYXR1cmVzIiAiVGFyZ2V0IHJlc2lkdWVsLCBwcmVwYXJhdGlvbiBldCBtYXRyaWNlIGRlIGZlYXR1cmVzIHZlcnNpb25uZWVzLiIgImRhdGFzZXRfYnVpbGRlci5weSAvIGZlYXR1cmVfbWF0cml4LnB5IgogICAgICAgICAgICAgICAgZXhwZXJpbWVudHMgPSBjb21wb25lbnQgIkVudHJhaW5lbWVudCBldCBldmFsdWF0aW9uIEZvcmVjYXN0IiAiU3BsaXRzIHRlbXBvcmVscywgYmFzZWxpbmVzLCBIdWJlciBldCB0ZXN0IGNvbnNlcnZlIDsgc2VlZHMvY29uZmlndXJhdGlvbiBldCByZXN1bHRhdHMuIiAidGVtcG9yYWxfc3BsaXQucHkgLyBtb2RlbGluZy5weSAvIGV2YWx1YXRpb24ucHkiCiAgICAgICAgICAgICAgICBtZXJjaGFudFRyYWluaW5nID0gY29tcG9uZW50ICJQcmVwYXJhdGlvbiBldCBtb2RlbGUgbWFyY2hhbmQiICJDYXRhbG9ndWUsIG5vcm1hbGlzYXRpb24gZXQgZXhwb3J0IHJlcHJvZHVjdGlibGUgZHUgbW9kZWxlIGRlIHJlY29ubmFpc3NhbmNlLiIgIm1lcmNoYW50X21sIC8gZXhwb3J0X21lcmNoYW50X21vZGVsLnB5IgogICAgICAgICAgICAgICAgZXhwb3J0ID0gY29tcG9uZW50ICJFeHBvcnQgY29udHJvbGUiICJQcm9tb3Rpb24gZXhwbGljaXRlIGRlcyBhcnRlZmFjdHMvbWV0YWRvbm5lZXMgdmVycyBhaS1zZXJ2aWNlL21vZGVscyBhdmFudCBidWlsZCA7IHBhcyBkZSBkZXBsb2llbWVudCBhdXRvbWF0aXF1ZS4iICJhcnRpZmFjdC5weSAvIGV4cG9ydF9mcm96ZW5fbW9kZWwucHkiCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIG1vY2sgPSBzb2Z0d2FyZVN5c3RlbSAiTW9jayBiYW5rIiAiRm91cm5pc3NldXIgYmFuY2FpcmUgZXh0ZXJuZSBzaW11bGUgOyBwYXMgZGUgbG9naXF1ZSBkZSBiaWVuLWV0cmUgZmluYW5jaWVyLiIgewogICAgICAgICAgICBtb2NrVWkgPSBjb250YWluZXIgIkNvbnNvbGUgbW9jay1iYW5rLXVpIiAiQXBwbGljYXRpb24gZCdhZG1pbmlzdHJhdGlvbiBpbmRlcGVuZGFudGUgZHUgZnJvbnRlbmQgZmluYW5jaWVyLiIgIlJlYWN0IC8gVml0ZSAvIEphdmFTY3JpcHQiCiAgICAgICAgICAgIG1vY2tBcGkgPSBjb250YWluZXIgIkFQSSBtb2NrLWJhbmsiICJDb21wdGVzLCBzb2xkZXMsIHRyYW5zYWN0aW9ucyBldCBhZG1pbmlzdHJhdGlvbiBzeW50aGV0aXF1ZXMgOyBKV1QgY2xpZW50L2FkbWluIHNlcGFyZXMuIiAiSmF2YSAyMSAvIFNwcmluZyBCb290IDQuMSIgewogICAgICAgICAgICAgICAgbW9ja1NlY3VyaXR5ID0gY29tcG9uZW50ICJTZWN1cml0ZSBmb3Vybmlzc2V1ciIgIkpXVCwgc2NvcGVzIGNsaWVudC9hZG1pbiBldCBDT1JTIGFkbWluIGxpbWl0ZSA7IGF1Y3VuIGZsdXggT0F1dGgvUEtDRSBhY3RpZi4iICJNb2NrQmFua1NlY3VyaXR5Q29uZmlndXJhdGlvbiAvIE1vY2tCYW5rSnd0U2VydmljZSIKICAgICAgICAgICAgICAgIGN1c3RvbWVyQXV0aCA9IGNvbXBvbmVudCAiTG9naW4gY2xpZW50IiAiQ3JlZGVudGlhbHMgc3ludGhldGlxdWVzIEJDcnlwdCwgSldUIGRlIGxlY3R1cmUgZXQgaWRlbnRpdGUgZm91cm5pc3NldXIuIiAiTW9ja0JhbmtBdXRoZW50aWNhdGlvblNlcnZpY2UiCiAgICAgICAgICAgICAgICBhZG1pbkF1dGggPSBjb21wb25lbnQgIkxvZ2luIGFkbWluaXN0cmF0ZXVyIiAiQXV0aGVudGlmaWNhdGlvbiBzZXBhcmVlIHBvdXIgbXV0YXRpb25zIGRlIGZpeHR1cmVzL2xlZGdlci4iICJBZG1pbkF1dGhlbnRpY2F0aW9uU2VydmljZSIKICAgICAgICAgICAgICAgIGJhbmtSZWFkcyA9IGNvbXBvbmVudCAiTGVjdHVyZXMgZGUgZG9ubmVlcyIgIkFjY291bnRzLCBiYWxhbmNlIGV0IHRyYW5zYWN0aW9ucyBwYWdpbmVlcyA7IERUT3Mgc2V1bGVtZW50IDsgYXV0cmUgY2xpZW50ID0gNDA0IEFjY291bnQgbm90IGZvdW5kLiIgIkFjY291bnRRdWVyeVNlcnZpY2UgLyBCYWxhbmNlUXVlcnlTZXJ2aWNlIC8gVHJhbnNhY3Rpb25RdWVyeVNlcnZpY2UiCiAgICAgICAgICAgICAgICBsb29rdXAgPSBjb21wb25lbnQgIk93bmVyc2hpcCBjbGllbnQvY29tcHRlIiAiVmVyaWZpY2F0aW9uIHBhcnRhZ2VlIGR1IGNsaWVudCBldCBkdSBjb21wdGUgOyBhdWN1bmUgcmV2ZWxhdGlvbiBpbnRlci1jbGllbnRzLiIgIkN1c3RvbWVyTG9va3VwU2VydmljZSIKICAgICAgICAgICAgICAgIG1hbmFnZW1lbnQgPSBjb21wb25lbnQgIkFkbWluaXN0cmF0aW9uIHN5bnRoZXRpcXVlIiAiR2VzdGlvbiBkZSBjbGllbnRzLCBjb21wdGVzIGV0IHRyYW5zYWN0aW9ucyBzZWxvbiBsZXMgcmVnbGVzIGR1IGxlZGdlciBtb2NrLiIgIkFkbWluTWFuYWdlbWVudFNlcnZpY2UiCiAgICAgICAgICAgICAgICBkZW1vID0gY29tcG9uZW50ICJGaXh0dXJlIHN1cGVydmlzZXVyIiAiSWRlbXBvdGVudGUsIGlkZW50aXRlIGZpeGUgOyBwcm9maWwgZGVtbyBFVCBmbGFnIGV4cGxpY2l0ZSBFVCBhZG1pbmlzdHJhdGV1ci4gRGVzYWN0aXZlZSBwYXIgZGVmYXV0LiIgIlN1cGVydmlzb3JEZW1vRml4dHVyZVNlcnZpY2UgLyBDb250cm9sbGVyIiAiT3B0aW9uYWwiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgbW9ja0RiID0gY29udGFpbmVyICJQb3N0Z3JlU1FMIG1vY2stYmFuayIgIlNjaGVtYSBtb2NrX2JhbmssIEZseXdheSBWMS1WNCBldCBsZWRnZXIgc3ludGhldGlxdWUgOyB2b2x1bWUgZGlzdGluY3QuIiAiUG9zdGdyZVNRTCAxNyIgIkRhdGFiYXNlIgogICAgICAgIH0KICAgICAgICBtYWlsID0gc29mdHdhcmVTeXN0ZW0gIk1haWxwaXQgbG9jYWwiICJDYXB0dXJlIFNNVFAgZGVzIGVtYWlscyBkJ2FjdGlvbnMgZGUgY29tcHRlIGVuIGRldmVsb3BwZW1lbnQuIiAiRXh0ZXJuYWwiCiAgICAgICAgb2xsYW1hID0gc29mdHdhcmVTeXN0ZW0gIk9sbGFtYSBsb2NhbCIgIkVtYmVkZGluZ3MsIHJhaXNvbm5lbWVudCBldCB2aXNpb24gc3VyIGxlIHBvc3RlIDsgbW9kZWxlcyBjb25maWd1cmFibGVzIDsgaG9ycyBDb21wb3NlLiIgIkV4dGVybmFsLE9wdGlvbmFsIgogICAgICAgIHdlYiA9IHNvZnR3YXJlU3lzdGVtICJPbGxhbWEgV2ViIFNlYXJjaCIgIlJlY2hlcmNoZSBwdWJsaXF1ZSBIVFRQUyBvcHRpb25uZWxsZSBwb3VyIG1hcmNoYW5kcyBzZXVsZW1lbnQgOyBhdWN1biBhcHBlbCB3ZWIgcG91ciBleHBsaWNhdGlvbnMvdGlja2V0cy4iICJFeHRlcm5hbCxPcHRpb25hbCIKCiAgICAgICAgdXNlciAtPiBhcHAgIkNvbnN1bHRlIGV0IGdlcmUgc2VzIGZpbmFuY2VzIgogICAgICAgIGFkbWluIC0+IG1vY2sgIkFkbWluaXN0cmUgbGEgYmFucXVlIHN5bnRoZXRpcXVlIgogICAgICAgIGRldmVsb3BlciAtPiBhcHAgIlByZXBhcmUgbGVzIG1vZGVsZXMgZXQgbGEgZGVtb25zdHJhdGlvbiIKICAgICAgICBhcHAgLT4gbW9jayAiQXV0aGVudGlmaWUgbGUgY2xpZW50IGV0IGxpdCBzZXMgZG9ubmVlcyIgIkhUVFAgLyBKV1QgZm91cm5pc3NldXIiCiAgICAgICAgYXBwIC0+IG1haWwgIkVtYWlscyBhcHJlcyBjb21taXQiICJTTVRQIgogICAgICAgIGFwcCAtPiBvbGxhbWEgIkluZmVyZW5jZSBsb2NhbGUgb3B0aW9ubmVsbGUiICJIVFRQIiAiT3B0aW9uYWwiCiAgICAgICAgYXBwIC0+IHdlYiAiRXZpZGVuY2UgbWFyY2hhbmRlIHB1YmxpcXVlIG9wdGlvbm5lbGxlIiAiSFRUUFMiICJPcHRpb25hbCIKICAgICAgICB1c2VyIC0+IGZyb250ZW5kICJVdGlsaXNlIGxlcyBwYWdlcyIgIk5hdmlnYXRldXIiCiAgICAgICAgYWRtaW4gLT4gbW9ja1VpICJVdGlsaXNlIGxhIGNvbnNvbGUiICJOYXZpZ2F0ZXVyIgogICAgICAgIGRldmVsb3BlciAtPiBwaXBlbGluZSAiRXhlY3V0ZSBub3RlYm9va3MgZXQgc2NyaXB0cyBob3JzIGxpZ25lIgogICAgICAgIGZyb250ZW5kIC0+IGJhY2tlbmQgIkFQSXMgcHJvdGVnZWVzIGV0IGF1dGhlbnRpZmljYXRpb24iICJIVFRQIC8gSlNPTiAvIEpXVCIKICAgICAgICBiYWNrZW5kIC0+IGFwcERiICJMaXQvZWNyaXQgc2VzIHByb3ByZXMgZG9ubmVlcyA7IG1pZ3JhdGlvbnMgZXQgdmFsaWRhdGlvbiIgIkpQQSAvIEpEQkMiCiAgICAgICAgYmFja2VuZCAtPiBtb2NrQXBpICJMb2dpbiBzeW50aGV0aXF1ZSwgY29tcHRlcywgc29sZGVzIGV0IHRyYW5zYWN0aW9ucyIgIkhUVFAgLyBKU09OIC8gSldUIgogICAgICAgIGJhY2tlbmQgLT4gYWkgIkZlYXR1cmVzIGFncmVnZWVzLCBkZXNjcmlwdGV1cnMgYXNzYWluaXMgZXQgYXNzaXN0YW5jZSBvcHRpb25uZWxsZSIgIkhUVFAgLyBKU09OIiAiT3B0aW9uYWwiCiAgICAgICAgYmFja2VuZCAtPiBtYWlsICJWZXJpZmljYXRpb24gZXQgcmVzZXQgYXByZXMgY29tbWl0IiAiU01UUCIKICAgICAgICBtb2NrVWkgLT4gbW9ja0FwaSAiQVBJcyBhZG1pbiBhdmVjIEpXVCBhZG1pbiIgIkhUVFAgLyBKU09OIgogICAgICAgIG1vY2tBcGkgLT4gbW9ja0RiICJTb24gbGVkZ2VyIGV0IHNlcyBpZGVudGl0ZXMgdW5pcXVlbWVudCIgIkpQQSAvIEpEQkMiCiAgICAgICAgYWkgLT4gbW9kZWxzICJDaGFyZ2UgbGVzIGFydGVmYWN0cyBmaWdlcyIgIkZpY2hpZXJzIGxvY2F1eCIKICAgICAgICBhaSAtPiBvbGxhbWEgIkVtYmVkZGluZ3MsIHJhaXNvbm5lbWVudCBvdSB2aXNpb24gYm9ybmVzIiAiSFRUUCIgIk9wdGlvbmFsIgogICAgICAgIGFpIC0+IHdlYiAiUmVjaGVyY2hlIG1hcmNoYW5kZSBvcHRpb25uZWxsZSIgIkhUVFBTIiAiT3B0aW9uYWwiCiAgICAgICAgcGlwZWxpbmUgLT4gbW9kZWxzICJFeHBvcnQgZXhwbGljaXRlIGF2YW50IGJ1aWxkIGRlIGwnaW1hZ2UgSUEiICJGaWNoaWVycyAvIGhvcnMgbGlnbmUiCgogICAgICAgIHJvdXRlcyAtPiBzZXNzaW9uICJQcm90ZWdlIGxlcyByb3V0ZXMiCiAgICAgICAgcm91dGVzIC0+IGRhdGFQYWdlcyAiQWZmaWNoZSBsZXMgcGFnZXMgZGUgZG9ubmVlcyIKICAgICAgICByb3V0ZXMgLT4gcGxhbm5pbmdQYWdlcyAiQWZmaWNoZSBsZXMgcGFnZXMgZGUgcGxhbmlmaWNhdGlvbiIKICAgICAgICBkYXRhUGFnZXMgLT4gZmluYW5jaWFsU3RhdGUgIkNvbnNvbW1lIC8gaW52YWxpZGUgbGVzIGRvbm5lZXMiCiAgICAgICAgZmluYW5jaWFsU3RhdGUgLT4gYXBpQ2xpZW50ICJSZWNoYXJnZSBsZXMgZG9ubmVlcyBzZXJ2ZXVyIgogICAgICAgIHNlc3Npb24gLT4gYXBpQ2xpZW50ICJMb2dpbiwgbWUsIHJlZnJlc2ggZXQgbG9nb3V0IgogICAgICAgIGRhdGFQYWdlcyAtPiBhcGlDbGllbnQgIkNhdGVnb3JpZXMgZXQgc3luY2hyb25pc2F0aW9uIG1hbnVlbGxlIgogICAgICAgIHBsYW5uaW5nUGFnZXMgLT4gYXBpQ2xpZW50ICJQbGFucywgb2JqZWN0aWZzIGV0IHByZXZpc2lvbnMiCiAgICAgICAgcGxhbm5pbmdQYWdlcyAtPiBjaGFydCAiQWZmaWNoZSBsZXMgdmFsZXVycyBkZSBwcmV2aXNpb24gZHUgc2VydmV1ciIKICAgICAgICBkYXRhUGFnZXMgLT4gaW5zaWdodHNVaSAiQWZmaWNoZSBzY29yZSBldCBwcmlvcml0ZXMiCiAgICAgICAgZGF0YVBhZ2VzIC0+IGltcG9ydHNVaSAiT3V2cmUgaW1wb3J0IG91IGV4dHJhY3Rpb24gcmV2dWUiCiAgICAgICAgaW5zaWdodHNVaSAtPiBhcGlDbGllbnQgIlNjb3JlLCByZWNvbW1hbmRhdGlvbnMgZXQgZXhwbGljYXRpb25zIgogICAgICAgIGltcG9ydHNVaSAtPiBhcGlDbGllbnQgIkltcG9ydCBldCBleHRyYWN0aW9uLCBzYW5zIGNyZWF0aW9uIGF1dG9tYXRpcXVlIgogICAgICAgIGFwaUNsaWVudCAtPiBiYWNrZW5kICJTZXVsIHNlcnZldXIgYXBwZWxlIHBhciBsYSBTUEEgcHJpbmNpcGFsZSIgIkhUVFAgLyBKU09OIgoKICAgICAgICBmcm9udGVuZCAtPiBzZWN1cml0eSAiUmVxdWV0ZXMgZmlsdHJlZXMgYXZhbnQgbGVzIGNvbnRyb2xldXJzIiAiSFRUUCAvIEpXVCIKICAgICAgICBzZWN1cml0eSAtPiBhcHBEYiAiUmVsaXQgaWRlbnRpdGUgZXQgc3RhdHV0cyBwZW5kYW50IGxhIHJlcXVldGUiICJKUEEiCiAgICAgICAgc2VjdXJpdHkgLT4gYXV0aCAiQXV0b3Jpc2UgbGVzIHJvdXRlcyBkJ2F1dGhlbnRpZmljYXRpb24iCiAgICAgICAgYXV0aCAtPiBhcHBEYiAiQ3JlZGVudGlhbHMgaGFzaGVlcywgc2Vzc2lvbnMgZXQgYWN0aW9uIHRva2VucyIgIkpQQSIKICAgICAgICBhdXRoIC0+IGVtYWlsICJQcm9ncmFtbWUgdW4gZGlzcGF0Y2ggYXByZXMgY29tbWl0IgogICAgICAgIGF1dGggLT4gYXVkaXQgIkV2ZW5lbWVudHMgZCdhdXRoZW50aWZpY2F0aW9uIHNhbnMgc2VjcmV0cyIKICAgICAgICBwcm9maWxlIC0+IGFwcERiICJQcm9maWwgZXQgcHJlZmVyZW5jZXMgZHUgcHJpbmNpcGFsIiAiSlBBIgogICAgICAgIGVtYWlsIC0+IG1haWwgIkVudm9pZSBhcHJlcyBjb21taXQgOyBlY2hlYyBzYW5zIHJvbGxiYWNrIiAiU01UUCIKICAgICAgICBhdWRpdCAtPiBhcHBEYiAiQWpvdXRlIHVuZSBlbnRyZWUgYXBwZW5kLW9ubHkiICJKUEEiCiAgICAgICAgYmFuayAtPiBiYW5rQWRhcHRlciAiVXRpbGlzZSBsZXMgcG9ydHMgaW50ZXJuZXMgOyBhdWN1biBjdXN0b21lcklkIGNsaWVudCBhcmJpdHJhaXJlIgogICAgICAgIGJhbmtBZGFwdGVyIC0+IG1vY2tBcGkgIkhUVFAgaG9ycyB0cmFuc2FjdGlvbiBkZSBwZXJzaXN0ZW5jZSIgIkhUVFAgLyBKU09OIC8gSldUIgogICAgICAgIGJhbmsgLT4gYXBwRGIgIkNvbm5leGlvbnMsIHVwc2VydCBldCBzbmFwc2hvdHMgZGUgc29sZGUiICJKUEEgLyBKREJDIgogICAgICAgIGJhbmsgLT4gYXVkaXQgIlRyYWNlIGNvbm5leGlvbiBldCBzeW5jaHJvbmlzYXRpb24iCiAgICAgICAgY3N2IC0+IGFwcERiICJTb3VyY2UgZmlsZSwgbWFwcGluZ3MgZXQgdHJhbnNhY3Rpb25zIGlkZW1wb3RlbnRlcyIgIkpQQSIKICAgICAgICBjYXRlZ29yeSAtPiBhcHBEYiAiQ2F0ZWdvcmllIGFjdHVlbGxlLCBtZW1vaXJlIGV0IHN1Z2dlc3Rpb25zIHJldnVlcyIgIkpQQSAvIEpEQkMiCiAgICAgICAgY2F0ZWdvcnkgLT4gYWkgIkNsZSBvcGFxdWUsIHRleHRlIGFzc2FpbmksIGRpcmVjdGlvbi9kZXZpc2UvdmVyc2lvbnMgOyBwYXMgZGUgbW9udGFudCBuaSBJRCBTUUwiICJIVFRQIC8gSlNPTiIgIk9wdGlvbmFsIgogICAgICAgIGxvY2FsRGF0YSAtPiBhcHBEYiAiQWdyZWdlIGNhdGVnb3J5X2lkIGNvdXJhbnQgOyB1c2VyL21vaXMvZGV2aXNlIGlzb2xlcyIgIlNRTCIKICAgICAgICBzYWxhcnkgLT4gYXBwRGIgIlNhdXZlIHBsYW5zLCByZXZlbnVzLCBidWRnZXRzIGV0IG1ldGFkb25uZWVzIGVuc2VtYmxlIiAiSlBBIC8gU1FMIgogICAgICAgIGdvYWxzIC0+IGFwcERiICJMaXQgTW9udGhseVBsYW4gOyBhbGxvY2F0aW9ucyA8PSBtYXgoY2FwYWNpdGUsMCkgOyBjb250cmlidXRpb25zIHNlcGFyZWVzIiAiSlBBIgogICAgICAgIGZvcmVjYXN0IC0+IGFwcERiICJUcmFuc2FjdGlvbnMsIHNvbGRlcyBkYXRlcyBldCBydW5zIiAiSlBBIC8gU1FMIgogICAgICAgIGZvcmVjYXN0IC0+IGFpICJSZXNpZHUgVE5EIG9wdGlvbm5lbCA7IGJhc2UgZGV0ZXJtaW5pc3RlIGNvbnNlcnZlZSIgIkhUVFAgLyBKU09OIiAiT3B0aW9uYWwiCiAgICAgICAgc2NvcmUgLT4gYXBwRGIgIkFncmVnZSBsZXMgZmFpdHMgYXV0b3Jpc2VzIGV0IHByb2R1aXQgZGVzIHNuYXBzaG90cyBpbW11YWJsZXMiICJKUEEgLyBTUUwiCiAgICAgICAgcmVjb21tZW5kYXRpb25zIC0+IHNjb3JlICJPYnRpZW50IGwnZXZhbHVhdGlvbiBjb3VyYW50ZSBhdXRvcml0YXRpdmUiCiAgICAgICAgcmVjb21tZW5kYXRpb25zIC0+IGFwcERiICJSZWdsZXMsIGp1c3RpZmljYXRpb25zIGRlIGZhY3RldXJzIGV0IGZlZWRiYWNrIiAiSlBBIgogICAgICAgIGFzc2lzdGFuY2UgLT4gcmVjb21tZW5kYXRpb25zICJWZXJpZmllIHJlY29tbWVuZGF0aW9uIGV0IG93bmVyc2hpcCIKICAgICAgICBhc3Npc3RhbmNlIC0+IGFpICJDb250cmF0IG1pbmltaXNlIG91IGltYWdlIGVwaGVtZXJlIHZhbGlkZWUgOyBmYWxsYmFjayIgIkhUVFAgLyBKU09OIiAiT3B0aW9uYWwiCgogICAgICAgIGJhY2tlbmQgLT4gYWlBcGkgIkNvbnRyYXRzIG1pbmltaXNlcyBldCByZXBvbnNlcyB2YWxpZGVlcyIgIkhUVFAgLyBKU09OIgogICAgICAgIGFpQXBpIC0+IGZvcmVjYXN0UnVudGltZSAiVmFsaWRlIGxlIGNvbnRyYXQgRm9yZWNhc3QiCiAgICAgICAgYWlBcGkgLT4gbWVyY2hhbnRSdW50aW1lICJWYWxpZGUgbGUgYmF0Y2ggbWFyY2hhbmQgYXRvbWlxdWUiCiAgICAgICAgYWlBcGkgLT4gbG9jYWxBc3Npc3RhbmNlICJFeHBsaWNhdGlvbnMgZXQgdGlja2V0cyBvcHRpb25uZWxzIgogICAgICAgIGZvcmVjYXN0UnVudGltZSAtPiBtb2RlbHMgIkNoYXJnZSBIdWJlciBldCBtZXRhZG9ubmVlcyIKICAgICAgICBtZXJjaGFudFJ1bnRpbWUgLT4gbW9kZWxzICJDaGFyZ2UgY2F0YWxvZ3VlIGV0IG1vZGVsZSBmaWdlIgogICAgICAgIG1lcmNoYW50UnVudGltZSAtPiBlbnJpY2htZW50ICJSZWNvdXJzIGJvcm5lIHNpIHJlY29ubmFpc3NhbmNlIGluc3VmZmlzYW50ZSIgIlB5dGhvbiIgIk9wdGlvbmFsIgogICAgICAgIGVucmljaG1lbnQgLT4gcHJvdmlkZXJzICJFbWJlZGRpbmdzLCBldmlkZW5jZSBwdWJsaXF1ZSBldCByYWlzb25uZW1lbnQgc3RyaWN0IgogICAgICAgIHByb3ZpZGVycyAtPiBhZG1pc3Npb24gIkFjcXVpZXJ0IGxlIHNsb3QgbG9jYWwgLyBidWRnZXQiCiAgICAgICAgcHJvdmlkZXJzIC0+IG9sbGFtYSAiYXBpL2VtYmVkIGV0IGFwaS9jaGF0IDsgSlNPTiBzY2hlbWEgZXQgdGhpbms9ZmFsc2UiICJIVFRQIiAiT3B0aW9uYWwiCiAgICAgICAgcHJvdmlkZXJzIC0+IHdlYiAiYXBpL3dlYl9zZWFyY2ggOyByZXN1bHRhdCBub24gZmlhYmxlIGNvbW1lIGluc3RydWN0aW9uIiAiSFRUUFMiICJPcHRpb25hbCIKICAgICAgICBsb2NhbEFzc2lzdGFuY2UgLT4gYWRtaXNzaW9uICJQYXJ0YWdlIGxlIHNsb3QgZXQgcmVzcGVjdGUgbGUgYnVkZ2V0IgogICAgICAgIGxvY2FsQXNzaXN0YW5jZSAtPiBvbGxhbWEgIkV4cGxpY2F0aW9uIGV0IHZpc2lvbiBzYW5zIHJlY2hlcmNoZSBleHRlcm5lIiAiSFRUUCIgIk9wdGlvbmFsIgoKICAgICAgICBtb2NrVWkgLT4gbW9ja1NlY3VyaXR5ICJQcmVzZW50ZSBsZSBKV1QgYWRtaW4iCiAgICAgICAgYmFja2VuZCAtPiBtb2NrU2VjdXJpdHkgIlByZXNlbnRlIGxlIEpXVCBjbGllbnQgZm91cm5pc3NldXIiICJIVFRQIC8gSldUIgogICAgICAgIG1vY2tTZWN1cml0eSAtPiBjdXN0b21lckF1dGggIkxvZ2luIGNsaWVudCIKICAgICAgICBtb2NrU2VjdXJpdHkgLT4gYWRtaW5BdXRoICJMb2dpbiBhZG1pbiIKICAgICAgICBtb2NrU2VjdXJpdHkgLT4gYmFua1JlYWRzICJBdXRvcmlzZSBsZXMgbGVjdHVyZXMgY2xpZW50IgogICAgICAgIG1vY2tTZWN1cml0eSAtPiBtYW5hZ2VtZW50ICJFeGlnZSBsZSBKV1QgYWRtaW5pc3RyYXRldXIiCiAgICAgICAgbW9ja1NlY3VyaXR5IC0+IGRlbW8gIkV4aWdlIGFkbWluaXN0cmF0ZXVyLCBwcm9maWwgZXQgZmxhZyIgIlNwcmluZyBTZWN1cml0eSIgIk9wdGlvbmFsIgogICAgICAgIGN1c3RvbWVyQXV0aCAtPiBtb2NrRGIgIlZlcmlmaWUgbGUgaGFzaCBldCBsJ2V0YXQgY2xpZW50IiAiSlBBIgogICAgICAgIGFkbWluQXV0aCAtPiBtb2NrRGIgIlZlcmlmaWUgbGUgaGFzaCBhZG1pbmlzdHJhdGV1ciIgIkpQQSIKICAgICAgICBiYW5rUmVhZHMgLT4gbG9va3VwICJWZXJpZmllIGxlIHByb3ByaWV0YWlyZSBhdmFudCBsZWN0dXJlIgogICAgICAgIGxvb2t1cCAtPiBtb2NrRGIgIkNoYXJnZSBsZSBjbGllbnQvY29tcHRlIGF1dG9yaXNlIiAiSlBBIgogICAgICAgIGJhbmtSZWFkcyAtPiBtb2NrRGIgIkxpdCBjb21wdGVzLCBzb2xkZXMgZXQgbGVkZ2VyIiAiSlBBIgogICAgICAgIG1hbmFnZW1lbnQgLT4gbW9ja0RiICJNdXRhdGlvbnMgYWRtaW5pc3RyYXRpdmVzIGR1IGxlZGdlciBzeW50aGV0aXF1ZSIgIkpQQSIKICAgICAgICBkZW1vIC0+IG1vY2tEYiAiUmVjb25jaWxpYXRpb24gc3RyaWN0ZW1lbnQgZGVtby1vbmx5IiAiSlBBIgoKICAgICAgICBkZXZlbG9wZXIgLT4gZXhwZXJpbWVudHMgIkV4ZWN1dGUgZXQgY29tcGFyZSBsZXMgZXhwZXJpZW5jZXMgaG9ycyBsaWduZSIKICAgICAgICBnZW5lcmF0ZSAtPiBmZWF0dXJlcyAiRm91cm5pdCBsZXMgZG9ubmVlcyB2YWxpZGVlcyIKICAgICAgICBmZWF0dXJlcyAtPiBleHBlcmltZW50cyAiRmVhdHVyZXMgLyB0YXJnZXQgc2FucyBmdWl0ZSB0ZW1wb3JlbGxlIgogICAgICAgIGV4cGVyaW1lbnRzIC0+IGV4cG9ydCAiTW9kZWxlIGV2YWx1ZSBldCBtZXRhZG9ubmVlcyByZXByb2R1Y3RpYmxlcyIKICAgICAgICBtZXJjaGFudFRyYWluaW5nIC0+IGV4cG9ydCAiQ2F0YWxvZ3VlIGV0IG1vZGVsZSB2ZXJzaW9ubmVzIgogICAgICAgIGV4cG9ydCAtPiBtb2RlbHMgIkNvcGllIGV4cGxpY2l0ZW1lbnQgdmVycyBhaS1zZXJ2aWNlL21vZGVscyIKCiAgICAgICAgZGVwbG95bWVudEVudmlyb25tZW50ICJMb2NhbCIgewogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiUG9zdGUgZGUgZGVtb25zdHJhdGlvbiIgIlBvcnRzIGhvdGUgY29uZmlndXJhYmxlcyA7IGJhY2tlbmQgYWN0dWVsbGVtZW50IDgwODIsIGRlZmF1dCBDb21wb3NlIDgwODAuIiAiV2luZG93cyAvIERvY2tlciBEZXNrdG9wIiB7CiAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiTmF2aWdhdGV1ciB1dGlsaXNhdGV1ciIgIlNQQSBleGVjdXRlZSBkYW5zIGxlIG5hdmlnYXRldXIsIHBhcyBkYW5zIE5naW54LiIgIkNocm9tZSAvIEVkZ2UgLyBCcmF2ZSIgewogICAgICAgICAgICAgICAgICAgIGJyb3dzZXJBcHAgPSBjb250YWluZXJJbnN0YW5jZSBmcm9udGVuZAogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIk5hdmlnYXRldXIgYWRtaW5pc3RyYXRldXIiICJDb25zb2xlIGluZGVwZW5kYW50ZS4iICJOYXZpZ2F0ZXVyIiB7CiAgICAgICAgICAgICAgICAgICAgYnJvd3NlckFkbWluID0gY29udGFpbmVySW5zdGFuY2UgbW9ja1VpCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiRG9ja2VyIENvbXBvc2UiICJSZXNlYXUgbG9jYWwgZGVzIHNlcnZpY2VzIDsgYmFzZXMgZXQgdm9sdW1lcyBpbmRlcGVuZGFudHMuIiAiRG9ja2VyIExpbnV4IGNvbnRhaW5lcnMiIHsKICAgICAgICAgICAgICAgICAgICBuZ2lueEFwcCA9IGluZnJhc3RydWN0dXJlTm9kZSAiZnJvbnRlbmQiICJBc3NldHMgc3RhdGlxdWVzIDsgaG90ZSA1MTczIHZlcnMgcG9ydCA4MC4gUGFzIGRlIHByb3h5IEFQSS4iICJOZ2lueCIKICAgICAgICAgICAgICAgICAgICBuZ2lueEFkbWluID0gaW5mcmFzdHJ1Y3R1cmVOb2RlICJtb2NrLWJhbmstdWkiICJBc3NldHMgYWRtaW4gOyBob3RlIDUxNzQgdmVycyBwb3J0IDgwLiIgIk5naW54IgogICAgICAgICAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJiYWNrZW5kIiAiUG9ydCBpbnRlcm5lIDgwODAgOyBob3RlIEJBQ0tFTkRfUE9SVCAoc2Vzc2lvbiA4MDgyKS4iICJKUkUgMjEiIHsKICAgICAgICAgICAgICAgICAgICAgICAgY29udGFpbmVySW5zdGFuY2UgYmFja2VuZAogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAicG9zdGdyZXMiICJQb3J0IDU0MzIgOyB2b2x1bWUgcG9zdGdyZXMtZGF0YSBjb25zZXJ2ZS4iICJQb3N0Z3JlU1FMIDE3IiB7CiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnRhaW5lckluc3RhbmNlIGFwcERiCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJtb2NrLWJhbmsiICJQb3J0IHB1YmxpZSA4MDgxLiIgIkpSRSAyMSIgewogICAgICAgICAgICAgICAgICAgICAgICBjb250YWluZXJJbnN0YW5jZSBtb2NrQXBpCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJtb2NrLWJhbmstZGIiICI1NDMyIGludGVybmUgdW5pcXVlbWVudCA7IHZvbHVtZSBtb2NrLWJhbmstZGF0YSBkaXN0aW5jdC4iICJQb3N0Z3JlU1FMIDE3IiB7CiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnRhaW5lckluc3RhbmNlIG1vY2tEYgogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiYWktc2VydmljZSIgIjgwMDAgaW50ZXJuZSwgcGFzIGRlIHBvcnQgaG90ZSBwdWJsaWUgOyBhcnRlZmFjdHMgaW5jbHVzIGRhbnMgbCdpbWFnZS4iICJQeXRob24gMy4xMiIgewogICAgICAgICAgICAgICAgICAgICAgICBjb250YWluZXJJbnN0YW5jZSBhaQogICAgICAgICAgICAgICAgICAgICAgICBjb250YWluZXJJbnN0YW5jZSBtb2RlbHMKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIm1haWxwaXQiICJTTVRQIDEwMjUgOyBpbnRlcmZhY2UgbG9jYWxlIDgwMjUuIiAiTWFpbHBpdCIgewogICAgICAgICAgICAgICAgICAgICAgICBzb2Z0d2FyZVN5c3RlbUluc3RhbmNlIG1haWwKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiT2xsYW1hIHN1ciBsZSBwb3N0ZSIgIjExNDM0IHZpYSBob3N0LmRvY2tlci5pbnRlcm5hbCA7IG1vZGVsZXMgY29uZmlndXJhYmxlcywgbm9uIGdlcmVzIHBhciBDb21wb3NlLiIgIk9sbGFtYSIgewogICAgICAgICAgICAgICAgICAgIHNvZnR3YXJlU3lzdGVtSW5zdGFuY2Ugb2xsYW1hCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiRW52aXJvbm5lbWVudCBNTCBob3JzIGxpZ25lIiAiU2NyaXB0cy9ub3RlYm9va3MgZXhlY3V0ZXMgZXhwbGljaXRlbWVudCwgcGFzIHVuIHNlcnZpY2UgQ29tcG9zZS4iICJQeXRob24gLyBub3RlYm9va3MiIHsKICAgICAgICAgICAgICAgICAgICBjb250YWluZXJJbnN0YW5jZSBwaXBlbGluZQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgYnJvd3NlckFwcCAtPiBuZ2lueEFwcCAiQ2hhcmdlIEhUTUwsIEpTIGV0IENTUyIgIkhUVFAgOjUxNzMiCiAgICAgICAgICAgICAgICBicm93c2VyQWRtaW4gLT4gbmdpbnhBZG1pbiAiQ2hhcmdlIGxlcyBhc3NldHMgYWRtaW4iICJIVFRQIDo1MTc0IgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJJbnRlcm5ldCBvcHRpb25uZWwiICJNZXJjaGFudCBlbnJpY2htZW50IHVuaXF1ZW1lbnQgOyBhdWN1biBhY2NlcyBleHRlcm5lIHBvdXIgZXhwbGljYXRpb25zL3Zpc2lvbi4iICJIVFRQUyIgewogICAgICAgICAgICAgICAgc29mdHdhcmVTeXN0ZW1JbnN0YW5jZSB3ZWIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICB2aWV3cyB7CiAgICAgICAgc3lzdGVtQ29udGV4dCBhcHAgIkMxLUNvbnRleHQiICJDb250ZXh0ZSBkdSBzeXN0ZW1lIGFjdHVlbCwgZGVwZW5kYW5jZXMgb3B0aW9ubmVsbGVzIGV0IGJhbnF1ZSBzeW50aGV0aXF1ZS4iIHsKICAgICAgICAgICAgaW5jbHVkZSB1c2VyIGFkbWluIGRldmVsb3BlciBhcHAgbW9jayBtYWlsIG9sbGFtYSB3ZWIKICAgICAgICAgICAgYXV0b0xheW91dCBscgogICAgICAgICAgICBkZWZhdWx0CiAgICAgICAgfQogICAgICAgIGNvbnRhaW5lciBhcHAgIkMyLUFwcGxpY2F0aW9uIiAiQXBwbGljYXRpb25zIGV0IHN0b2NrYWdlcy4gUGlwZWxpbmUgaG9ycyBsaWduZSA7IGF1Y3VuZSBjb25uZXhpb24gSUEgYXV4IGJhc2VzLiIgewogICAgICAgICAgICBpbmNsdWRlIHVzZXIgYWRtaW4gZGV2ZWxvcGVyIGZyb250ZW5kIGJhY2tlbmQgYXBwRGIgYWkgbW9kZWxzIHBpcGVsaW5lIG1vY2tVaSBtb2NrQXBpIG1vY2tEYiBtYWlsIG9sbGFtYSB3ZWIKICAgICAgICAgICAgYXV0b0xheW91dCBsciA0MDAgMjIwCiAgICAgICAgfQogICAgICAgIGNvbnRhaW5lciBtb2NrICJDMi1Nb2NrQmFuayIgIkZyb250aWVyZSBkdSBmb3Vybmlzc2V1ciBzeW50aGV0aXF1ZSBpbmRlcGVuZGFudC4iIHsKICAgICAgICAgICAgaW5jbHVkZSBhZG1pbiBtb2NrVWkgbW9ja0FwaSBtb2NrRGIgYmFja2VuZAogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCBiYWNrZW5kICJDMy1CYWNrZW5kLURhdGEiICJDb21wb3NhbnRzIGxvZ2lxdWVzIGRlIGRvbm5lZXMsIHNlY3VyaXRlIGV0IGludGVncmF0aW9ucyA7IHBhcyBkZXMgbWljcm9zZXJ2aWNlcy4iIHsKICAgICAgICAgICAgaW5jbHVkZSBmcm9udGVuZCBzZWN1cml0eSBhdXRoIHByb2ZpbGUgZW1haWwgYXVkaXQgYmFuayBiYW5rQWRhcHRlciBjc3YgY2F0ZWdvcnkgbG9jYWxEYXRhIGFwcERiIG1vY2tBcGkgYWkgbWFpbAogICAgICAgICAgICBhdXRvTGF5b3V0IGxyIDQwMCAyMjAKICAgICAgICB9CiAgICAgICAgY29tcG9uZW50IGJhY2tlbmQgIkMzLUJhY2tlbmQtSW5zaWdodHMiICJDYWxjdWxzIGRldGVybWluaXN0ZXMsIGNhcGFjaXRlIGQnZXBhcmduZSBwZXJzaXN0ZWUsIHNuYXBzaG90cyBpbW11YWJsZXMgZXQgYXNzaXN0YW5jZSBvcHRpb25uZWxsZS4iIHsKICAgICAgICAgICAgaW5jbHVkZSBmcm9udGVuZCBzZWN1cml0eSBzYWxhcnkgZ29hbHMgZm9yZWNhc3Qgc2NvcmUgcmVjb21tZW5kYXRpb25zIGFzc2lzdGFuY2UgYXBwRGIgYWkKICAgICAgICAgICAgYXV0b0xheW91dCBsciA0MDAgMjIwCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCBmcm9udGVuZCAiQzMtRnJvbnRlbmQiICJTUEEgcHJpbmNpcGFsZSA7IHRvdXRlcyBsZXMgcmVxdWV0ZXMgcGFzc2VudCBwYXIgbGUgY2xpZW50IEFQSSBhdXRoZW50aWZpZS4iIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQgbHIKICAgICAgICB9CiAgICAgICAgY29tcG9uZW50IGFpICJDMy1BSSIgIkluZmVyZW5jZSBmaWdlZSBldCBsb2NhbGUgYm9ybmVlIDsgd2ViIHVuaXF1ZW1lbnQgcG91ciBtYXJjaGFuZHMuIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCBtb2NrQXBpICJDMy1Nb2NrQmFuayIgIkpXVCBkaXN0aW5jdHMsIG93bmVyc2hpcCBldCBkb25uZWVzIHN5bnRoZXRpcXVlcyA7IGRlbW8gY29uZGl0aW9ubmVsbGUuIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCBwaXBlbGluZSAiQzMtTUwtUGlwZWxpbmUiICJQcmVwYXJhdGlvbiwgdmFsaWRhdGlvbiwgZW50cmFpbmVtZW50IGV0IGV4cG9ydCBob3JzIGxpZ25lIHNlcGFyZXMgZGUgbCdpbmZlcmVuY2UuIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGRlcGxveW1lbnQgKiAiTG9jYWwiICJEZXBsb3ltZW50LUxvY2FsIiAiQ29tcG9zZSBsb2NhbCwgdm9sdW1lcyBzZXBhcmVzLCBTUEFzIGRhbnMgbGVzIG5hdmlnYXRldXJzIGV0IE9sbGFtYSBzdXIgbCdob3RlLiIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dCBsciA0MDAgMjIwCiAgICAgICAgfQogICAgICAgIHN0eWxlcyB7CiAgICAgICAgICAgIGVsZW1lbnQgIkVsZW1lbnQiIHsKICAgICAgICAgICAgICAgIGNvbG9yICMxNzMyNEQKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI0YxRjVGQQogICAgICAgICAgICAgICAgc3Ryb2tlICMyMjM5NkYKICAgICAgICAgICAgICAgIGZvbnRTaXplIDIyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiUGVyc29uIiB7CiAgICAgICAgICAgICAgICBzaGFwZSBQZXJzb24KICAgICAgICAgICAgICAgIGJhY2tncm91bmQgIzEyMzQ1OAogICAgICAgICAgICAgICAgY29sb3IgI0ZGRkZGRgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIlNvZnR3YXJlIFN5c3RlbSIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjMTIzNDU4CiAgICAgICAgICAgICAgICBjb2xvciAjRkZGRkZGCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQ29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICMyMjM5NkYKICAgICAgICAgICAgICAgIGNvbG9yICNGRkZGRkYKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJDb21wb25lbnQiIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI0U3RUZGOQogICAgICAgICAgICAgICAgY29sb3IgIzE3MzI0RAogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkV4dGVybmFsIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM1ODY3NzkKICAgICAgICAgICAgICAgIGNvbG9yICNGRkZGRkYKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgc2hhcGUgQ3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJGaWxlU3RvcmUiIHsKICAgICAgICAgICAgICAgIHNoYXBlIEZvbGRlcgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkRlcGxveW1lbnQgTm9kZSIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjRkZGRkZGCiAgICAgICAgICAgICAgICBjb2xvciAjMTczMjRECiAgICAgICAgICAgICAgICBzdHJva2UgIzlBQUZDNQogICAgICAgICAgICB9CiAgICAgICAgICAgIHJlbGF0aW9uc2hpcCAiUmVsYXRpb25zaGlwIiB7CiAgICAgICAgICAgICAgICBjb2xvciAjNTA2NzczCiAgICAgICAgICAgICAgICBmb250U2l6ZSAxOAogICAgICAgICAgICAgICAgdGhpY2tuZXNzIDIKICAgICAgICAgICAgfQogICAgICAgICAgICByZWxhdGlvbnNoaXAgIk9wdGlvbmFsIiB7CiAgICAgICAgICAgICAgICBkYXNoZWQgdHJ1ZQogICAgICAgICAgICAgICAgY29sb3IgIzc3NjkzMQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQp9",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 220,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 400,
+        "vertices" : true
+      },
+      "containerId" : "15",
+      "description" : "Composants logiques de donnees, securite et integrations ; pas des microservices.",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "33",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "50",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "59",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-Backend-Data",
+      "name" : "Component View: Smart Financial Wellness Advisor - Backend principal",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "100"
+      }, {
+        "id" : "101"
+      }, {
+        "id" : "102"
+      }, {
+        "id" : "103"
+      }, {
+        "id" : "104"
+      }, {
+        "id" : "105"
+      }, {
+        "id" : "106"
+      }, {
+        "id" : "107"
+      }, {
+        "id" : "108"
+      }, {
+        "id" : "109"
+      }, {
+        "id" : "110"
+      }, {
+        "id" : "111"
+      }, {
+        "id" : "112"
+      }, {
+        "id" : "113"
+      }, {
+        "id" : "97"
+      }, {
+        "id" : "98"
+      }, {
+        "id" : "99"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 220,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 400,
+        "vertices" : true
+      },
+      "containerId" : "15",
+      "description" : "Calculs deterministes, capacite d'epargne persistee, snapshots immuables et assistance optionnelle.",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "31",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "33",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-Backend-Insights",
+      "name" : "Component View: Smart Financial Wellness Advisor - Backend principal",
+      "order" : 5,
+      "relationships" : [ {
+        "id" : "114"
+      }, {
+        "id" : "115"
+      }, {
+        "id" : "116"
+      }, {
+        "id" : "117"
+      }, {
+        "id" : "118"
+      }, {
+        "id" : "119"
+      }, {
+        "id" : "120"
+      }, {
+        "id" : "121"
+      }, {
+        "id" : "122"
+      }, {
+        "id" : "97"
+      }, {
+        "id" : "98"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "5",
+      "description" : "SPA principale ; toutes les requetes passent par le client API authentifie.",
+      "elements" : [ {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-Frontend",
+      "name" : "Component View: Smart Financial Wellness Advisor - Frontend principal",
+      "order" : 6,
+      "relationships" : [ {
+        "id" : "83"
+      }, {
+        "id" : "84"
+      }, {
+        "id" : "85"
+      }, {
+        "id" : "86"
+      }, {
+        "id" : "87"
+      }, {
+        "id" : "88"
+      }, {
+        "id" : "89"
+      }, {
+        "id" : "90"
+      }, {
+        "id" : "91"
+      }, {
+        "id" : "92"
+      }, {
+        "id" : "93"
+      }, {
+        "id" : "94"
+      }, {
+        "id" : "95"
+      }, {
+        "id" : "96"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "33",
+      "description" : "Inference figee et locale bornee ; web uniquement pour marchands.",
+      "elements" : [ {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "34",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "35",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "36",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "38",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "39",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "40",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "60",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "61",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-AI",
+      "name" : "Component View: Smart Financial Wellness Advisor - Service IA",
+      "order" : 7,
+      "relationships" : [ {
+        "id" : "123"
+      }, {
+        "id" : "124"
+      }, {
+        "id" : "125"
+      }, {
+        "id" : "126"
+      }, {
+        "id" : "127"
+      }, {
+        "id" : "128"
+      }, {
+        "id" : "129"
+      }, {
+        "id" : "130"
+      }, {
+        "id" : "131"
+      }, {
+        "id" : "132"
+      }, {
+        "id" : "133"
+      }, {
+        "id" : "134"
+      }, {
+        "id" : "135"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "50",
+      "description" : "JWT distincts, ownership et donnees synthetiques ; demo conditionnelle.",
+      "elements" : [ {
+        "id" : "49",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "51",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "52",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "53",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "54",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "55",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "56",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "57",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "58",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-MockBank",
+      "name" : "Component View: Mock bank - API mock-bank",
+      "order" : 8,
+      "relationships" : [ {
+        "id" : "136"
+      }, {
+        "id" : "138"
+      }, {
+        "id" : "139"
+      }, {
+        "id" : "140"
+      }, {
+        "id" : "141"
+      }, {
+        "id" : "142"
+      }, {
+        "id" : "143"
+      }, {
+        "id" : "144"
+      }, {
+        "id" : "145"
+      }, {
+        "id" : "146"
+      }, {
+        "id" : "147"
+      }, {
+        "id" : "148"
+      }, {
+        "id" : "149"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "42",
+      "description" : "Preparation, validation, entrainement et export hors ligne separes de l'inference.",
+      "elements" : [ {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "43",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "44",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "45",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "46",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "47",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3-ML-Pipeline",
+      "name" : "Component View: Smart Financial Wellness Advisor - Pipeline ML hors ligne",
+      "order" : 9,
+      "relationships" : [ {
+        "id" : "150"
+      }, {
+        "id" : "151"
+      }, {
+        "id" : "152"
+      }, {
+        "id" : "153"
+      }, {
+        "id" : "154"
+      }, {
+        "id" : "155"
+      } ]
+    } ],
+    "configuration" : {
+      "defaultView" : "C1-Context",
+      "styles" : {
+        "elements" : [ {
+          "background" : "#e7eff9",
+          "color" : "#17324d",
+          "tag" : "Component"
+        }, {
+          "background" : "#22396f",
+          "color" : "#ffffff",
+          "tag" : "Container"
+        }, {
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#ffffff",
+          "color" : "#17324d",
+          "stroke" : "#9aafc5",
+          "tag" : "Deployment Node"
+        }, {
+          "background" : "#f1f5fa",
+          "color" : "#17324d",
+          "fontSize" : 22,
+          "stroke" : "#22396f",
+          "tag" : "Element"
+        }, {
+          "background" : "#586779",
+          "color" : "#ffffff",
+          "tag" : "External"
+        }, {
+          "shape" : "Folder",
+          "tag" : "FileStore"
+        }, {
+          "background" : "#123458",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#123458",
+          "color" : "#ffffff",
+          "tag" : "Software System"
+        } ],
+        "relationships" : [ {
+          "color" : "#776931",
+          "dashed" : true,
+          "tag" : "Optional"
+        }, {
+          "color" : "#506773",
+          "fontSize" : 18,
+          "tag" : "Relationship",
+          "thickness" : 2
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 220,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 400,
+        "vertices" : true
+      },
+      "description" : "Applications et stockages. Pipeline hors ligne ; aucune connexion IA aux bases.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "33",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "42",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "49",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "50",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "58",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "59",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "60",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "61",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "C2-Application",
+      "name" : "Container View: Smart Financial Wellness Advisor",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      }, {
+        "id" : "75"
+      }, {
+        "id" : "76"
+      }, {
+        "id" : "77"
+      }, {
+        "id" : "78"
+      }, {
+        "id" : "79"
+      }, {
+        "id" : "80"
+      }, {
+        "id" : "81"
+      }, {
+        "id" : "82"
+      } ],
+      "softwareSystemId" : "4"
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "Frontiere du fournisseur synthetique independant.",
+      "elements" : [ {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "49",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "50",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "58",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "C2-MockBank",
+      "name" : "Container View: Mock bank",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "70"
+      }, {
+        "id" : "74"
+      }, {
+        "id" : "77"
+      }, {
+        "id" : "78"
+      } ],
+      "softwareSystemId" : "48"
+    } ],
+    "deploymentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 220,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 400,
+        "vertices" : true
+      },
+      "description" : "Compose local, volumes separes, SPAs dans les navigateurs et Ollama sur l'hote.",
+      "elements" : [ {
+        "id" : "156",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "157",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "158",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "159",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "160",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "161",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "162",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "163",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "164",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "165",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "167",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "168",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "170",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "171",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "174",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "175",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "177",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "178",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "180",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "182",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "183",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "185",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "186",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "188",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "189",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "193",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "194",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "environment" : "Local",
+      "key" : "Deployment-Local",
+      "name" : "Deployment View: Local",
+      "order" : 10,
+      "relationships" : [ {
+        "id" : "166"
+      }, {
+        "id" : "169"
+      }, {
+        "id" : "172"
+      }, {
+        "id" : "173"
+      }, {
+        "id" : "176"
+      }, {
+        "id" : "179"
+      }, {
+        "id" : "181"
+      }, {
+        "id" : "184"
+      }, {
+        "id" : "187"
+      }, {
+        "id" : "190"
+      }, {
+        "id" : "191"
+      }, {
+        "id" : "192"
+      }, {
+        "id" : "195"
+      } ]
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "Contexte du systeme actuel, dependances optionnelles et banque synthetique.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "48",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "59",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "60",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "61",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "C1-Context",
+      "name" : "System Context View: Smart Financial Wellness Advisor",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "62"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "68"
+      } ],
+      "softwareSystemId" : "4"
+    } ]
+  }
+}

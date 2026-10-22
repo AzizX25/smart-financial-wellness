@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1370 2231" width="1370" height="2231" role="img" aria-labelledby="06-ai-service-title 06-ai-service-desc">
+<title id="06-ai-service-title">C3 · Service d&#x27;inférence</title>
+<desc id="06-ai-service-desc">Runtimes figés et fournisseurs bornés ; pas d&#x27;entraînement ni d&#x27;accès aux bases applicatives. Les relations numérotées sont détaillées sous le diagramme.</desc>
+<defs><marker id="06-ai-service-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#59616d"/></marker></defs>
+<g font-family="Arial, sans-serif">
+<rect width="1370" height="2231" fill="#ffffff"/>
+<text x="30" y="38" font-size="26" fill="#123458" font-weight="600" text-anchor="start">C3 · Service d&#x27;inférence</text>
+<text x="30" y="63" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Types explicites · flèches = sens de l&#x27;appel / du flux · pointillés = option ou étape hors ligne</text>
+<rect x="30" y="300" width="1300" height="850" rx="12" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="45" y="324" font-size="15" fill="#59616d" font-weight="600" text-anchor="start">Processus FastAPI / Python</text>
+<g data-edge="1"><title>Appelle les routes d&#x27;inférence internes</title><path d="M675 270 L675 298 L680 300 L680 350 L675 352 L675 380" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="2"><title>/forecast/predict-residual</title><path d="M520 465 L492 465 L490 460 L410 460 L410 740 L408 745 L380 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="3"><title>/merchant-recognition/predict</title><path d="M675 550 L675 578 L680 580 L680 630 L675 632 L675 660" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="4"><title>/recommendations/explain ; /receipts/extract</title><path d="M830 465 L858 465 L860 460 L860 740 L940 740 L942 745 L970 745" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="5"><title>Charge le Huber et vérifie son empreinte</title><path d="M225 830 L225 858 L220 860 L220 1180 L225 1182 L225 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="6"><title>Charge catalogue et modèle marchand</title><path d="M675 830 L675 858 L680 860 L230 860 L230 1180 L220 1180 L225 1182 L225 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)"/></g>
+<g data-edge="7"><title>Recours optionnel après modèle local</title><path d="M675 830 L675 858 L680 860 L680 910 L675 912 L675 940" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="8"><title>Embedding et raisonnement local bornés</title><path d="M830 1025 L858 1025 L860 1020 L860 1300 L940 1300 L942 1295 L970 1295" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="9"><title>Recherche marchande si activée</title><path d="M675 1110 L675 1138 L680 1140 L680 1440 L675 1442 L675 1470" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-edge="10"><title>Explication ou vision si activée</title><path d="M1125 830 L1125 858 L1120 860 L1120 1180 L1125 1182 L1125 1210" fill="none" stroke="#59616d" stroke-width="2" stroke-linejoin="round" marker-end="url(#06-ai-service-arrow)" stroke-dasharray="7 5"/></g>
+<g data-node="backend"><title>Backend principal: Envoie uniquement le contrat minimal propre à chaque fonctionnalité. | backend/src/main/java/com/azizx25/smartfinancialwellness/assistance/AssistanceClient.java; backend/src/main/java/com/azizx25/smartfinancialwellness/category/infrastructure/HttpMerchantRecognitionAiClient.java</title>
+<rect x="520" y="100" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="129" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Backend principal</text>
+<text x="536" y="152" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="171" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTP / JSON strict</text>
+<text x="536" y="195" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Envoie uniquement le contrat minimal</text>
+<text x="536" y="212" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">propre à chaque fonctionnalité.</text>
+</g>
+<g data-node="api"><title>FastAPI et contrats: Validation stricte, limites, erreurs sûres et health. | ai-service/src/forecast_ai/main.py; ai-service/src/forecast_ai/contracts.py; ai-service/src/forecast_ai/merchant_contracts.py</title>
+<rect x="520" y="380" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="409" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">FastAPI et contrats</text>
+<text x="536" y="432" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="451" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">main.py · Pydantic</text>
+<text x="536" y="475" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Validation stricte, limites, erreurs</text>
+<text x="536" y="492" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sûres et health.</text>
+</g>
+<g data-node="forecast"><title>Résidu Forecast: Huber figé TND ; features agrégées ; sortie décimale. | ai-service/src/forecast_ai/runtime.py; ai-service/src/forecast_ai/contracts.py</title>
+<rect x="70" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="86" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Résidu Forecast</text>
+<text x="86" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="86" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">ModelRuntime · scikit-learn</text>
+<text x="86" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Huber figé TND ; features agrégées ;</text>
+<text x="86" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sortie décimale.</text>
+</g>
+<g data-node="merchant"><title>Reconnaissance marchande: Alias/catalogue, modèle local puis enrichissement optionnel. | ai-service/src/forecast_ai/merchant_runtime.py</title>
+<rect x="520" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Reconnaissance marchande</text>
+<text x="536" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MerchantRuntime</text>
+<text x="536" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Alias/catalogue, modèle local puis</text>
+<text x="536" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">enrichissement optionnel.</text>
+</g>
+<g data-node="assist"><title>Explication et vision: Règle contrôlée ou image assainie ; sorties strictes. | ai-service/src/forecast_ai/assistance.py</title>
+<rect x="970" y="660" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="986" y="689" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Explication et vision</text>
+<text x="986" y="712" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="986" y="731" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">LocalAssistance · Pillow</text>
+<text x="986" y="755" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Règle contrôlée ou image assainie ;</text>
+<text x="986" y="772" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">sorties strictes.</text>
+</g>
+<g data-node="artifacts"><title>Artefacts locaux: Modèles, métadonnées et versions vérifiés. | ai-service/models</title>
+<rect x="70" y="1210" width="310" height="170" rx="10" fill="#fff7cf" stroke="#8a6500" stroke-width="2"/>
+<text x="86" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Artefacts locaux</text>
+<text x="86" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Artefacts versionnés]</text>
+<text x="86" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">models/forecast · models/merchant</text>
+<text x="86" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Modèles, métadonnées et versions</text>
+<text x="86" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">vérifiés.</text>
+</g>
+<g data-node="enrich"><title>Enrichissement et admission: Budget borné, cache catalogue public et un slot local partagé. | ai-service/src/forecast_ai/merchant_enrichment.py; ai-service/src/forecast_ai/inference_control.py</title>
+<rect x="520" y="940" width="310" height="170" rx="10" fill="#edf3fc" stroke="#22396f" stroke-width="2"/>
+<text x="536" y="969" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Enrichissement et admission</text>
+<text x="536" y="992" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Composant]</text>
+<text x="536" y="1011" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">MerchantEnricher · inference_control</text>
+<text x="536" y="1035" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Budget borné, cache catalogue public et</text>
+<text x="536" y="1052" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">un slot local partagé.</text>
+</g>
+<g data-node="ollama"><title>Ollama du poste: Embedding, raisonnement et vision configurables. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="970" y="1210" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="986" y="1239" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama du poste</text>
+<text x="986" y="1262" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="986" y="1281" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">/api/embed · /api/chat</text>
+<text x="986" y="1305" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Embedding, raisonnement et vision</text>
+<text x="986" y="1322" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">configurables.</text>
+</g>
+<g data-node="web"><title>Ollama Web Search: Résultats publics bornés ; URLs de preuve contrôlées. | ai-service/src/forecast_ai/ollama_providers.py</title>
+<rect x="520" y="1470" width="310" height="170" rx="10" fill="#f2f4f7" stroke="#7a828e" stroke-width="2"/>
+<text x="536" y="1499" font-size="18" fill="#17324d" font-weight="600" text-anchor="start">Ollama Web Search</text>
+<text x="536" y="1522" font-size="12" fill="#17324d" font-weight="400" text-anchor="start">[Système externe]</text>
+<text x="536" y="1541" font-size="13" fill="#17324d" font-weight="600" text-anchor="start">HTTPS / API fournisseur</text>
+<text x="536" y="1565" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">Résultats publics bornés ; URLs de</text>
+<text x="536" y="1582" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">preuve contrôlées.</text>
+</g>
+<circle cx="680" cy="325" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="329.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">1</text>
+<circle cx="410" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="410.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">2</text>
+<circle cx="680" cy="605" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="609.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">3</text>
+<circle cx="860" cy="600" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="604.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">4</text>
+<circle cx="220" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="220.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">5</text>
+<circle cx="455" cy="860" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="455.0" y="864.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">6</text>
+<circle cx="680" cy="885" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="889.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">7</text>
+<circle cx="860" cy="1160" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="860.0" y="1164.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">8</text>
+<circle cx="680" cy="1290" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="680.0" y="1294.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">9</text>
+<circle cx="1120" cy="1020" r="12" fill="#ffffff" stroke="#59616d"/>
+<text x="1120.0" y="1024.0" font-size="12" fill="#123458" font-weight="600" text-anchor="middle">10</text>
+<text x="30" y="1772" font-size="18" fill="#123458" font-weight="600" text-anchor="start">Relations et protocoles (numéros sur les flèches)</text>
+<text x="30" y="1802" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">1. Backend principal → FastAPI et contrats : Appelle les routes d&#x27;inférence internes</text>
+<text x="30" y="1867" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">2. FastAPI et contrats → Résidu Forecast : /forecast/predict-residual</text>
+<text x="30" y="1932" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">3. FastAPI et contrats → Reconnaissance marchande : /merchant-recognition/predict</text>
+<text x="30" y="1997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">4. FastAPI et contrats → Explication et vision : /recommendations/explain ;</text>
+<text x="30" y="2014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">/receipts/extract</text>
+<text x="30" y="2062" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">5. Résidu Forecast → Artefacts locaux : Charge le Huber et vérifie son empreinte</text>
+<text x="700.0" y="1802" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">6. Reconnaissance marchande → Artefacts locaux : Charge catalogue et modèle marchand</text>
+<text x="700.0" y="1867" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">7. Reconnaissance marchande → Enrichissement et admission : Recours optionnel après</text>
+<text x="700.0" y="1884" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">modèle local (pointillés)</text>
+<text x="700.0" y="1932" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">8. Enrichissement et admission → Ollama du poste : Embedding et raisonnement local</text>
+<text x="700.0" y="1949" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">bornés (pointillés)</text>
+<text x="700.0" y="1997" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">9. Enrichissement et admission → Ollama Web Search : Recherche marchande si activée</text>
+<text x="700.0" y="2014" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="700.0" y="2062" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">10. Explication et vision → Ollama du poste : Explication ou vision si activée</text>
+<text x="700.0" y="2079" font-size="13" fill="#17324d" font-weight="400" text-anchor="start">(pointillés)</text>
+<text x="30" y="2137" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Aucun PostgreSQL ni stockage de tickets. Les appels externes appartiennent uniquement à l&#x27;enrichissement marchand.</text>
+<text x="30" y="2159" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Contrats et provenance sont validés avant toute suggestion ; le backend reste responsable de la persistance PENDING.</text>
+<text x="30" y="2181" font-size="13" fill="#59616d" font-weight="400" text-anchor="start">Le slot d&#x27;inférence couvre embeddings, raisonnement et assistance. Forecast et health restent indépendants.</text>
+</g>
+</svg>
