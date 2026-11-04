@@ -32,8 +32,10 @@ the private file.
 Keep the same credentials on subsequent runs. An existing administrator must be
 ACTIVE and match the supplied password: the setup never changes its password or
 reactivates it. A mismatch or invalid configuration stops startup safely. This is
-not a password-reset facility. Existing customers, accounts and the legacy
-migration-created administrator remain unchanged.
+not a password-reset facility. Mock-bank migration V5 separately disables and
+replaces only unchanged legacy migration-seeded credentials. Independently
+changed credentials and all ledger records are preserved. Use the private local
+administrator above, not the legacy known-password administrator.
 
 If `.env.demo` already exists, copying the template does not change it. To opt in,
 add `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`, choose an unused local administrator

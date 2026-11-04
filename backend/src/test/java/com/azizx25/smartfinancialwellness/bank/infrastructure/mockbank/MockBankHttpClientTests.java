@@ -407,7 +407,7 @@ class MockBankHttpClientTests {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        var login = client.login("amina.demo", "DemoBank2026!");
+        var login = client.login("amina.demo", java.util.UUID.randomUUID().toString());
 
         assertThat(login.customerId()).isEqualTo(CUSTOMER_ID);
         assertThat(login.accessToken()).isEqualTo("provider-token");

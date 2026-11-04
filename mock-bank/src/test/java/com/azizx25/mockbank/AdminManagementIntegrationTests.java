@@ -42,8 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(MockBankPostgresTestConfiguration.class)
 class AdminManagementIntegrationTests {
 
-    private static final String ADMIN_USERNAME = "admin.demo";
-    private static final String ADMIN_PASSWORD = "AdminBank2026!";
+    private static final String ADMIN_USERNAME = TestBankCredentials.ADMIN_USERNAME;
+    private static final String ADMIN_PASSWORD = TestBankCredentials.ADMIN_PASSWORD;
     private static final String ADMIN_UI_ORIGIN = "http://localhost:5174";
 
     @Autowired
@@ -142,6 +142,20 @@ class AdminManagementIntegrationTests {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("Invalid bank credentials"))
                 .andExpect(jsonPath("$.accessToken").doesNotExist());
+    }
+
+    @Test
+    void disabledOrMissingAdministratorCannotUseAnUnexpiredJwt() throws Exception {
+        String path = "/api/admin/dashboard";
+        String token = adminToken();
+        try {
+            jdbcTemplate.update("UPDATE mock_bank.bank_administrator SET status='INACTIVE' WHERE username=?", ADMIN_USERNAME);
+            expectUnauthorized(mockMvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer(token))), path);
+        } finally {
+            jdbcTemplate.update("UPDATE mock_bank.bank_administrator SET status='ACTIVE' WHERE username=?", ADMIN_USERNAME);
+        }
+        String missingToken = jwtService.issueAdmin("missing.integration.admin").value();
+        expectUnauthorized(mockMvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer(missingToken))), path);
     }
 
     @Test

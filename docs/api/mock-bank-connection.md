@@ -28,17 +28,16 @@ The backend never accepts a public `userId` or mock-bank `customerId`. The mock
 bank independently verifies the JWT signature, expiry, issuer, audience, path
 customer, and account ownership on every data request.
 
-## Development credentials
+## Private local credentials
 
-The deterministic V2/V3 fixture provides two development-only identities:
+The historical V2/V3 customer fixtures and V4 administrator had publicly known
+passwords. V5 disables those exact accounts only while their old password hash
+is unchanged, replacing the compromised hash with a random, unrecoverable one.
+Financial records and independently recredentialed accounts are preserved.
 
-| Username | Password |
-| --- | --- |
-| `amina.demo` | `DemoBank2026!` |
-| `youssef.demo` | `DemoBank2026!` |
-
-The database stores only BCrypt password hashes. These credentials must never
-be reused outside this synthetic local provider.
+Create local sample accounts through the [private demo setup](../demo/local-demo.md),
+or use a privately provisioned administrator to create a customer normally.
+There is no shared login password. Only BCrypt password hashes are stored.
 
 ## Core backend endpoints
 
@@ -64,8 +63,8 @@ The connection request is:
 
 ```json
 {
-  "username": "amina.demo",
-  "password": "<demo password>"
+  "username": "<your privately created bank username>",
+  "password": "<your private bank password>"
 }
 ```
 

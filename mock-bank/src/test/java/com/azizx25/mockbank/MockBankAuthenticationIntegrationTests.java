@@ -39,7 +39,7 @@ class MockBankAuthenticationIntegrationTests {
     private static final String CUSTOMER_ONE = "MOCK-CUST-001";
     private static final String CUSTOMER_TWO = "MOCK-CUST-002";
     private static final String DEMO_USERNAME = "amina.demo";
-    private static final String DEMO_PASSWORD = "DemoBank2026!";
+    private static final String DEMO_PASSWORD = TestBankCredentials.CUSTOMER_PASSWORD;
 
     @Autowired
     private MockMvc mockMvc;
@@ -90,7 +90,7 @@ class MockBankAuthenticationIntegrationTests {
     }
 
     @Test
-    void seededPasswordIsStoredOnlyAsBcryptHash() {
+    void isolatedFixturePasswordIsStoredOnlyAsBcryptHash() {
         String hash = jdbcTemplate.queryForObject(
                 "SELECT password_hash FROM mock_bank.bank_customer WHERE username = ?",
                 String.class,

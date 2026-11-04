@@ -1,0 +1,12 @@
+title = "Smart Financial Wellness secret checks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Exact Structurizr container-view identifier; not an API credential"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|[/\\])docs[/\\]architecture[/\\]c4[/\\]workspace\.json$''']
+regexTarget = "line"
+regexes = ['''^\s*"key"\s*:\s*"C2-Application",?\s*$''']

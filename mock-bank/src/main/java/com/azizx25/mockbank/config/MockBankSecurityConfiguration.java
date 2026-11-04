@@ -2,13 +2,12 @@ package com.azizx25.mockbank.config;
 
 import java.time.Clock;
 import java.util.Collection;
-import java.util.Base64;
 import java.util.List;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.azizx25.mockbank.security.BankCustomerAuthorizationFilter;
+import com.azizx25.mockbank.security.JwtSigningKey;
 import com.azizx25.mockbank.security.MockBankAccessDeniedHandler;
 import com.azizx25.mockbank.security.MockBankAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -154,16 +153,7 @@ public class MockBankSecurityConfiguration {
     }
 
     private SecretKey jwtSecret(MockBankSecurityProperties properties) {
-        byte[] decoded;
-        try {
-            decoded = Base64.getDecoder().decode(properties.jwt().secret());
-        } catch (IllegalArgumentException exception) {
-            throw new IllegalStateException("MOCK_BANK_JWT_SECRET must be Base64 encoded", exception);
-        }
-        if (decoded.length < 32) {
-            throw new IllegalStateException("MOCK_BANK_JWT_SECRET must decode to at least 32 bytes");
-        }
-        return new SecretKeySpec(decoded, "HmacSHA256");
+        return JwtSigningKey.decode(properties.jwt().secret());
     }
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {

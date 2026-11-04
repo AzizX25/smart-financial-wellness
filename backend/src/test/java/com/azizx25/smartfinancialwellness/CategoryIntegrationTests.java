@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CategoryIntegrationTests {
 
     private static final String SCHEMA = "smart_financial_wellness.";
-    private static final String BANK_PASSWORD = "DemoBank2026!";
+    private static final String BANK_PASSWORD = BankConnectionIntegrationTests.BANK_PASSWORD;
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;

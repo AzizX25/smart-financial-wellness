@@ -211,47 +211,38 @@ docker info --format '{{.OSType}}'
 The last command should return `linux`. A private repository requires permission
 and GitHub authentication. A clone contains only published commits, not another
 computer's uncommitted work, private environment files or database contents.
-The default `main` branch contains the application. For a reproducible demo
-version, select the `v1.0.0-demo` tag after cloning with
-`git checkout v1.0.0-demo`.
+Use the current `main` branch for security updates. The historical
+`v1.0.0-demo` tag predates credential hardening and must not be used for a new
+installation. The credential-hardened demonstration release is `v1.0.1-demo`.
 You can also download a source ZIP from GitHub and extract it before opening a
 terminal in the directory containing `compose.yaml`.
 
 ### 1. Prepare private configuration
 
-Copy the template only if a private configuration does not already exist:
+For a **new installation**, generate private configuration without displaying
+secrets:
 
 ```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/setup/initialize_local_environment.ps1
 ```
 
-Edit `.env` locally:
+Use `pwsh` instead of `powershell.exe` on Linux/macOS. This command creates an
+ignored `.env` with four independent cryptographically random secrets and refuses
+to overwrite an existing file. The public template deliberately leaves required
+secrets blank; `docker compose --env-file .env.example config` is expected to fail.
 
-- Set private `DB_PASSWORD` and `MOCK_BANK_DB_PASSWORD`.
-- Replace the example `AUTH_JWT_SECRET` and `MOCK_BANK_JWT_SECRET` with **different**
-  securely generated Base64 secrets, each decoding to at least 32 random bytes.
+Review non-secret settings in `.env` locally:
+
+- Keep the generated private database passwords and independent Base64 signing keys.
 - Keep optional AI flags disabled for the first run.
 - Do not commit `.env`, print its contents or share secret-bearing Compose output.
 
-For a **new installation**, this optional PowerShell snippet generates signing
-keys without displaying them:
-
-```powershell
-function New-LocalSigningSecret {
-  $bytes = New-Object byte[] 32
-  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-  try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
-  return [Convert]::ToBase64String($bytes)
-}
-$env:AUTH_JWT_SECRET = New-LocalSigningSecret
-$env:MOCK_BANK_JWT_SECRET = New-LocalSigningSecret
-```
-
-These assignments affect only this shell and its child processes; shell variables
-override matching Compose `.env` entries. Use securely managed persistent values
-for repeatable startup. Do not regenerate an existing environment's signing keys
-casually: that invalidates its JWTs. Do not change passwords for already initialized
-database volumes without a deliberate credential-change procedure.
+Shell variables override matching Compose `.env` entries. Do not regenerate an
+existing installation's secrets casually: signing-key rotation invalidates JWTs,
+and changing a database password in `.env` does not update an initialized database.
+Historical published signing keys are now rejected at application startup. See
+the [credential-hardening and existing-installation guide](docs/security/local-credentials.md)
+before upgrading an existing installation. Do not delete database volumes.
 
 ### 2. Start the application
 
@@ -357,7 +348,8 @@ the supplied password; a mismatch is refused, never silently reset.
 Existing `.env.demo` files are not overwritten. To opt in on an older installation,
 add `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=true`, choose an unused local administrator
 username in `DEMO_MOCK_BANK_ADMIN_USERNAME`, and set its private password. Existing
-users and the legacy migration-created `admin.demo` account are left untouched.
+users are not changed by this provisioner. Mock-bank migration V5 separately
+retires unchanged legacy known-password credentials without deleting financial data.
 Default, `prod` and `production` profiles cannot run this startup provisioner.
 There is no unauthenticated setup endpoint. It can be disabled after provisioning
 by setting `MOCK_BANK_ADMIN_BOOTSTRAP_ENABLED=false`; the saved administrator
@@ -667,6 +659,7 @@ Run each from the indicated directory:
 | `ml-pipeline` | `python -m pytest` in its test-enabled virtual environment |
 | Repository root | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/demo/test_demo_scripts.ps1` |
 | Repository root | `docker compose --env-file .env config --quiet`, `git diff --check` |
+| Private setup | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/setup/test_local_environment.ps1` |
 
 On Unix-like shells, Maven wrappers use `./mvnw`. Java integration tests require
 Docker and use isolated PostgreSQL Testcontainers with Flyway; they do not use the
