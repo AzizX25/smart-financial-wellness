@@ -1,5 +1,8 @@
 package com.azizx25.smartfinancialwellness;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import com.azizx25.smartfinancialwellness.email.EmailDeliveryService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -12,7 +15,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class PostgresTestConfiguration {
 
     private static final String TEST_JWT_SECRET =
-            "c2Z3YS10ZXN0LW9ubHktMzItYnl0ZS1zZWNyZXQhISE=";
+            Base64.getEncoder().encodeToString(new SecureRandom().generateSeed(64));
 
     @Bean
     static DynamicPropertyRegistrar testSecurityProperties() {

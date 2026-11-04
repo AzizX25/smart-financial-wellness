@@ -39,7 +39,7 @@ describe('console administrateur', () => {
     expect(screen.getByRole('heading', { name: /Administration de la banque simulée/i })).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText(/Nom d’utilisateur/i), { target: { value: 'admin.demo' } })
-    fireEvent.change(screen.getByLabelText(/Mot de passe/i), { target: { value: 'AdminBank2026!' } })
+    fireEvent.change(screen.getByLabelText(/Mot de passe/i), { target: { value: crypto.randomUUID() } })
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     await screen.findByRole('heading', { name: 'Clients' })

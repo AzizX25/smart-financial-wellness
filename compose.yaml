@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-smart_financial_wellness}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -19,8 +19,8 @@ services:
   mailpit:
     image: axllent/mailpit:v1.30.0
     ports:
-      - "${MAILPIT_SMTP_PORT:-1025}:1025"
-      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
   backend:
     build:
@@ -58,7 +58,7 @@ services:
       AI_FORECAST_EXPECTED_FEATURE_VERSION: ${AI_FORECAST_EXPECTED_FEATURE_VERSION:-forecast-residual-features-v1}
       AI_MERCHANT_EXPECTED_ENRICHMENT_MODEL_ID: ${OLLAMA_REASONING_MODEL:-qwen3:4b}
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
 
   ai-service:
     build:
@@ -97,7 +97,7 @@ services:
       backend:
         condition: service_started
     ports:
-      - "${FRONTEND_PORT:-5173}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
 
   mock-bank-db:
     image: postgres:17-alpine
@@ -136,7 +136,7 @@ services:
       MOCK_BANK_ADMIN_BOOTSTRAP_USERNAME: ${DEMO_MOCK_BANK_ADMIN_USERNAME:-local.demo.admin}
       MOCK_BANK_ADMIN_BOOTSTRAP_PASSWORD: ${DEMO_MOCK_BANK_ADMIN_PASSWORD:-}
     ports:
-      - "${MOCK_BANK_PORT:-8081}:8081"
+      - "127.0.0.1:${MOCK_BANK_PORT:-8081}:8081"
 
   mock-bank-ui:
     build:
@@ -147,7 +147,7 @@ services:
       mock-bank:
         condition: service_started
     ports:
-      - "${MOCK_BANK_UI_PORT:-5174}:80"
+      - "127.0.0.1:${MOCK_BANK_UI_PORT:-5174}:80"
 
 volumes:
   postgres-data:

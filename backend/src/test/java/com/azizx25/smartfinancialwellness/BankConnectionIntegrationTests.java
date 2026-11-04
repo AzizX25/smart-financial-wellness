@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BankConnectionIntegrationTests {
 
     private static final String SCHEMA = "smart_financial_wellness.";
-    private static final String BANK_PASSWORD = "DemoBank2026!";
+    static final String BANK_PASSWORD = UUID.randomUUID().toString();
 
     @Autowired
     private MockMvc mockMvc;

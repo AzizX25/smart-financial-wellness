@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.azizx25.mockbank.customer.persistence.BankCustomerRepository;
+import com.azizx25.mockbank.admin.persistence.BankAdministratorRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,14 +25,17 @@ public class BankCustomerAuthorizationFilter extends OncePerRequestFilter {
             Pattern.compile("^/api/v1/customers/([^/]+)(?:/.*)?$");
 
     private final BankCustomerRepository customerRepository;
+    private final BankAdministratorRepository administrators;
     private final MockBankAuthenticationEntryPoint authenticationEntryPoint;
     private final MockBankAccessDeniedHandler accessDeniedHandler;
 
     public BankCustomerAuthorizationFilter(
             BankCustomerRepository customerRepository,
+            BankAdministratorRepository administrators,
             MockBankAuthenticationEntryPoint authenticationEntryPoint,
             MockBankAccessDeniedHandler accessDeniedHandler) {
         this.customerRepository = customerRepository;
+        this.administrators = administrators;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
     }
@@ -41,6 +45,17 @@ public class BankCustomerAuthorizationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
+        // Disabling an administrator must also block its still-unexpired JWT.
+        if (request.getRequestURI().startsWith("/api/admin/")
+                && SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken admin
+                && "ADMIN".equals(admin.getToken().getClaimAsString("role"))
+                && (!"ADMIN".equals(admin.getToken().getClaimAsString("token_type"))
+                    || administrators.findByUsername(admin.getToken().getSubject())
+                            .filter(account -> "ACTIVE".equals(account.getStatus())).isEmpty())) {
+            authenticationEntryPoint.write(response, request, HttpStatus.UNAUTHORIZED,
+                    "Invalid or expired bank authentication");
+            return;
+        }
         Matcher matcher = CUSTOMER_PATH.matcher(request.getRequestURI());
         if (!matcher.matches()) {
             filterChain.doFilter(request, response);

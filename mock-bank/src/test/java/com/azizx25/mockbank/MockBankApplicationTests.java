@@ -98,7 +98,7 @@ class MockBankApplicationTests {
                         + "AND table_type = 'BASE TABLE' AND table_name <> 'flyway_schema_history'",
                 String.class));
 
-        assertThat(successfulVersions).containsExactly("1", "2", "3", "4");
+        assertThat(successfulVersions).containsExactly("1", "2", "3", "4", "5");
         assertThat(applicationTables).containsExactlyInAnyOrder(
                 "bank_customer",
                 "oauth_client",
